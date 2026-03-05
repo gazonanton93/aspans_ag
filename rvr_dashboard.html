@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица РВР</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- jQuery & DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+
+    <!-- Select2 for searchable dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-light: #eff6ff;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+            --radius-lg: 16px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Header Area ── */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .title-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), #1e40af);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+        }
+
+        .title-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Filters Card ── */
+        .filters-card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--surface2);
+            width: 100%;
+        }
+
+        .filter-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background: var(--surface);
+        }
+
+        .filter-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        /* Select2 Customization to match theme */
+        .select2-container .select2-selection--single {
+            height: 40px !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+            background-color: var(--surface2) !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--text) !important;
+            line-height: normal !important;
+            padding-left: 14px !important;
+            font-size: 14px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 38px !important;
+            right: 8px !important;
+        }
+
+        .select2-container--open .select2-selection--single {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-light) !important;
+            background-color: var(--surface) !important;
+        }
+
+        .select2-dropdown {
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+            box-shadow: var(--shadow-lg) !important;
+            overflow: hidden !important;
+            z-index: 1050;
+        }
+
+        .select2-search__field {
+            border-radius: var(--radius-sm) !important;
+            border: 1px solid var(--border) !important;
+            outline: none !important;
+        }
+
+        .select2-search__field:focus {
+            border-color: var(--primary) !important;
+        }
+
+        .select2-results__option {
+            font-size: 14px !important;
+            padding: 8px 14px !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: var(--primary) !important;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--surface2);
+        }
+
+        /* ── Table Card ── */
+        .table-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            padding: 24px;
+        }
+
+        /* DataTables custom styling */
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 12px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_length select:focus,
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .dt-buttons {
+            margin-bottom: 16px;
+        }
+
+        .dt-button.buttons-excel {
+            background: #10b981 !important;
+            color: white !important;
+            border: none !important;
+            padding: 10px 20px !important;
+            border-radius: var(--radius-sm) !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        .dt-button.buttons-excel:hover {
+            background: #059669 !important;
+        }
+
+        table.dataTable {
+            border-bottom: 1px solid var(--border);
+            margin-top: 16px !important;
+            margin-bottom: 16px !important;
+            width: 100% !important;
+        }
+
+        table.dataTable thead th {
+            border-bottom: 2px solid var(--border);
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 13px;
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        table.dataTable tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: var(--primary-light) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 6px 12px;
+            margin-left: 4px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            font-size: 14px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: var(--primary-light);
+            color: var(--primary-hover) !important;
+            border: 1px solid #bfdbfe;
+            font-weight: 600;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text) !important;
+        }
+
+        /* ── Loader ── */
+        .loader-container {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loader-container.hidden {
+            display: none !important;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader" class="loader-container">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Загрузка данных РВР...</div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="page-title">
+                <div class="title-icon">
+                    <i data-lucide="table-2" style="width: 28px; height: 28px;"></i>
+                </div>
+                <div>
+                    <h1>Таблица РВР</h1>
+                    <div class="title-subtitle">Данные ремонтно-восстановительных работ</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filters -->
+        <div class="filters-card">
+            <div class="filters-grid">
+                <div class="control-group">
+                    <label class="control-label">Скважина</label>
+                    <select id="filterWell" class="filter-input">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Блок</label>
+                    <select id="filterBlock" class="filter-input">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Участок</label>
+                    <select id="filterSection" class="filter-input">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Дата (от)</label>
+                    <input type="date" id="filterDateFrom" class="filter-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Дата (до)</label>
+                    <input type="date" id="filterDateTo" class="filter-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Тип скважины</label>
+                    <select id="filterWellType" class="filter-input">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Метод РВР</label>
+                    <select id="filterMethod" class="filter-input">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button id="btnReset" class="btn btn-outline">
+                    <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i>
+                    Сбросить
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <table id="rvrTable" class="display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Дата проведения РВР</th>
+                        <th>Смена</th>
+                        <th>ФИО ответственного работника</th>
+                        <th>Скважина</th>
+                        <th>Технологический блок</th>
+                        <th>Участок</th>
+                        <th>Тип скважины</th>
+                        <th>U</th>
+                        <th>pH</th>
+                        <th>Метод РВР</th>
+                        <th>Дебит/Приемист. до РВР</th>
+                        <th>Дебит/Приемист. при РВР</th>
+                        <th>Дебит/Приемист. после РВР</th>
+                        <th>Мото/часы до РВР</th>
+                        <th>Мото/часы после РВР</th>
+                        <th>Продолжительность, мото/часы</th>
+                        <th>Кислотность раствора, г/л</th>
+                        <th>Часовой расход раствора, м3/ч</th>
+                        <th>Масса реагента, кг</th>
+                        <th>Показание расходомера до РВР</th>
+                        <th>Показание расходомера после РВР</th>
+                        <th>Объем раствора при РВР, м3</th>
+                        <th>Номер ПКУ</th>
+                        <th>Номер ЕОР</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populated via DataTables JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const API_BASE = window.location.origin + '/api/v1';
+        let rawData = [];
+        let dataTable;
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        async function initData() {
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+
+            try {
+                // Fetch the data from the view
+                // Including all columns for filters and table display explicitly to avoid rec_id error
+                const queryObj = {
+                    "limit": 10000,
+                    "columns": "i0d_date_rvr,i00_smena,i00_fio_otvetstvennogo_rabotnika,i00_skvazhina,i00_tekhnologicheskiy_blok,i00_uchastok,i00_tip_skvazhiny,i00_u,i00_ph,i00_metod_rvr,i00_debit_priemist_do_rvr,i00_debit_priemist_pri_rvr,i00_debit_priemist_posle_rvr,i00_moto_chasy_do_rvr,i00_moto_chasy_posle_rvr,i00_prodolzhitelnost_moto_chasy,i00_kislotnost_rastvora_gl,i00_chasovoy_raskhod_rastvora_m3ch,i00_massa_reagenta_kg,i00_pokazanie_raskhodomera_do_rvr,i00_pokazanie_raskhodomera_posle_rvr,i00_obem_rastvora_pri_rvr_m3,i00_nomer_pku,i00_nomer_eor,i00_primechanie"
+                };
+                const url = `${API_BASE}/doc_v_vw_rvr?_format=json&query=${encodeURIComponent(JSON.stringify(queryObj))}`;
+                rawData = await fetchJSON(url);
+
+                populateFilters();
+                initDataTable();
+
+                showToast(`Загружено ${rawData.length} записей`);
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка загрузки данных: " + err.message);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function getUniqueValues(key) {
+            const valSet = new Set();
+            rawData.forEach(item => {
+                const val = item[key];
+                if (val !== null && val !== undefined && val !== '') {
+                    valSet.add(val);
+                }
+            });
+            return Array.from(valSet).sort();
+        }
+
+        function populateSelect(selectId, values) {
+            const select = document.getElementById(selectId);
+            // preserve the first "All" option
+            select.innerHTML = '<option value="">Все</option>';
+            values.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateFilters() {
+            // Mapping downcased API columns
+            populateSelect('filterWell', getUniqueValues('i00_skvazhina'));
+            populateSelect('filterBlock', getUniqueValues('i00_tekhnologicheskiy_blok'));
+            populateSelect('filterSection', getUniqueValues('i00_uchastok'));
+            populateSelect('filterWellType', getUniqueValues('i00_tip_skvazhiny'));
+            populateSelect('filterMethod', getUniqueValues('i00_metod_rvr'));
+
+            // Initialize Select2 on the dropdowns
+            $('#filterWell, #filterBlock, #filterSection, #filterWellType, #filterMethod').select2({
+                width: '100%',
+                language: {
+                    noResults: function () {
+                        return "Ничего не найдено";
+                    }
+                }
+            });
+        }
+
+        function initDataTable() {
+            // Destroy if already exists
+            if (dataTable) {
+                dataTable.destroy();
+            }
+
+            dataTable = $('#rvrTable').DataTable({
+                data: rawData,
+                scrollX: true,
+                pageLength: 200,
+                lengthMenu: [[50, 100, 200, 500, -1], [50, 100, 200, 500, "Все"]],
+                dom: '<"top"Bf>rt<"bottom"lip><"clear">',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i data-lucide="file-spreadsheet" style="width: 16px; height: 16px; display: inline-block; vertical-align: text-bottom;"></i> Экспорт в Excel',
+                        className: 'btn btn-primary export-btn',
+                        title: 'Данные_РВР_' + new Date().toLocaleDateString('ru-RU'),
+                        exportOptions: {
+                            modifier: {
+                                search: 'applied' // only export filtered data
+                            }
+                        }
+                    }
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/ru.json'
+                },
+                columns: [
+                    { data: 'i0d_date_rvr', defaultContent: '', render: renderDate },
+                    { data: 'i00_smena', defaultContent: '' },
+                    { data: 'i00_fio_otvetstvennogo_rabotnika', defaultContent: '' },
+                    { data: 'i00_skvazhina', defaultContent: '' },
+                    { data: 'i00_tekhnologicheskiy_blok', defaultContent: '' },
+                    { data: 'i00_uchastok', defaultContent: '' },
+                    { data: 'i00_tip_skvazhiny', defaultContent: '' },
+                    { data: 'i00_u', defaultContent: '' },
+                    { data: 'i00_ph', defaultContent: '' },
+                    { data: 'i00_metod_rvr', defaultContent: '' },
+                    { data: 'i00_debit_priemist_do_rvr', defaultContent: '' },
+                    { data: 'i00_debit_priemist_pri_rvr', defaultContent: '' },
+                    { data: 'i00_debit_priemist_posle_rvr', defaultContent: '' },
+                    { data: 'i00_moto_chasy_do_rvr', defaultContent: '' },
+                    { data: 'i00_moto_chasy_posle_rvr', defaultContent: '' },
+                    { data: 'i00_prodolzhitelnost_moto_chasy', defaultContent: '' },
+                    { data: 'i00_kislotnost_rastvora_gl', defaultContent: '' },
+                    { data: 'i00_chasovoy_raskhod_rastvora_m3ch', defaultContent: '' },
+                    { data: 'i00_massa_reagenta_kg', defaultContent: '' },
+                    { data: 'i00_pokazanie_raskhodomera_do_rvr', defaultContent: '' },
+                    { data: 'i00_pokazanie_raskhodomera_posle_rvr', defaultContent: '' },
+                    { data: 'i00_obem_rastvora_pri_rvr_m3', defaultContent: '' },
+                    { data: 'i00_nomer_pku', defaultContent: '' },
+                    { data: 'i00_nomer_eor', defaultContent: '' },
+                    { data: 'i00_primechanie', defaultContent: '' }
+                ]
+            });
+
+            // Filtering logic
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex, rowData) {
+                    const skv = $('#filterWell').val();
+                    const blk = $('#filterBlock').val();
+                    const sec = $('#filterSection').val();
+                    const type = $('#filterWellType').val();
+                    const met = $('#filterMethod').val();
+
+                    const dateFrom = $('#filterDateFrom').val();
+                    const dateTo = $('#filterDateTo').val();
+
+                    if (skv && rowData.i00_skvazhina !== skv) return false;
+                    if (blk && rowData.i00_tekhnologicheskiy_blok !== blk) return false;
+                    if (sec && rowData.i00_uchastok !== sec) return false;
+                    if (type && rowData.i00_tip_skvazhiny !== type) return false;
+                    if (met && rowData.i00_metod_rvr !== met) return false;
+
+                    let rowDateStr = rowData.i0d_date_rvr;
+                    if (rowDateStr) {
+                        try {
+                            const rowDate = new Date(rowDateStr.split(' ')[0]);
+                            if (dateFrom) {
+                                const from = new Date(dateFrom);
+                                if (rowDate < from) return false;
+                            }
+                            if (dateTo) {
+                                const to = new Date(dateTo);
+                                if (rowDate > to) return false;
+                            }
+                        } catch (e) { }
+                    } else {
+                        // If no date, and user selected dates, maybe hide?
+                        if (dateFrom || dateTo) return false;
+                    }
+
+                    return true;
+                }
+            );
+
+            // Bind change events to redraw table
+            $('.filter-input').not('.select2-hidden-accessible').on('change', function () {
+                dataTable.draw();
+            });
+
+            // Select2 change event binding
+            $('#filterWell, #filterBlock, #filterSection, #filterWellType, #filterMethod').on('change', function () {
+                dataTable.draw();
+            });
+
+            $('#btnReset').on('click', function () {
+                // Reset standard inputs
+                $('#filterDateFrom, #filterDateTo').val('');
+
+                // Reset Select2 inputs
+                $('#filterWell, #filterBlock, #filterSection, #filterWellType, #filterMethod').val('').trigger('change.select2');
+
+                dataTable.draw();
+            });
+
+            // Re-render lucide icons when drawing table or after init (for dynamic buttons)
+            dataTable.on('draw', function () {
+                lucide.createIcons();
+            });
+            lucide.createIcons();
+        }
+
+        function renderDate(data, type, row) {
+            if (!data) return '';
+            if (type === 'display') {
+                const parts = data.split(' ')[0].split('-');
+                if (parts.length === 3) {
+                    return `${parts[0]}-${parts[1]}-${parts[2]}`; // YYYY-MM-DD
+                }
+            }
+            return data;
+        }
+
+        $(document).ready(function () {
+            initData();
+        });
+
+    </script>
+</body>
+
+</html>

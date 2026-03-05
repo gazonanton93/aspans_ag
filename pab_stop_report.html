@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПАБ: Остановка работ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #ef4444;
+            /* Red for stop work */
+            --accent-hover: #dc2626;
+            --accent-light: #fef2f2;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(239, 68, 68, .3);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Loading / Error ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ── Main Container ── */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+            animation: fadeIn .4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── KPIs ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+        }
+
+        .kpi-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        /* ── Charts Grid ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header-icon {
+            color: var(--accent);
+        }
+
+        /* ── List / Bars ── */
+        .stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-name {
+            color: var(--text);
+        }
+
+        .stat-count {
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        .stat-bar-bg {
+            height: 8px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ── Data Table ── */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: var(--surface2);
+            padding: 14px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fdf2f2;
+            /* Light red hover */
+        }
+
+        .col-date {
+            white-space: nowrap;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .col-type {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .col-org {
+            color: #0f172a;
+        }
+
+        .col-person {
+            color: #334155;
+        }
+
+        .col-text {
+            max-width: 250px;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <div style="font-weight:600; color:var(--text-muted); letter-spacing:1px;">ЗАГРУЗКА ДАННЫХ ПАБ...</div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header" id="main-content" style="display:none;">
+        <div class="header-left">
+            <div class="logo-icon">🛑</div>
+            <div>
+                <div class="header-title">ПАБ: Остановка работ</div>
+                <div class="header-subtitle" id="header-period">Сводка за текущий год</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container" id="dashboard-container" style="display:none;">
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">📅</div>
+                <div>
+                    <div class="kpi-label">За текущий месяц</div>
+                    <div class="kpi-value" id="kpi-month">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">📈</div>
+                <div>
+                    <div class="kpi-label">За текущий год</div>
+                    <div class="kpi-value" id="kpi-year">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+            <!-- By Orgstruct -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <span class="card-header-icon">🏢</span> Остановки по участкам (за год)
+                </div>
+                <div class="stat-list" id="chart-orgstruct">
+                    <!-- Stat items go here -->
+                </div>
+            </div>
+
+            <!-- By PAB Type -->
+            <div class="chart-card">
+                <div class="card-header">
+                    <span class="card-header-icon">📋</span> Остановки по видам ПАБ (за год)
+                </div>
+                <div class="stat-list" id="chart-type">
+                    <!-- Stat items go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Журнал остановленных работ (текущий год)</div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Вид ПАБ</th>
+                            <th>Участок</th>
+                            <th>ФИО наблюдателя</th>
+                            <th>Наблюдаемый отдел</th>
+                            <th>Вид работ</th>
+                            <th>Описание нарушений</th>
+                            <th>Последствия остановки</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rows go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let allData = [];
+
+        // Formatting utilities
+        function escHtml(str) {
+            if (!str) return '—';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const parts = dateStr.slice(0, 10).split('-');
+                if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                return dateStr;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // Auth helper
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8 = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8)
+            };
+        }
+
+        async function fetchJSON(url) {
+            try {
+                const res = await fetch(url, { headers: getAuthHeaders() });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                return data?.items || [];
+            } catch (err) {
+                console.error('Fetch error:', err);
+                return [];
+            }
+        }
+
+        async function loadData() {
+            try {
+                // Fetch current year data
+                const currentYear = new Date().getFullYear();
+                const yearStart = `${currentYear}-01-01`;
+                const query = JSON.stringify({
+                    offset: '0', limit: '5000',
+                    columns: 'i0d_caldate,ilt_lpab,ilc_orgstruct,ilc_person,ilc_otdel,i00_nabl_vid_rabot,i00_nar_short_descr,i00_c_ost,i00_stop',
+                    show_code: 'false',
+                    order: 'i0d_caldate|desc'
+                });
+
+                const url = `${API_BASE}/doc_lpab_new?_format=json&query=${encodeURIComponent(query)}`;
+                const rows = await fetchJSON(url);
+
+                // Filter: only stopped items from current year
+                allData = rows.filter(r => {
+                    const isStopped = String(r.i00_stop) === '1' || r.i00_stop === true || String(r.i00_stop).toLowerCase() === 'true';
+                    const date = r.i0d_caldate || '';
+                    return isStopped && date >= yearStart;
+                });
+
+                initPabReportDashboard();
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка загрузки данных ПАБ");
+            } finally {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('main-content').style.display = 'flex';
+                document.getElementById('dashboard-container').style.display = 'block';
+            }
+        }
+
+        function initPabReportDashboard() {
+            const now = new Date();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentYearStr = String(now.getFullYear());
+            const monthPrefix = `${currentYearStr}-${currentMonth}-`;
+
+            // 1. Calculate KPIs
+            const yearCount = allData.length;
+            const monthCount = allData.filter(r => (r.i0d_caldate || '').startsWith(monthPrefix)).length;
+
+            document.getElementById('kpi-year').textContent = yearCount;
+            document.getElementById('kpi-month').textContent = monthCount;
+
+            // 2. Aggregate Data for Charts
+            const orgMap = {};
+            const typeMap = {};
+
+            allData.forEach(r => {
+                const org = r.ilc_orgstruct || 'Не указано';
+                const type = r.ilt_lpab || 'Не указано';
+
+                orgMap[org] = (orgMap[org] || 0) + 1;
+                typeMap[type] = (typeMap[type] || 0) + 1;
+            });
+
+            renderStatList('chart-orgstruct', orgMap, yearCount);
+            renderStatList('chart-type', typeMap, yearCount);
+
+            // 3. Render Table
+            renderTable();
+        }
+
+        function renderStatList(containerId, dataMap, total) {
+            const container = document.getElementById(containerId);
+
+            // Convert to array and sort descending
+            const entries = Object.entries(dataMap).sort((a, b) => b[1] - a[1]);
+
+            if (entries.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); font-size:13px;">Нет данных</div>';
+                return;
+            }
+
+            // Find max for bar scaling (relative to largest item)
+            const maxVal = entries[0][1];
+
+            let html = '';
+            entries.forEach(([name, count]) => {
+                const pct = maxVal > 0 ? (count / maxVal * 100) : 0;
+                html += `
+                    <div class="stat-item">
+                        <div class="stat-info">
+                            <span class="stat-name">${escHtml(name)}</span>
+                            <span class="stat-count">${count}</span>
+                        </div>
+                        <div class="stat-bar-bg">
+                            <div class="stat-bar-fill" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+
+            if (allData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">Нет остановленных работ за этот год</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            allData.forEach(r => {
+                html += `
+                    <tr>
+                        <td class="col-date">${formatDate(r.i0d_caldate)}</td>
+                        <td class="col-type">${escHtml(r.ilt_lpab)}</td>
+                        <td class="col-org">${escHtml(r.ilc_orgstruct)}</td>
+                        <td class="col-person">${escHtml(r.ilc_person)}</td>
+                        <td>${escHtml(r.ilc_otdel)}</td>
+                        <td class="col-text">${escHtml(r.i00_nabl_vid_rabot)}</td>
+                        <td class="col-text">${escHtml(r.i00_nar_short_descr)}</td>
+                        <td class="col-text">${escHtml(r.i00_c_ost)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Init
+        loadData();
+
+    </script>
+</body>
+
+</html>

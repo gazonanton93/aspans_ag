@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд — Рудник Инкай</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+
+            /* Status colors */
+            --color-inwork: #10b981;
+            --color-reserve: #f59e0b;
+            --color-plan_to: #3b82f6;
+            --color-rem: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #1d4ed8, #10b981);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(29, 78, 216, 0.3);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 14px;
+        }
+
+        /* ── Loading / Error ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        #error-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 9998;
+        }
+
+        #error-screen.show {
+            display: flex;
+        }
+
+        .error-msg {
+            font-size: 16px;
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .error-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 100%;
+            padding: 28px 24px;
+        }
+
+        /* ── Section ── */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title span {
+            font-size: 16px;
+        }
+
+        .section-divider {
+            margin-bottom: 28px;
+        }
+
+        /* ── Transport Block ── */
+        .transport-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .transport-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--surface2);
+        }
+
+        .transport-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .transport-header h2 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .transport-header .sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        /* ── KPI mini row ── */
+        .kpi-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .kpi-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid;
+        }
+
+        .kpi-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .kpi-badge.inwork {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #065f46;
+        }
+
+        .kpi-badge.reserve {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .kpi-badge.plan_to {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .kpi-badge.rem {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .kpi-badge.inwork .dot {
+            background: var(--color-inwork);
+        }
+
+        .kpi-badge.reserve .dot {
+            background: var(--color-reserve);
+        }
+
+        .kpi-badge.plan_to .dot {
+            background: var(--color-plan_to);
+        }
+
+        .kpi-badge.rem .dot {
+            background: var(--color-rem);
+        }
+
+        /* ── Dashboard sections grid ── */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        /* ── Section card ── */
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .section-card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .section-card-title {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .section-card-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .section-card-body {
+            padding: 16px 18px;
+        }
+
+        /* ── Status summary items ── */
+        .status-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .status-row-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.inwork {
+            background: var(--color-inwork);
+        }
+
+        .status-dot.reserve {
+            background: var(--color-reserve);
+        }
+
+        .status-dot.plan_to {
+            background: var(--color-plan_to);
+        }
+
+        .status-dot.rem {
+            background: var(--color-rem);
+        }
+
+        .status-count {
+            font-size: 20px;
+            font-weight: 800;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .status-count.inwork {
+            color: var(--color-inwork);
+        }
+
+        .status-count.reserve {
+            color: var(--color-reserve);
+        }
+
+        .status-count.plan_to {
+            color: var(--color-plan_to);
+        }
+
+        .status-count.rem {
+            color: var(--color-rem);
+        }
+
+        .status-bar-bg {
+            flex: 1;
+            height: 5px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+            min-width: 40px;
+        }
+
+        .status-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+
+        .status-bar-fill.inwork {
+            background: var(--color-inwork);
+        }
+
+        .status-bar-fill.reserve {
+            background: var(--color-reserve);
+        }
+
+        .status-bar-fill.plan_to {
+            background: var(--color-plan_to);
+        }
+
+        .status-bar-fill.rem {
+            background: var(--color-rem);
+        }
+
+        /* ── Fade-in ── */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Period tabs ── */
+        .period-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+
+        .period-tab {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .period-tab:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .period-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+        }
+
+        /* ── Status mini-table ── */
+        .stat-mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .stat-mini-table td {
+            padding: 7px 4px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .stat-mini-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stat-mini-table .col-label {
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-mini-table .col-count {
+            text-align: right;
+            font-weight: 800;
+            font-size: 14px;
+            color: #1d4ed8;
+            width: 36px;
+        }
+
+        .stat-mini-table .col-pct {
+            width: 48px;
+            text-align: right;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-mini-table .col-bar {
+            width: 80px;
+            padding-left: 8px;
+        }
+
+        .mini-bar-bg {
+            height: 4px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 14px 16px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+        }
+
+        /* ── Кнопка «Открыть» ── */
+        .btn-open {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 7px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-open:hover {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.28);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading -->
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Загрузка данных...</div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-screen">
+        <div style="font-size:48px;">⚠️</div>
+        <div class="error-msg" id="error-msg">Ошибка загрузки данных</div>
+        <div class="error-sub" id="error-sub"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">⛏️</div>
+            <div>
+                <div class="header-title">Рудник Инкай — Оперативный дашборд</div>
+                <div class="header-subtitle">Актуальные данные по ключевым показателям</div>
+            </div>
+        </div>
+        <div class="header-date" id="header-date">—</div>
+    </div>
+
+    <!-- Main -->
+    <div class="container" id="main-content" style="display:none;">
+
+        <!-- ═══════ СЕКЦИИ ДАШБОРДА ═══════ -->
+        <div class="sections-grid">
+
+            <!-- ТРАНСПОРТ -->
+            <div class="section-card fade-in">
+                <div class="section-card-header">
+                    <div class="section-card-icon" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);">🚛</div>
+                    <div style="flex:1;">
+                        <div class="section-card-title">Транспорт</div>
+                        <div class="section-card-sub" id="ts-subtitle">Загрузка...</div>
+                    </div>
+                    <button class="btn-open" onclick="openModule('vvod-dannyh-po-ts')">Открыть ↗</button>
+                </div>
+                <div class="section-card-body">
+                    <div class="status-summary" id="ts-summary">
+                        <div class="status-row">
+                            <div class="status-row-left">
+                                <div class="status-dot inwork"></div>В эксплуатации
+                            </div>
+                            <div class="status-bar-bg">
+                                <div class="status-bar-fill inwork" id="ts-bar-inwork" style="width:0%"></div>
+                            </div>
+                            <div class="status-count inwork" id="ts-cnt-inwork">—</div>
+                        </div>
+                        <div class="status-row">
+                            <div class="status-row-left">
+                                <div class="status-dot reserve"></div>Резерв
+                            </div>
+                            <div class="status-bar-bg">
+                                <div class="status-bar-fill reserve" id="ts-bar-reserve" style="width:0%"></div>
+                            </div>
+                            <div class="status-count reserve" id="ts-cnt-reserve">—</div>
+                        </div>
+                        <div class="status-row">
+                            <div class="status-row-left">
+                                <div class="status-dot plan_to"></div>Плановое ТО
+                            </div>
+                            <div class="status-bar-bg">
+                                <div class="status-bar-fill plan_to" id="ts-bar-plan_to" style="width:0%"></div>
+                            </div>
+                            <div class="status-count plan_to" id="ts-cnt-plan_to">—</div>
+                        </div>
+                        <div class="status-row">
+                            <div class="status-row-left">
+                                <div class="status-dot rem"></div>На ремонте
+                            </div>
+                            <div class="status-bar-bg">
+                                <div class="status-bar-fill rem" id="ts-bar-rem" style="width:0%"></div>
+                            </div>
+                            <div class="status-count rem" id="ts-cnt-rem">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- СОБЫТИЯ ERC -->
+            <div class="section-card fade-in" style="transition-delay:0.1s;">
+                <div class="section-card-header">
+                    <div class="section-card-icon" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">🔔</div>
+                    <div style="flex:1;">
+                        <div class="section-card-title">События</div>
+                        <div class="section-card-sub" id="erc-subtitle">Загрузка...</div>
+                    </div>
+                    <button class="btn-open" onclick="openModule('krs-index')">Открыть ↗</button>
+                </div>
+                <div class="section-card-body">
+                    <div class="period-tabs">
+                        <button class="period-tab active" onclick="ercSetPeriod('today', this)">Сегодня</button>
+                        <button class="period-tab" onclick="ercSetPeriod('month', this)">Месяц</button>
+                        <button class="period-tab" onclick="ercSetPeriod('year', this)">Год</button>
+                    </div>
+                    <table class="stat-mini-table" id="erc-table">
+                        <tbody id="erc-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;">
+                                    Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- СООРУЖЕНИЕ СКВАЖИН -->
+            <div class="section-card fade-in" style="transition-delay:0.2s;">
+                <div class="section-card-header">
+                    <div class="section-card-icon" style="background:linear-gradient(135deg,#0f766e,#14b8a6);">🔩</div>
+                    <div style="flex:1;">
+                        <div class="section-card-title">Сооружение скважин</div>
+                        <div class="section-card-sub" id="wells-subtitle">Загрузка...</div>
+                    </div>
+                    <div class="period-tabs">
+                        <button class="period-tab active" id="wells-tab-month"
+                            onclick="wellsSetPeriod('month',this)">Месяц</button>
+                        <button class="period-tab" id="wells-tab-year"
+                            onclick="wellsSetPeriod('year', this)">Год</button>
+                    </div>
+                    <button class="btn-open" onclick="openModule('burenie-i-sooruzhenie-skvazhin-tehnologiya')">Открыть
+                        ↗</button>
+                </div>
+                <div class="section-card-body">
+                    <!-- Счётчик принятых -->
+                    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                        <div
+                            style="background:#f0fdfa;border:1.5px solid #99f6e4;border-radius:10px;padding:10px 16px;min-width:80px;">
+                            <div
+                                style="font-size:10px;font-weight:600;color:#134e4a;text-transform:uppercase;letter-spacing:0.5px;">
+                                Принято</div>
+                            <div style="font-size:24px;font-weight:800;color:#0f766e;" id="wells-total">—</div>
+                        </div>
+                    </div>
+                    <!-- По участкам -->
+                    <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">По участкам:
+                    </div>
+                    <table class="stat-mini-table" style="margin-bottom:12px;">
+                        <tbody id="wells-org-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:12px;">
+                                    Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- По видам скважин -->
+                    <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">По видам:
+                    </div>
+                    <table class="stat-mini-table">
+                        <tbody id="wells-type-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:12px;">
+                                    Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ПАБ + ТБ: две колонки -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+
+            <!-- ПАБ -->
+            <div class="section-card fade-in" style="transition-delay:0.2s;">
+                <div class="section-card-header">
+                    <div class="section-card-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4);">👁️</div>
+                    <div style="flex:1;">
+                        <div class="section-card-title">Поведенческий аудит безопасности</div>
+                        <div class="section-card-sub" id="pab-subtitle">Загрузка...</div>
+                    </div>
+                    <div class="period-tabs">
+                        <button class="period-tab active" id="pab-tab-month"
+                            onclick="pabSetPeriod('month', this)">Месяц</button>
+                        <button class="period-tab" id="pab-tab-year" onclick="pabSetPeriod('year', this)">Год</button>
+                    </div>
+                    <button class="btn-open" onclick="openModule('lpab-novaya-forma')">Открыть ↗</button>
+                </div>
+                <div class="section-card-body">
+                    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+                        <div
+                            style="background:#ecfeff;border:1.5px solid #a5f3fc;border-radius:10px;padding:10px 16px;min-width:90px;">
+                            <div
+                                style="font-size:10px;font-weight:600;color:#164e63;text-transform:uppercase;letter-spacing:0.5px;">
+                                Всего</div>
+                            <div style="font-size:24px;font-weight:800;color:#0891b2;" id="pab-total">—</div>
+                        </div>
+                    </div>
+                    <table class="stat-mini-table">
+                        <tbody id="pab-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">
+                                    Загрузка...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ═══════ ТБ — ПРОИЗВОДСТВЕННЫЙ КОНТРОЛЬ ═══════ -->
+            <div class="section-card fade-in" id="safety-card" style="transition-delay:0.15s;">
+                <div class="section-card-header">
+                    <div class="section-card-icon" style="background:linear-gradient(135deg,#dc2626,#f97316);">🦺</div>
+                    <div style="flex:1;">
+                        <div class="section-card-title">Производственный контроль</div>
+                        <div class="section-card-sub" id="safety-subtitle">Загрузка...</div>
+                    </div>
+                    <div class="period-tabs">
+                        <button class="period-tab active" onclick="safetySetPeriod('month', this)">Месяц</button>
+                        <button class="period-tab" onclick="safetySetPeriod('year',  this)">Год</button>
+                    </div>
+                    <button class="btn-open" onclick="openModule('reestr-tb1')">Открыть ↗</button>
+                </div>
+                <div class="section-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+                    <!-- Проверки -->
+                    <div>
+                        <div
+                            style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:12px;">
+                            📋 Проверки</div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;" id="safety-checks-total">
+                            Всего: —</div>
+                        <table class="stat-mini-table">
+                            <tbody id="safety-checks-tbody">
+                                <tr>
+                                    <td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">
+                                        Загрузка...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Несоответствия -->
+                    <div>
+                        <div
+                            style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:12px;">
+                            ⚠️ Несоответствия</div>
+                        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+                            <div
+                                style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 16px;min-width:90px;">
+                                <div
+                                    style="font-size:10px;font-weight:600;color:#065f46;text-transform:uppercase;letter-spacing:0.5px;">
+                                    Всего</div>
+                                <div style="font-size:24px;font-weight:800;color:#10b981;" id="safety-nc-total">—</div>
+                            </div>
+                            <div
+                                style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:10px 16px;min-width:90px;">
+                                <div
+                                    style="font-size:10px;font-weight:600;color:#991b1b;text-transform:uppercase;letter-spacing:0.5px;">
+                                    Просрочено</div>
+                                <div style="font-size:24px;font-weight:800;color:#ef4444;" id="safety-nc-overdue">—
+                                </div>
+                            </div>
+                        </div>
+                        <table class="stat-mini-table">
+                            <tbody id="safety-nc-tbody">
+                                <tr>
+                                    <td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">
+                                        Загрузка...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /двухколоночная секция -->
+
+        <!-- ═══════ ПРОИСШЕСТВИЯ + ПЛАН МЕРОПРИЯТИЙ ═══════ -->
+        <div class="section-card fade-in" id="incident-card" style="transition-delay:0.25s;margin-bottom:28px;">
+            <div class="section-card-header">
+                <div class="section-card-icon" style="background:linear-gradient(135deg,#b45309,#f59e0b);">⚠️</div>
+                <div style="flex:1;">
+                    <div class="section-card-title">Происшествия и план мероприятий</div>
+                    <div class="section-card-sub" id="incident-subtitle">Загрузка...</div>
+                </div>
+                <div class="period-tabs">
+                    <button class="period-tab active" id="inc-tab-month"
+                        onclick="incSetPeriod('month',this)">Месяц</button>
+                    <button class="period-tab" id="inc-tab-year" onclick="incSetPeriod('year', this)">Год</button>
+                </div>
+                <button class="btn-open" onclick="openModule('rassledovanie-proisshestvij-otchet')">Открыть ↗</button>
+            </div>
+            <div class="section-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+                <!-- Происшествия по статусам -->
+                <div>
+                    <div
+                        style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:12px;">
+                        ⚠️ Происшествия</div>
+                    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                        <div
+                            style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 16px;min-width:80px;">
+                            <div
+                                style="font-size:10px;font-weight:600;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">
+                                Всего</div>
+                            <div style="font-size:24px;font-weight:800;color:#f59e0b;" id="inc-total">—</div>
+                        </div>
+                    </div>
+                    <table class="stat-mini-table">
+                        <tbody id="inc-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">
+                                    Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Мероприятия -->
+                <div>
+                    <div
+                        style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:12px;">
+                        📋 План мероприятий</div>
+                    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                        <div
+                            style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 14px;min-width:76px;text-align:center;">
+                            <div style="font-size:10px;font-weight:600;color:#065f46;text-transform:uppercase;">Всего
+                            </div>
+                            <div style="font-size:22px;font-weight:800;color:#10b981;" id="merop-total">—</div>
+                        </div>
+                        <div
+                            style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;min-width:76px;text-align:center;">
+                            <div style="font-size:10px;font-weight:600;color:#92400e;text-transform:uppercase;">В работе
+                            </div>
+                            <div style="font-size:22px;font-weight:800;color:#f59e0b;" id="merop-inprogress">—</div>
+                        </div>
+                        <div
+                            style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:10px 14px;min-width:76px;text-align:center;">
+                            <div style="font-size:10px;font-weight:600;color:#991b1b;text-transform:uppercase;">
+                                Просрочено</div>
+                            <div style="font-size:22px;font-weight:800;color:#ef4444;" id="merop-overdue">—</div>
+                        </div>
+                        <div
+                            style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 14px;min-width:76px;text-align:center;">
+                            <div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;">
+                                Выполнено</div>
+                            <div style="font-size:22px;font-weight:800;color:#3b82f6;" id="merop-done">—</div>
+                        </div>
+                    </div>
+                    <!-- Прогресс-бар выполнения -->
+                    <div style="margin-bottom:8px;font-size:12px;color:var(--text-muted);">
+                        Прогресс выполнения: <span id="merop-pct" style="font-weight:700;color:var(--text);">0%</span>
+                    </div>
+                    <div
+                        style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:14px;">
+                        <div id="merop-progress-bar"
+                            style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.8s ease;">
+                        </div>
+                    </div>
+                    <!-- топ-5 по от отдел -->
+                    <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Топ отделов
+                        по числу мероприятий:</div>
+                    <table class="stat-mini-table">
+                        <tbody id="merop-tbody">
+                            <tr>
+                                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:12px;">
+                                    Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── CONFIG ────────────────────────────────────────────────────────────
+        const API_BASE = '/api/v1';
+
+        // Маппинг статусов
+        const STATUS_MAP = {
+            'inwork': { label: 'В эксплуатации', cls: 'inwork' },
+            'reserve': { label: 'Резерв', cls: 'reserve' },
+            'plan_to': { label: 'Плановое ТО', cls: 'plan_to' },
+            'rem': { label: 'На ремонте', cls: 'rem' },
+        };
+
+        // ── openModule ─────────────────────────────────────────────────────────
+        function openModule(pageCode) {
+            // Сохраняем домен, меняем только код страницы
+            window.open(
+                window.location.origin + '/ru/cms/publish/view?code=' + pageCode,
+                '_blank'
+            );
+        }
+
+        // ── AUTH ──────────────────────────────────────────────────────────────
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        // ── DATE HELPERS ──────────────────────────────────────────────────────
+        function formatDateRu(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            return d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        // ── TRANSPORT ─────────────────────────────────────────────────────────
+        async function loadTransport() {
+            // Берём последние 500 строк, ищем самую свежую дату, показываем только её
+            const query = JSON.stringify({
+                offset: '0',
+                limit: '500',
+                columns: 'i0d_caldate,ilc_ts,ilc_uppevents',
+                show_code: 'true',
+                order: 'i0d_caldate|desc'
+            });
+            const rows = await fetchJSON(
+                `${API_BASE}/doc_transport_actions?_format=json&query=${encodeURIComponent(query)}`
+            );
+
+            if (!rows.length) {
+                document.getElementById('ts-tbody').innerHTML =
+                    '<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--text-muted);">Нет данных</td></tr>';
+                return;
+            }
+
+            // Найти максимальную дату среди первых 500
+            let maxDate = null;
+            rows.forEach(r => {
+                const d = r.i0d_caldate ? r.i0d_caldate.slice(0, 10) : null;
+                if (d && (!maxDate || d > maxDate)) maxDate = d;
+            });
+
+            // Оставить только строки с maxDate
+            const latest = rows.filter(r => r.i0d_caldate && r.i0d_caldate.slice(0, 10) === maxDate);
+
+            // Обновить subtitle и заголовок страницы
+            document.getElementById('ts-subtitle').textContent =
+                `Данные на: ${formatDateRu(maxDate)} · Всего ТС: ${latest.length}`;
+            document.getElementById('header-date').textContent =
+                `Данные на: ${formatDateRu(maxDate)}`;
+
+            // Подсчёт по статусам
+            const counts = { inwork: 0, reserve: 0, plan_to: 0, rem: 0 };
+            latest.forEach(r => {
+                // ilc_uppevents всегда текст, код берём из ilc_uppevents_data.code
+                const s = r.ilc_uppevents_data
+                    ? r.ilc_uppevents_data.code
+                    : r.ilc_uppevents;
+                if (s && counts[s] !== undefined) counts[s]++;
+            });
+
+            const total = latest.length;
+            Object.keys(counts).forEach(k => {
+                const cntEl = document.getElementById(`ts-cnt-${k}`);
+                const barEl = document.getElementById(`ts-bar-${k}`);
+                if (cntEl) cntEl.textContent = counts[k];
+                if (barEl) barEl.style.width = total > 0 ? `${Math.round(counts[k] / total * 100)}%` : '0%';
+            });
+        }
+
+        // ── ERC EVENTS ────────────────────────────────────────────────────────
+        let ercAllRows = [];
+
+        async function loadErc() {
+            const now = new Date();
+            const yearStart = `${now.getFullYear()}-01-01`;
+
+            const query = JSON.stringify({
+                offset: '0',
+                limit: '5000',
+                columns: 'i0d_event_timestamp,ils_erc,ilc_orgstruct',
+                show_code: 'false',
+                order: 'i0d_event_timestamp|desc'
+            });
+
+            const rows = await fetchJSON(
+                `${API_BASE}/doc_erc_input?_format=json&query=${encodeURIComponent(query)}`
+            );
+
+            // Оставляем только строки текущего года
+            ercAllRows = rows.filter(r => {
+                const d = r.i0d_event_timestamp ? r.i0d_event_timestamp.slice(0, 10) : '';
+                return d >= yearStart;
+            });
+
+            document.getElementById('erc-subtitle').textContent =
+                `За год: ${ercAllRows.length} событий`;
+
+            ercRender('today');
+        }
+
+        function ercSetPeriod(period, btn) {
+            document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ercRender(period);
+        }
+
+        function ercRender(period) {
+            const now = new Date();
+            const todayStr = now.toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7); // "YYYY-MM"
+            const yearStr = todayStr.slice(0, 4); // "YYYY"
+
+            const filtered = ercAllRows.filter(r => {
+                const d = r.i0d_event_timestamp ? r.i0d_event_timestamp.slice(0, 10) : '';
+                if (period === 'today') return d === todayStr;
+                if (period === 'month') return d.startsWith(monthStr);
+                return d.startsWith(yearStr);
+            });
+
+            // Группировка по статусу
+            const counts = new Map();
+            filtered.forEach(r => {
+                const code = r.ils_erc_data ? r.ils_erc_data.code : r.ils_erc;
+                const label = r.ils_erc_data ? r.ils_erc_data.sname : r.ils_erc;
+                const key = code || '—';
+                if (!counts.has(key)) counts.set(key, { label: label || key, n: 0 });
+                counts.get(key).n++;
+            });
+
+            const total = filtered.length;
+
+            if (total === 0) {
+                document.getElementById('erc-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;">Нет данных за выбранный период</td></tr>`;
+                return;
+            }
+
+            // Сортировать по убыванию
+            const sorted = [...counts.entries()].sort((a, b) => b[1].n - a[1].n);
+            const maxN = sorted[0][1].n;
+
+            let html = '';
+            sorted.forEach(([, { label, n }]) => {
+                const pct = Math.round(n / total * 100);
+                const barW = Math.round(n / maxN * 100);
+                html += `<tr>
+                    <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#6366f1;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                    <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%"></div></div></td>
+                    <td class="col-pct">${pct}%</td>
+                    <td class="col-count">${n}</td>
+                </tr>`;
+            });
+
+            document.getElementById('erc-tbody').innerHTML = html;
+        }
+
+        // ── PAB ───────────────────────────────────────────────────────────────
+        let pabAllRows = [];
+
+        async function loadPab() {
+            const yearStart = `${new Date().getFullYear()}-01-01`;
+            const query = JSON.stringify({
+                offset: '0', limit: '5000',
+                columns: 'i0d_caldate,ilt_lpab,ilc_orgstruct',
+                show_code: 'false',
+                order: 'i0d_caldate|desc'
+            });
+            const rows = await fetchJSON(
+                `${API_BASE}/doc_lpab_new?_format=json&query=${encodeURIComponent(query)}`
+            );
+            pabAllRows = rows.filter(r => (r.i0d_caldate || '').slice(0, 10) >= yearStart);
+            document.getElementById('pab-subtitle').textContent =
+                `За год: ${pabAllRows.length} аудитов`;
+            pabRender('month');
+        }
+
+        function pabSetPeriod(period, btn) {
+            document.querySelectorAll('#pab-tab-month, #pab-tab-year').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            pabRender(period);
+        }
+
+        function pabRender(period) {
+            const now = new Date();
+            const todayStr = now.toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7);
+            const yearStr = todayStr.slice(0, 4);
+            const filtered = pabAllRows.filter(r => {
+                const d = (r.i0d_caldate || '').slice(0, 10);
+                return period === 'month' ? d.startsWith(monthStr) : d.startsWith(yearStr);
+            });
+            document.getElementById('pab-total').textContent = filtered.length;
+            if (!filtered.length) {
+                document.getElementById('pab-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">Нет данных за выбранный период</td></tr>`;
+                return;
+            }
+            const counts = new Map();
+            filtered.forEach(r => {
+                const code = r.ilt_lpab_data ? r.ilt_lpab_data.code : r.ilt_lpab;
+                const label = r.ilt_lpab_data ? r.ilt_lpab_data.sname : r.ilt_lpab;
+                const key = code || '—';
+                if (!counts.has(key)) counts.set(key, { label: label || key, n: 0 });
+                counts.get(key).n++;
+            });
+            const sorted = [...counts.entries()].sort((a, b) => b[1].n - a[1].n);
+            const maxN = sorted[0][1].n;
+            document.getElementById('pab-tbody').innerHTML = sorted.map(([, { label, n }]) => {
+                const pct = Math.round(n / filtered.length * 100);
+                const barW = Math.round(n / maxN * 100);
+                return `<tr>
+                    <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#0891b2;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                    <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#0891b2,#06b6d4);"></div></div></td>
+                    <td class="col-pct">${pct}%</td>
+                    <td class="col-count" style="color:#0891b2;">${n}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ── SAFETY (ТБ) ───────────────────────────────────────────────────────
+        let safetyCheckRows = [];   // doc_safety_input_document
+        let safetyNcRows = [];   // doc_safety_input
+        let safetyPeriod = 'month';
+
+        async function loadSafety() {
+            const yearStart = `${new Date().getFullYear()}-01-01`;
+
+            const [chRows, ncRows] = await Promise.all([
+                // Проверки
+                fetchJSON(`${API_BASE}/doc_safety_input_document?_format=json&query=${encodeURIComponent(JSON.stringify({
+                    offset: '0', limit: '5000',
+                    columns: 's0d_caldate,ilc2_safety_control_level',
+                    show_code: 'false',
+                    order: 's0d_caldate|desc'
+                }))}`),
+                // Несоответствия
+                fetchJSON(`${API_BASE}/doc_safety_input?_format=json&query=${encodeURIComponent(JSON.stringify({
+                    offset: '0', limit: '5000',
+                    columns: 'i0d2_index19_end_date,slc2_orgstruct,s0d3_index19_end_date,ils2_safetycheck,ilc3_otdel',
+                    show_code: 'false',
+                    order: 'i0d2_index19_end_date|desc'
+                }))}`)
+            ]);
+
+            // Фильтр: только текущий год
+            safetyCheckRows = chRows.filter(r => (r.s0d_caldate || '').slice(0, 10) >= yearStart);
+            safetyNcRows = ncRows.filter(r => (r.i0d2_index19_end_date || '').slice(0, 10) >= yearStart);
+
+            document.getElementById('safety-subtitle').textContent =
+                `Проверки: ${safetyCheckRows.length} за год · Несоответствия: ${safetyNcRows.length} за год`;
+
+            safetyRender('month');
+        }
+
+        function safetySetPeriod(period, btn) {
+            document.querySelectorAll('#safety-card .period-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            safetyRender(period);
+        }
+
+        function safetyRender(period) {
+            safetyPeriod = period;
+            const now = new Date();
+            const todayStr = now.toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7);
+            const yearStr = todayStr.slice(0, 4);
+
+            const inPeriod = d => d && (period === 'month' ? d.startsWith(monthStr) : d.startsWith(yearStr));
+
+            // ─── Проверки ───────────────────────────────────────────────────
+            const checks = safetyCheckRows.filter(r => inPeriod((r.s0d_caldate || '').slice(0, 10)));
+            document.getElementById('safety-checks-total').textContent = `Всего: ${checks.length}`;
+
+            const chCounts = new Map();
+            checks.forEach(r => {
+                const code = r.ilc2_safety_control_level_data ? r.ilc2_safety_control_level_data.code : r.ilc2_safety_control_level;
+                const label = r.ilc2_safety_control_level_data ? r.ilc2_safety_control_level_data.sname : r.ilc2_safety_control_level;
+                const key = code || '—';
+                if (!chCounts.has(key)) chCounts.set(key, { label: label || key, n: 0 });
+                chCounts.get(key).n++;
+            });
+
+            const chSorted = [...chCounts.entries()].sort((a, b) => b[1].n - a[1].n);
+            const chMax = chSorted[0]?.[1].n || 1;
+
+            if (!chSorted.length) {
+                document.getElementById('safety-checks-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">Нет данных</td></tr>`;
+            } else {
+                document.getElementById('safety-checks-tbody').innerHTML = chSorted.map(([, { label, n }]) => {
+                    const pct = Math.round(n / checks.length * 100);
+                    const barW = Math.round(n / chMax * 100);
+                    return `<tr>
+                        <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                        <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#f97316,#fbbf24);"></div></div></td>
+                        <td class="col-pct">${pct}%</td>
+                        <td class="col-count" style="color:#f97316;">${n}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // ─── Несоответствия ─────────────────────────────────────────────
+            const ncs = safetyNcRows.filter(r => inPeriod((r.i0d2_index19_end_date || '').slice(0, 10)));
+
+            // Просроченные: статус не '_closed' И срок < сегодня
+            const overdue = ncs.filter(r => {
+                const statusCode = r.ils2_safetycheck_data ? r.ils2_safetycheck_data.code : r.ils2_safetycheck;
+                const deadline = (r.s0d3_index19_end_date || '').slice(0, 10);
+                return statusCode !== '_closed' && deadline && deadline < todayStr;
+            });
+
+            document.getElementById('safety-nc-total').textContent = ncs.length;
+            document.getElementById('safety-nc-overdue').textContent = overdue.length;
+
+            // Разбивка по статусам
+            const ncCounts = new Map();
+            ncs.forEach(r => {
+                const code = r.ils2_safetycheck_data ? r.ils2_safetycheck_data.code : r.ils2_safetycheck;
+                const label = r.ils2_safetycheck_data ? r.ils2_safetycheck_data.sname : r.ils2_safetycheck;
+                const key = code || '—';
+                if (!ncCounts.has(key)) ncCounts.set(key, { label: label || key, n: 0, isClosed: code === '_closed' });
+                ncCounts.get(key).n++;
+            });
+
+            const ncSorted = [...ncCounts.entries()].sort((a, b) => b[1].n - a[1].n);
+            const ncMax = ncSorted[0]?.[1].n || 1;
+
+            if (!ncSorted.length) {
+                document.getElementById('safety-nc-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">Нет данных</td></tr>`;
+            } else {
+                document.getElementById('safety-nc-tbody').innerHTML = ncSorted.map(([, { label, n, isClosed }]) => {
+                    const pct = Math.round(n / ncs.length * 100);
+                    const barW = Math.round(n / ncMax * 100);
+                    const color = isClosed ? '#10b981' : '#ef4444';
+                    const barColor = isClosed ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#ef4444,#f87171)';
+                    return `<tr>
+                        <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                        <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:${barColor};"></div></div></td>
+                        <td class="col-pct">${pct}%</td>
+                        <td class="col-count" style="color:${color};">${n}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // ── INCIDENTS (Происшествия + Мероприятия) ───────────────────────────
+        let incAllRows = [];  // doc_prois_document (без draft)
+        let meropAllRows = [];  // doc_prois_merop
+        let incPeriod = 'month';
+
+        async function loadIncidentsAll() {
+            const yearStart = `${new Date().getFullYear()}-01-01`;
+
+            const [incRows, meropRows] = await Promise.all([
+                // Происшествия
+                fetchJSON(`${API_BASE}/doc_prois_document?_format=json&query=${encodeURIComponent(JSON.stringify({
+                    offset: '0', limit: '5000',
+                    columns: 'i0d_caldate,ilc_orgstruct,ils_prois',
+                    show_code: 'false',
+                    order: 'i0d_caldate|desc'
+                }))}`),
+                // Мероприятия
+                fetchJSON(`${API_BASE}/doc_prois_merop?_format=json&query=${encodeURIComponent(JSON.stringify({
+                    offset: '0', limit: '10000',
+                    columns: 'id,ilc_otdel,i00_action,i0d_caldate,i0d_srok,ils_prois_act',
+                    show_code: 'false',
+                    order: 'i0d_caldate|desc'
+                }))}`),
+            ]);
+
+            // Происшествия: только текущий год, исключить draft
+            incAllRows = incRows.filter(r => {
+                const statusCode = r.ils_prois_data ? r.ils_prois_data.code : r.ils_prois;
+                const d = (r.i0d_caldate || '').slice(0, 10);
+                return d >= yearStart && statusCode !== 'draft';
+            });
+
+            // Мероприятия: текущий год
+            meropAllRows = meropRows.filter(r => (r.i0d_caldate || '').slice(0, 10) >= yearStart);
+
+            document.getElementById('incident-subtitle').textContent =
+                `Происшествий за год: ${incAllRows.length} · Мероприятий: ${meropAllRows.length}`;
+
+            incRender('month');
+            meropRender();
+        }
+
+        function incSetPeriod(period, btn) {
+            document.querySelectorAll('#incident-card .period-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            incPeriod = period;
+            incRender(period);
+            meropRender();
+        }
+
+        function incRender(period) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7);
+            const yearStr = todayStr.slice(0, 4);
+            const filtered = incAllRows.filter(r => {
+                const d = (r.i0d_caldate || '').slice(0, 10);
+                return period === 'month' ? d.startsWith(monthStr) : d.startsWith(yearStr);
+            });
+            document.getElementById('inc-total').textContent = filtered.length;
+            if (!filtered.length) {
+                document.getElementById('inc-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:16px;">Нет данных за период</td></tr>`;
+                return;
+            }
+            const counts = new Map();
+            filtered.forEach(r => {
+                const code = r.ils_prois_data ? r.ils_prois_data.code : r.ils_prois;
+                const label = r.ils_prois_data ? r.ils_prois_data.sname : r.ils_prois;
+                const key = code || '—';
+                if (!counts.has(key)) counts.set(key, { label: label || key, n: 0 });
+                counts.get(key).n++;
+            });
+            const sorted = [...counts.entries()].sort((a, b) => b[1].n - a[1].n);
+            const maxN = sorted[0][1].n;
+            document.getElementById('inc-tbody').innerHTML = sorted.map(([, { label, n }]) => {
+                const pct = Math.round(n / filtered.length * 100);
+                const barW = Math.round(n / maxN * 100);
+                return `<tr>
+                    <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                    <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div></td>
+                    <td class="col-pct">${pct}%</td>
+                    <td class="col-count" style="color:#f59e0b;">${n}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function meropRender() {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7);
+            const yearStr = todayStr.slice(0, 4);
+            const filtered = meropAllRows.filter(r => {
+                const d = (r.i0d_caldate || '').slice(0, 10);
+                return incPeriod === 'month' ? d.startsWith(monthStr) : d.startsWith(yearStr);
+            });
+
+            const total = filtered.length;
+            let done = 0, inprogress = 0, overdue = 0;
+            filtered.forEach(r => {
+                // Определяем «закрыто» по коду статуса
+                const code = r.ils_prois_act_data ? r.ils_prois_act_data.code : '';
+                const sname = r.ils_prois_act_data ? r.ils_prois_act_data.sname : (r.ils_prois_act || '');
+                const isClosed = /(закрыт|closed|done|completed|выполн)/i.test(sname) || code === '_closed';
+                const deadline = (r.i0d_srok || '').slice(0, 10);
+                const isOvd = !isClosed && deadline && deadline < todayStr;
+                if (isClosed) done++;
+                else if (isOvd) overdue++;
+                else inprogress++;
+            });
+
+            document.getElementById('merop-total').textContent = total;
+            document.getElementById('merop-done').textContent = done;
+            document.getElementById('merop-inprogress').textContent = inprogress;
+            document.getElementById('merop-overdue').textContent = overdue;
+
+            const pct = total > 0 ? Math.round(done / total * 100) : 0;
+            document.getElementById('merop-pct').textContent = `${pct}%`;
+            document.getElementById('merop-progress-bar').style.width = `${pct}%`;
+
+            // Топ-5 отделов по числу мероприятий
+            const deptCounts = new Map();
+            filtered.forEach(r => {
+                const label = r.ilc_otdel_data ? r.ilc_otdel_data.sname : (r.ilc_otdel || '—');
+                const key = label;
+                if (!deptCounts.has(key)) deptCounts.set(key, 0);
+                deptCounts.set(key, deptCounts.get(key) + 1);
+            });
+            const dSorted = [...deptCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const dMax = dSorted[0]?.[1] || 1;
+            if (!dSorted.length) {
+                document.getElementById('merop-tbody').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:12px;">Нет данных</td></tr>`;
+            } else {
+                document.getElementById('merop-tbody').innerHTML = dSorted.map(([label, n]) => {
+                    const barW = Math.round(n / dMax * 100);
+                    return `<tr>
+                        <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                        <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#3b82f6,#6366f1);"></div></div></td>
+                        <td class="col-pct"></td>
+                        <td class="col-count" style="color:#3b82f6;">${n}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // ── WELLS (Скважины) ────────────────────────────────────────────────────
+        let wellsAllRows = [];   // doc_skv_project_data (только prin)
+
+        async function loadWells() {
+            const yearStart = `${new Date().getFullYear()}-01-01`;
+            const rows = await fetchJSON(
+                `${API_BASE}/doc_skv_project_data?_format=json&query=${encodeURIComponent(JSON.stringify({
+                    offset: '0', limit: '5000',
+                    columns: 'i0d_prin_date,ilc_okonch_priem_skv,ilc_orgstruct,ilt_skv',
+                    show_code: 'false',
+                    order: 'i0d_prin_date|desc'
+                }))}`
+            );
+
+            // Оставляем только prin (Принято) за текущий год
+            wellsAllRows = rows.filter(r => {
+                const code = r.ilc_okonch_priem_skv_data
+                    ? r.ilc_okonch_priem_skv_data.code
+                    : r.ilc_okonch_priem_skv;
+                const d = (r.i0d_prin_date || '').slice(0, 10);
+                return code === 'prin' && d >= yearStart;
+            });
+
+            document.getElementById('wells-subtitle').textContent =
+                `Принято за год: ${wellsAllRows.length} скважин`;
+
+            wellsRender('month');
+        }
+
+        function wellsSetPeriod(period, btn) {
+            document.querySelectorAll('#wells-tab-month, #wells-tab-year').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            wellsRender(period);
+        }
+
+        function wellsRender(period) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const monthStr = todayStr.slice(0, 7);
+            const yearStr = todayStr.slice(0, 4);
+            const filtered = wellsAllRows.filter(r => {
+                const d = (r.i0d_prin_date || '').slice(0, 10);
+                return period === 'month' ? d.startsWith(monthStr) : d.startsWith(yearStr);
+            });
+
+            document.getElementById('wells-total').textContent = filtered.length;
+
+            const noData = `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:10px;">Нет данных</td></tr>`;
+
+            // По участкам (ilc_orgstruct)
+            const orgCounts = new Map();
+            filtered.forEach(r => {
+                const label = r.ilc_orgstruct_data ? r.ilc_orgstruct_data.sname : (r.ilc_orgstruct || '—');
+                orgCounts.set(label, (orgCounts.get(label) || 0) + 1);
+            });
+            const orgSorted = [...orgCounts.entries()].sort((a, b) => b[1] - a[1]);
+            const orgMax = orgSorted[0]?.[1] || 1;
+            document.getElementById('wells-org-tbody').innerHTML = orgSorted.length
+                ? orgSorted.map(([label, n]) => {
+                    const barW = Math.round(n / orgMax * 100);
+                    return `<tr>
+                        <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#0f766e;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                        <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#0f766e,#14b8a6);"></div></div></td>
+                        <td class="col-pct"></td>
+                        <td class="col-count" style="color:#0f766e;">${n}</td>
+                    </tr>`;
+                }).join('')
+                : noData;
+
+            // По видам скважин (ilt_skv)
+            const typeCounts = new Map();
+            filtered.forEach(r => {
+                const label = r.ilt_skv_data ? r.ilt_skv_data.sname : (r.ilt_skv || '—');
+                typeCounts.set(label, (typeCounts.get(label) || 0) + 1);
+            });
+            const typeSorted = [...typeCounts.entries()].sort((a, b) => b[1] - a[1]);
+            const typeMax = typeSorted[0]?.[1] || 1;
+            document.getElementById('wells-type-tbody').innerHTML = typeSorted.length
+                ? typeSorted.map(([label, n]) => {
+                    const pct = Math.round(n / filtered.length * 100);
+                    const barW = Math.round(n / typeMax * 100);
+                    return `<tr>
+                        <td class="col-label"><span style="width:8px;height:8px;border-radius:50%;background:#14b8a6;display:inline-block;flex-shrink:0;"></span>${escHtml(label)}</td>
+                        <td class="col-bar"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${barW}%;background:linear-gradient(90deg,#14b8a6,#67e8f9);"></div></div></td>
+                        <td class="col-pct">${pct}%</td>
+                        <td class="col-count" style="color:#14b8a6;">${n}</td>
+                    </tr>`;
+                }).join('')
+                : noData;
+        }
+
+        // ── INIT ──────────────────────────────────────────────────────────────
+        async function init() {
+            try {
+                await Promise.all([
+                    loadTransport(),
+                    loadErc(),
+                    loadSafety(),
+                    loadPab(),
+                    loadWells(),
+                    loadIncidentsAll(),
+                ]);
+                showContent();
+            } catch (err) {
+                console.error(err);
+                showError('Ошибка загрузки данных', err.message);
+            }
+        }
+
+        // ── HELPERS ───────────────────────────────────────────────────────────
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showContent() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = '';
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+            });
+        }
+
+        function showError(msg, sub) {
+            document.getElementById('loading-screen').style.display = 'none';
+            const es = document.getElementById('error-screen');
+            es.classList.add('show');
+            document.getElementById('error-msg').textContent = msg;
+            document.getElementById('error-sub').textContent = sub || '';
+        }
+
+        // ── START ─────────────────────────────────────────────────────────────
+        init();
+    </script>
+
+</body>
+
+</html>

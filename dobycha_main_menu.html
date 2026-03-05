@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добычной комплекс</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --primary: #0f766e;
+            --primary-hover: #115e59;
+            --primary-light: #ccfbf1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 32px;
+        }
+
+
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+
+
+        /* 3-Column Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Column Cards */
+        .column-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .column-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .column-header {
+            color: white;
+            padding: 20px 24px;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.2px;
+        }
+
+        .column-header.intro-data {
+            background: #0f766e;
+        }
+
+        .column-header.databases {
+            background: #be185d;
+        }
+
+        .column-header.reports {
+            background: #6d28d9;
+        }
+
+        .column-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        /* Links (Buttons) styling */
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            text-decoration: none;
+        }
+
+        /* Icon Wrapper styling */
+        .icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .icon-wrapper i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Hover Effects */
+        .link-item:hover {
+            background: #fdfdfd;
+            border-color: var(--border);
+            box-shadow: var(--shadow);
+            transform: translateX(6px);
+            color: var(--primary);
+        }
+
+        .link-item:hover .icon-wrapper {
+            background: var(--primary);
+            color: white;
+            transform: rotate(-10deg) scale(1.1);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .link-item:active {
+            transform: translateX(2px) scale(0.98);
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <div class="page-header">
+        <div class="page-title">Управление добычей | Дэшборд</div>
+    </div>
+
+    <div class="grid-container">
+
+        <!-- ВВОД ДАННЫХ -->
+        <div class="column-card">
+            <div class="column-header intro-data">
+                Ввод данных
+            </div>
+            <div class="column-body">
+                <a class="link-item" onclick="openModule('gidrodinamika')">
+                    <div class="icon-wrapper"><i data-lucide="droplets"></i></div>
+                    Загрузка гидрологических связей
+                </a>
+                <a class="link-item" onclick="openModule('debit-priemistost-iz-formulyara')">
+                    <div class="icon-wrapper"><i data-lucide="file-plus"></i></div>
+                    Загрузка балансировочных файлов
+                </a>
+                <a class="link-item" onclick="openModule('zagruzka-dannyh-o-rashodah-kisloty')">
+                    <div class="icon-wrapper"><i data-lucide="flask-conical"></i></div>
+                    Загрузка данных о расходах кислоты
+                </a>
+                <a class="link-item" onclick="openModule('rvr-skvazhin')">
+                    <div class="icon-wrapper"><i data-lucide="file-spreadsheet"></i></div>
+                    Загрузка отчета РВР
+                </a>
+            </div>
+        </div>
+
+        <!-- БАЗЫ ДАННЫХ -->
+        <div class="column-card">
+            <div class="column-header databases">
+                Базы данных
+            </div>
+            <div class="column-body">
+                <a class="link-item" onclick="openModule('dannye-po-skladam-kisloty')">
+                    <div class="icon-wrapper" style="background: #fdf4ff; color: #a21caf;"><i
+                            data-lucide="database"></i></div>
+                    Данные по складам кислоты
+                </a>
+                <a class="link-item" onclick="openModule('baza-dannyh-pna')">
+                    <div class="icon-wrapper" style="background: #ecfdf5; color: #059669;"><i data-lucide="server"></i>
+                    </div>
+                    База данных ПНА
+                </a>
+                <a class="link-item" onclick="openModule('baza-zamerov-po-turam')">
+                    <div class="icon-wrapper" style="background: #fff7ed; color: #c2410c;"><i
+                            data-lucide="activity"></i></div>
+                    База замеров по ТУРам
+                </a>
+                <a class="link-item" onclick="openModule('ud-baza-dannyh-baza-zamerov-po-skvazhinam')">
+                    <div class="icon-wrapper" style="background: #fef2f2; color: #b91c1c;"><i data-lucide="gauge"></i>
+                    </div>
+                    База замеров по скважинам
+                </a>
+                <a class="link-item" onclick="openModule('baza-dannyh-rvr-tablica')">
+                    <div class="icon-wrapper" style="background: #f0fdf4; color: #15803d;"><i
+                            data-lucide="table-properties"></i></div>
+                    База данных РВР
+                </a>
+                <a class="link-item" onclick="openModule('baza-gidrodinamicheskih-svyazej')">
+                    <div class="icon-wrapper" style="background: #f1f5f9; color: #475569;"><i data-lucide="share-2"></i>
+                    </div>
+                    Конфигурация ячеек
+                </a>
+                <a class="link-item" onclick="openModule('baza-raschetnyh-ob-emov-rastvorov')">
+                    <div class="icon-wrapper" style="background: #faf5ff; color: #7e22ce;"><i data-lucide="layers"></i>
+                    </div>
+                    База расчетных объемов растворов
+                </a>
+            </div>
+        </div>
+
+        <!-- ОТЧЕТЫ -->
+        <div class="column-card">
+            <div class="column-header reports">
+                Отчеты
+            </div>
+            <div class="column-body">
+                <a class="link-item" onclick="openModule('ud-status-skvazhin')">
+                    <div class="icon-wrapper" style="background: #f8fafc; color: #334155;"><i
+                            data-lucide="check-circle"></i></div>
+                    Статусы скважин
+                </a>
+                <a class="link-item" onclick="openModule('baza-balansa-rastvorov-po-blokam')">
+                    <div class="icon-wrapper" style="background: #f0fdfa; color: #0f766e;"><i
+                            data-lucide="pie-chart"></i></div>
+                    Баланс растворов по блокам
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Hover color overrides for specific icon types to maintain their themes during hover
+        document.querySelectorAll('.link-item').forEach(item => {
+            const iconWrapper = item.querySelector('.icon-wrapper');
+            if (iconWrapper.hasAttribute('style')) {
+                // If it has a custom inline style color, we want that to become the background on hover
+                const defaultBg = iconWrapper.style.backgroundColor;
+                const defaultColor = iconWrapper.style.color;
+
+                item.addEventListener('mouseenter', () => {
+                    iconWrapper.style.backgroundColor = defaultColor;
+                    iconWrapper.style.color = '#ffffff';
+                    iconWrapper.style.boxShadow = `0 4px 12px ${defaultColor}40`;
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    iconWrapper.style.backgroundColor = defaultBg;
+                    iconWrapper.style.color = defaultColor;
+                    iconWrapper.style.boxShadow = 'none';
+                });
+            }
+        });
+
+        function openModule(pageCode) {
+            // Match the behavior from the lab_main_menu.html
+            window.open(
+                window.location.origin + '/ru/cms/publish/view?code=' + pageCode,
+                '_blank'
+            );
+        }
+    </script>
+</body>
+
+</html>

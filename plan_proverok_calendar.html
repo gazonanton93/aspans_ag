@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График проверок — Календарь</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+
+            /* Heatmap colors */
+            --heat-0: #f1f5f9;
+            --heat-1: #dbeafe;
+            --heat-2: #93c5fd;
+            --heat-3: #3b82f6;
+            --heat-4: #1d4ed8;
+            --heat-5: #1e3a8a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Controls ── */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .level-tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        .level-tab {
+            padding: 7px 18px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.18s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .level-tab:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .level-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            width: 220px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+        }
+
+        /* ── Loading / Error ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        #error-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 9998;
+        }
+
+        #error-screen.show {
+            display: flex;
+        }
+
+        .error-msg {
+            font-size: 16px;
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .error-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ── Stats ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .stat-card.purple::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .stat-card.amber::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .stat-card.blue .stat-value {
+            color: #3b82f6;
+        }
+
+        .stat-card.purple .stat-value {
+            color: #8b5cf6;
+        }
+
+        .stat-card.green .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.amber .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 32px;
+            opacity: 0.15;
+        }
+
+        /* ── Calendar Card ── */
+        .calendar-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .calendar-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .calendar-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .calendar-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Legend ── */
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .legend-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* ── Grid Scroll Wrapper ── */
+        .grid-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── Calendar Table ── */
+        .cal-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 100%;
+            font-size: 12px;
+        }
+
+        /* Sticky columns */
+        .cal-table th.dept-col,
+        .cal-table td.dept-col {
+            position: sticky;
+            left: 0;
+            background: var(--surface);
+            z-index: 2;
+            min-width: 180px;
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cal-table th.dolj-col,
+        .cal-table td.dolj-col {
+            position: sticky;
+            left: 180px;
+            background: var(--surface);
+            z-index: 2;
+            min-width: 160px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cal-table tbody td.dolj-col {
+            text-align: left;
+            padding: 10px 14px 10px 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-right: 2px solid var(--border);
+        }
+
+        .cal-table thead th.dolj-col {
+            text-align: left;
+            padding-left: 12px;
+            border-right: 2px solid var(--border);
+            background: var(--surface2);
+        }
+
+        /* Dept-change separator */
+        .cal-table tbody tr.dept-sep td {
+            border-top: 2px solid #cbd5e1;
+        }
+
+        .cal-table thead th {
+            padding: 10px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .cal-table thead th.dept-col {
+            text-align: left;
+            padding-left: 20px;
+            border-right: 2px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .cal-table thead th.week-head {
+            min-width: 38px;
+            border-right: 1px solid var(--border);
+        }
+
+        /* Month group header */
+        .cal-table thead th.month-head {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text);
+            background: #f0f4ff;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.3px;
+        }
+
+        .cal-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .cal-table tbody tr:hover td {
+            background-color: #eff6ff !important;
+        }
+
+        .cal-table tbody tr:hover td.dept-col {
+            background-color: #eff6ff !important;
+        }
+
+        .cal-table tbody td {
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid rgba(226, 232, 240, 0.6);
+            text-align: center;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .cal-table tbody td.dept-col {
+            text-align: left;
+            padding: 10px 16px 10px 20px;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text);
+            border-right: 2px solid var(--border);
+            cursor: default;
+        }
+
+        /* Cell */
+        .cell-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 38px;
+            font-weight: 700;
+            font-size: 11px;
+            border-radius: 0;
+            transition: transform 0.15s;
+            position: relative;
+        }
+
+        .cell-inner:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .cell-inner.zero {
+            color: transparent;
+        }
+
+        .cell-inner.heat-1 {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .cell-inner.heat-2 {
+            background: #93c5fd;
+            color: #1e3a8a;
+        }
+
+        .cell-inner.heat-3 {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .cell-inner.heat-4 {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .cell-inner.heat-5 {
+            background: #1e3a8a;
+            color: #fff;
+        }
+
+        /* Total row */
+        .cal-table tbody tr.total-row td {
+            background: linear-gradient(90deg, #eff6ff, #f0f4ff);
+            font-weight: 700;
+            border-top: 2px solid #3b82f6;
+        }
+
+        .cal-table tbody tr.total-row td.dept-col {
+            color: #3b82f6;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #eff6ff, #f0f4ff);
+        }
+
+        /* Tooltip */
+        .tooltip-text {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 99;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip-text::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #0f172a;
+        }
+
+        .cell-inner:hover .tooltip-text {
+            display: block;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Fade-in */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 14px 16px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+
+            .search-input {
+                width: 160px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading -->
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Загрузка данных...</div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-screen">
+        <div style="font-size:48px;">⚠️</div>
+        <div class="error-msg" id="error-msg">Ошибка загрузки данных</div>
+        <div class="error-sub" id="error-sub"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">📅</div>
+            <div>
+                <div class="header-title">График проверок — Календарь</div>
+                <div class="header-subtitle">Распределение проверок по отделам и неделям года</div>
+            </div>
+        </div>
+        <div class="header-controls">
+            <div class="level-tabs" id="level-tabs"></div>
+            <input type="text" class="search-input" id="dept-search" placeholder="🔍 Поиск по отделу..."
+                oninput="filterDepts()">
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container" id="main-content" style="display:none;">
+
+        <!-- KPI -->
+        <div class="stats-grid fade-in" id="stats-row">
+            <div class="stat-card blue">
+                <div class="stat-label">Всего проверок</div>
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-icon">🔍</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Отделов</div>
+                <div class="stat-value" id="stat-depts">—</div>
+                <div class="stat-icon">🏢</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Недель с планом</div>
+                <div class="stat-value" id="stat-weeks">—</div>
+                <div class="stat-icon">📆</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-label">Макс. в неделю</div>
+                <div class="stat-value" id="stat-maxweek">—</div>
+                <div class="stat-icon">📈</div>
+            </div>
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="calendar-card fade-in" id="calendar-section" style="transition-delay:0.1s;">
+            <div class="calendar-header">
+                <div>
+                    <div class="calendar-title">Календарь проверок по неделям</div>
+                    <div class="calendar-subtitle" id="cal-subtitle">Уровень — · Отделов — · Строки: отдел × неделя
+                    </div>
+                </div>
+                <div class="legend-row">
+                    <span>Меньше</span>
+                    <div class="legend-box" style="background:var(--heat-0); border:1px solid var(--border);"></div>
+                    <div class="legend-box" style="background:#dbeafe;"></div>
+                    <div class="legend-box" style="background:#93c5fd;"></div>
+                    <div class="legend-box" style="background:#3b82f6;"></div>
+                    <div class="legend-box" style="background:#1d4ed8;"></div>
+                    <div class="legend-box" style="background:#1e3a8a;"></div>
+                    <span>Больше</span>
+                </div>
+            </div>
+            <div class="grid-scroll">
+                <div id="calendar-body">
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <div class="empty-text">Данные загружаются...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── CONFIG ────────────────────────────────────────────────────────────
+        const API_BASE = '/api/v1';
+        const TABLE = 'doc_pk_plan_2_level';  // ← таблица плана проверок
+        const WEEKS_IN_YEAR = 52;
+
+        // Month names for week → month mapping
+        const MONTH_NAMES = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн',
+            'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+
+        // Map of approximate week → month (ISO weeks, year ~2025)
+        function weekToMonth(w) {
+            // Approx: each month ~4.33 weeks
+            return Math.min(11, Math.floor((w - 1) / 4.348));
+        }
+
+        // ── AUTH ──────────────────────────────────────────────────────────────
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        // Fetch ALL rows — single request, no pagination params
+        async function fetchAllPages(baseUrl) {
+            const res = await fetch(baseUrl, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const rows = Array.isArray(data) ? data : (data.items || []);
+            console.log(`[Calendar] rows loaded: ${rows.length}`);
+            return rows;
+        }
+
+        // ── STATE ─────────────────────────────────────────────────────────────
+        let allRows = [];
+        let levels = [];
+        let selectedLevel = null;
+        let deptFilter = '';
+
+        // ── INIT ──────────────────────────────────────────────────────────────
+        async function init() {
+            try {
+                const query = JSON.stringify({
+                    columns: 'id,i00_level,ilc_otdel,ilc_person,i00_dolzhnost,i00_ned,i00_cnt',
+                    limit: 10000
+                });
+                const rows = await fetchAllPages(
+                    `${API_BASE}/${TABLE}?_format=json&query=${encodeURIComponent(query)}`
+                );
+
+                // Debug
+                const dbgDepts = [...new Set(rows.map(r => r.ilc_otdel))];
+                console.log(`[Calendar] rows=${rows.length}, depts=`, dbgDepts);
+
+                allRows = rows;
+
+                // Collect unique levels
+                levels = [...new Set(rows.map(r => r.i00_level).filter(v => v !== null && v !== undefined))]
+                    .map(Number).sort((a, b) => a - b);
+
+                if (levels.length === 0) levels = [2]; // fallback
+
+                selectedLevel = levels[0];
+
+                buildLevelTabs();
+                renderAll();
+                showContent();
+            } catch (err) {
+                console.error(err);
+                showError('Ошибка загрузки данных', err.message);
+            }
+        }
+
+        // ── LEVEL TABS ────────────────────────────────────────────────────────
+        function buildLevelTabs() {
+            const container = document.getElementById('level-tabs');
+            container.innerHTML = levels.map(lv => `
+                <button class="level-tab ${lv === selectedLevel ? 'active' : ''}"
+                    onclick="selectLevel(${lv})">Уровень ${lv}</button>
+            `).join('');
+        }
+
+        function selectLevel(lv) {
+            selectedLevel = lv;
+            document.querySelectorAll('.level-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.trim() === `Уровень ${lv}`);
+            });
+            renderAll();
+        }
+
+        function filterDepts() {
+            deptFilter = document.getElementById('dept-search').value.trim().toLowerCase();
+            renderAll();
+        }
+
+        // ── RENDER ────────────────────────────────────────────────────────────
+        function renderAll() {
+            // 1. Filter by level
+            let rows = allRows.filter(r => Number(r.i00_level) === selectedLevel);
+
+            // 2. Aggregate: dept × week → total qty
+            // key: dept, value: Map<week, qty>
+            const deptWeekMap = new Map(); // dept → Map<week, qty>
+            const weekSet = new Set();
+
+            rows.forEach(r => {
+                const dept = selectedLevel === 4
+                    ? ((r.ilc_person ?? '') || '—')
+                    : ((r.ilc_otdel ?? '') || '—');
+                const dolj = (r.i00_dolzhnost ?? '') || '';
+                const key = dept + '\x00' + dolj;
+                const timeIndex = Number(r.i00_ned); // week for LV1-3, month for LV4
+                const qty = Number(r.i00_cnt) || 0;
+
+                // For level 4 it's 1-12 (month), for others 1-53 (week)
+                const maxTime = selectedLevel === 4 ? 12 : 53;
+                if (isNaN(timeIndex) || timeIndex < 1 || timeIndex > maxTime) return;
+
+                weekSet.add(timeIndex);
+
+                if (!deptWeekMap.has(key)) deptWeekMap.set(key, { dept, dolj, weeks: new Map() });
+                const entry = deptWeekMap.get(key);
+                entry.weeks.set(timeIndex, (entry.weeks.get(timeIndex) || 0) + qty);
+            });
+
+            // 3. Apply dept search filter & sort (dept asc, dolj asc)
+            let depts = [...deptWeekMap.keys()].sort((a, b) => {
+                const ea = deptWeekMap.get(a), eb = deptWeekMap.get(b);
+                return (ea.dept || '').localeCompare(eb.dept || '') ||
+                    (ea.dolj || '').localeCompare(eb.dolj || '');
+            });
+            if (deptFilter) {
+                depts = depts.filter(k => {
+                    const e = deptWeekMap.get(k);
+                    return (e.dept || '').toLowerCase().includes(deptFilter) ||
+                        (e.dolj || '').toLowerCase().includes(deptFilter);
+                });
+            }
+
+            // 4. All time columns to show (weeks or months)
+            const allTimes = [...weekSet].sort((a, b) => a - b);
+            // If no data, fallback to 1-52 weeks or 1-12 months
+            const maxCols = selectedLevel === 4 ? 12 : 52;
+            const columns = allTimes.length > 0 ? allTimes : Array.from({ length: maxCols }, (_, i) => i + 1);
+
+            // 5. Update stats
+            let totalQty = 0;
+            const uniqueDepts = new Set();
+            deptWeekMap.forEach(e => { e.weeks.forEach(v => totalQty += v); uniqueDepts.add(e.dept); });
+            const maxInCol = columns.reduce((mx, w) => {
+                let s = 0;
+                deptWeekMap.forEach(e => s += (e.weeks.get(w) || 0));
+                return Math.max(mx, s);
+            }, 0);
+
+            document.getElementById('stat-total').textContent = totalQty.toLocaleString('ru');
+            document.getElementById('stat-depts').textContent = uniqueDepts.size;
+            document.getElementById('stat-weeks').textContent = weekSet.size;
+            document.getElementById('stat-maxweek').textContent = maxInCol;
+            document.getElementById('cal-subtitle').textContent =
+                `Уровень ${selectedLevel} · ${selectedLevel === 4 ? 'ФИО' : 'Отделов'} ${uniqueDepts.size} · Строк ${depts.length} · ${selectedLevel === 4 ? 'Месяцев' : 'Недель'} ${columns.length}`;
+
+            // 6. Compute heatmap max per cell (for color scale)
+            let cellMax = 0;
+            deptWeekMap.forEach(e => e.weeks.forEach(v => { if (v > cellMax) cellMax = v; }));
+
+            // 7. Build table
+            if (depts.length === 0) {
+                document.getElementById('calendar-body').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔎</div>
+                        <div class="empty-text">Нет данных для выбранного уровня</div>
+                    </div>`;
+                return;
+            }
+
+            buildCalendarTable(depts, columns, deptWeekMap, cellMax);
+        }
+
+        // ── MONTH HEADER BUILD ────────────────────────────────────────────────
+        function buildMonthGroups(weeks) {
+            // Group consecutive weeks by month
+            const groups = []; // { month, count }
+            let prevMonth = -1;
+            weeks.forEach(w => {
+                const m = weekToMonth(w);
+                if (m !== prevMonth) { groups.push({ month: m, count: 1 }); prevMonth = m; }
+                else { groups[groups.length - 1].count++; }
+            });
+            return groups;
+        }
+
+        function heatClass(val, maxVal) {
+            if (!val || val === 0) return 'zero';
+            if (maxVal <= 0) return 'heat-1';
+            const ratio = val / maxVal;
+            if (ratio <= 0.1) return 'heat-1';
+            if (ratio <= 0.3) return 'heat-2';
+            if (ratio <= 0.55) return 'heat-3';
+            if (ratio <= 0.8) return 'heat-4';
+            return 'heat-5';
+        }
+
+        function buildCalendarTable(depts, columns, deptWeekMap, cellMax) {
+            const isLevel4 = selectedLevel === 4;
+            const monthGroups = isLevel4 ? [] : buildMonthGroups(columns);
+
+            let html = `<table class="cal-table">`;
+
+            // ── THEAD row 1: Month groups (Only for LV1-3) ─────────────────
+            html += `<thead><tr>`;
+            html += `<th class="dept-col" rowspan="2">${isLevel4 ? 'ФИО' : 'Отдел'}</th>`;
+            html += `<th class="dolj-col" rowspan="2">Должность</th>`;
+
+            if (isLevel4) {
+                columns.forEach(m => {
+                    html += `<th class="month-head" rowspan="2">${MONTH_NAMES[m - 1] || 'Мес ' + m}</th>`;
+                });
+            } else {
+                monthGroups.forEach(g => {
+                    html += `<th class="month-head" colspan="${g.count}">${MONTH_NAMES[g.month]}</th>`;
+                });
+            }
+
+            html += `<th rowspan="2" style="min-width:54px;background:#f0f4ff;color:#3b82f6;font-weight:800;">Итого</th>`;
+            html += `</tr>`;
+
+            // ── THEAD row 2: Week numbers (Only for LV1-3) ─────────────────
+            if (!isLevel4) {
+                html += `<tr>`;
+                columns.forEach(w => {
+                    html += `<th class="week-head">Нед<br>${w}</th>`;
+                });
+                html += `</tr>`;
+            }
+            html += `</thead>`;
+
+            // ── TBODY ─────────────────────────────────────────────────
+            html += `<tbody>`;
+            let prevDept = null;
+            depts.forEach(key => {
+                const entry = deptWeekMap.get(key);
+                const { dept, dolj, weeks: wm } = entry;
+                let rowTotal = 0;
+                columns.forEach(w => rowTotal += (wm.get(w) || 0));
+
+                const sepClass = (prevDept !== null && dept !== prevDept) ? ' dept-sep' : '';
+                prevDept = dept;
+
+                html += `<tr class="${sepClass}">`;
+                html += `<td class="dept-col" title="${escHtml(dept)}">${escHtml(dept)}</td>`;
+                html += `<td class="dolj-col" title="${escHtml(dolj)}">${escHtml(dolj) || '<span style="color:#cbd5e1">—</span>'}</td>`;
+
+                columns.forEach(w => {
+                    const val = wm.get(w) || 0;
+                    const cls = heatClass(val, cellMax);
+                    if (val > 0) {
+                        const tooltipTime = isLevel4 ? MONTH_NAMES[w - 1] : `Неделя ${w}`;
+                        html += `<td><div class="cell-inner ${cls}">
+                            ${val}
+                            <span class="tooltip-text">${escHtml(dept)}<br>${escHtml(dolj) || '—'}<br>${tooltipTime}: ${val} пров.</span>
+                        </div></td>`;
+                    } else {
+                        html += `<td><div class="cell-inner zero"></div></td>`;
+                    }
+                });
+
+                html += `<td style="font-weight:800;color:#3b82f6;padding:0 8px;font-size:13px;">${rowTotal || '—'}</td>`;
+                html += `</tr>`;
+            });
+
+            // ── TOTAL ROW ─────────────────────────────────────────────
+            html += `<tr class="total-row">`;
+            html += `<td class="dept-col">ИТОГО</td>`;
+            html += `<td class="dolj-col"></td>`;
+            let grandTotal = 0;
+            columns.forEach(w => {
+                let s = 0;
+                deptWeekMap.forEach(e => s += (e.weeks.get(w) || 0));
+                grandTotal += s;
+                html += `<td style="font-weight:800;color:#1d4ed8;font-size:12px;padding:6px 2px;">${s || ''}</td>`;
+            });
+            html += `<td style="font-weight:900;color:#1d4ed8;font-size:14px;padding:0 8px;">${grandTotal}</td>`;
+            html += `</tr>`;
+
+            html += `</tbody></table>`;
+            document.getElementById('calendar-body').innerHTML = html;
+        }
+
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── UI HELPERS ────────────────────────────────────────────────────────
+        function showContent() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = '';
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+            });
+        }
+
+        function showError(msg, sub) {
+            document.getElementById('loading-screen').style.display = 'none';
+            const es = document.getElementById('error-screen');
+            es.classList.add('show');
+            document.getElementById('error-msg').textContent = msg;
+            document.getElementById('error-sub').textContent = sub || '';
+        }
+
+        // ── START ─────────────────────────────────────────────────────────────
+        init();
+    </script>
+
+</body>
+
+</html>

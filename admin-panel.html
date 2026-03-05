@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <style>
+        .admin-panel {
+            --admin-primary: #1a73e8;
+            --admin-primary-hover: #1557b0;
+            --admin-primary-light: #e8f0fe;
+            --admin-success: #1e8e3e;
+            --admin-success-light: #e6f4ea;
+            --admin-error: #d93025;
+            --admin-error-light: #fce8e6;
+            --admin-warning: #f29900;
+            --admin-warning-light: #fef7e0;
+            --admin-background: #f8f9fa;
+            --admin-surface: #ffffff;
+            --admin-text: #202124;
+            --admin-text-secondary: #5f6368;
+            --admin-border: #dadce0;
+            --admin-hover: #f1f3f4;
+            --admin-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+            background: var(--admin-background);
+            color: var(--admin-text);
+            line-height: 1.5;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .admin-panel * {
+            box-sizing: border-box;
+        }
+
+        .backgroundVideo {
+            display: none !important;
+        }
+
+        .admin-header {
+            background: var(--admin-surface);
+            border-bottom: 1px solid var(--admin-border);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .admin-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .admin-header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .admin-header-subtitle {
+            font-size: 13px;
+            color: var(--admin-text-secondary);
+        }
+
+        .admin-tabs {
+            display: flex;
+            margin-top: 4px;
+        }
+
+        .admin-tab {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--admin-text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .admin-tab:hover {
+            color: var(--admin-primary);
+            background: var(--admin-hover);
+        }
+
+        .admin-tab.active {
+            color: var(--admin-primary);
+            border-bottom-color: var(--admin-primary);
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat-card {
+            background: var(--admin-surface);
+            padding: 16px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            transition: box-shadow 0.2s;
+        }
+
+        .admin-stat-card:hover {
+            box-shadow: var(--admin-shadow);
+        }
+
+        .admin-stat-card .label {
+            font-size: 11px;
+            color: var(--admin-text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .admin-stat-card .value {
+            font-size: 26px;
+            font-weight: 400;
+        }
+
+        .admin-controls {
+            background: var(--admin-surface);
+            padding: 12px 16px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .admin-search-box {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+
+        .admin-search-box input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .admin-search-box input:focus {
+            border-color: var(--admin-primary);
+        }
+
+        .admin-search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--admin-text-secondary);
+            pointer-events: none;
+            font-size: 14px;
+        }
+
+        .admin-filter-select {
+            padding: 9px 12px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .admin-filter-select:focus {
+            border-color: var(--admin-primary);
+        }
+
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            outline: none;
+        }
+
+        .admin-btn:active {
+            transform: scale(0.98);
+        }
+
+        .admin-btn-primary {
+            background: var(--admin-primary);
+            color: white;
+        }
+
+        .admin-btn-primary:hover {
+            background: var(--admin-primary-hover);
+            box-shadow: var(--admin-shadow);
+        }
+
+        .admin-btn-success {
+            background: var(--admin-success);
+            color: white;
+        }
+
+        .admin-btn-success:hover {
+            background: #188038;
+            box-shadow: var(--admin-shadow);
+        }
+
+        .admin-btn-secondary {
+            background: white;
+            border: 1px solid var(--admin-border);
+            color: var(--admin-text);
+        }
+
+        .admin-btn-secondary:hover {
+            background: var(--admin-hover);
+        }
+
+        .admin-btn-danger {
+            background: var(--admin-error);
+            color: white;
+        }
+
+        .admin-btn-danger:hover {
+            background: #b3000c;
+            box-shadow: var(--admin-shadow);
+        }
+
+        .admin-btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .admin-btn-icon {
+            padding: 7px;
+            min-width: 34px;
+            height: 34px;
+        }
+
+        .admin-table-container {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .admin-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table thead {
+            background: var(--admin-hover);
+        }
+
+        .admin-table thead th {
+            padding: 11px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 11px;
+            color: var(--admin-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .admin-table tbody tr {
+            border-bottom: 1px solid var(--admin-border);
+            transition: background 0.15s;
+        }
+
+        .admin-table tbody tr:hover {
+            background: var(--admin-hover);
+        }
+
+        .admin-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .admin-table tbody td {
+            padding: 11px 16px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .admin-badge-green {
+            background: var(--admin-success-light);
+            color: var(--admin-success);
+        }
+
+        .admin-badge-gray {
+            background: var(--admin-hover);
+            color: var(--admin-text-secondary);
+        }
+
+        .admin-badge-blue {
+            background: var(--admin-primary-light);
+            color: var(--admin-primary);
+        }
+
+        .admin-badge-orange {
+            background: #fef7e0;
+            color: #b06000;
+        }
+
+        /* ── Multiple answer badges ── */
+        .answer-badges {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .admin-answer-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 12px;
+            background: var(--admin-success-light);
+            color: var(--admin-success);
+        }
+
+        .admin-answer-badge-multi {
+            background: var(--admin-primary-light);
+            color: var(--admin-primary);
+        }
+
+        /* ── Modal ── */
+        .admin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .admin-modal.open {
+            display: flex;
+        }
+
+        .admin-modal-content {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 680px;
+            max-height: 92vh;
+            overflow-y: auto;
+            animation: adminSlideUp 0.2s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes adminSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .admin-modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--admin-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .admin-modal-header h2 {
+            font-size: 17px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .admin-modal-body {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .admin-modal-footer {
+            padding: 14px 24px;
+            border-top: 1px solid var(--admin-border);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            background: #fff;
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+        }
+
+        .admin-form-group {
+            margin-bottom: 18px;
+        }
+
+        .admin-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .required {
+            color: var(--admin-error);
+        }
+
+        .admin-form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .admin-form-control:focus {
+            border-color: var(--admin-primary);
+        }
+
+        textarea.admin-form-control {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .admin-form-hint {
+            font-size: 12px;
+            color: var(--admin-text-secondary);
+            margin-top: 4px;
+        }
+
+        .admin-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ── Options editor (dynamic) ── */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--admin-hover);
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            transition: border-color 0.2s;
+        }
+
+        .option-row.is-correct {
+            border-color: var(--admin-success);
+            background: var(--admin-success-light);
+        }
+
+        /* Checkbox for "correct" */
+        .option-correct-check {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+            accent-color: var(--admin-success);
+        }
+
+        .option-letter {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--admin-text-secondary);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .option-row.is-correct .option-letter {
+            color: var(--admin-success);
+        }
+
+        .option-text-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            color: var(--admin-text);
+        }
+
+        .option-row.is-correct .option-text-input {
+            color: var(--admin-success);
+            font-weight: 500;
+        }
+
+        .option-drag-handle {
+            cursor: grab;
+            color: var(--admin-text-secondary);
+            font-size: 16px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .options-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .options-info {
+            font-size: 12px;
+            color: var(--admin-text-secondary);
+            margin-left: auto;
+        }
+
+        /* Correct count indicator */
+        .correct-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .correct-count-0 {
+            background: var(--admin-error-light);
+            color: var(--admin-error);
+        }
+
+        .correct-count-1 {
+            background: var(--admin-success-light);
+            color: var(--admin-success);
+        }
+
+        .correct-count-many {
+            background: var(--admin-primary-light);
+            color: var(--admin-primary);
+        }
+
+        /* View Modal */
+        .admin-view-section {
+            margin-bottom: 18px;
+        }
+
+        .admin-view-section h3 {
+            font-size: 11px;
+            color: var(--admin-text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-view-section p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .admin-view-option {
+            padding: 10px 14px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .admin-view-option.correct {
+            background: var(--admin-success);
+            color: white;
+            border-color: var(--admin-success);
+        }
+
+        .admin-view-option.correct-multi {
+            background: var(--admin-primary);
+            color: white;
+            border-color: var(--admin-primary);
+        }
+
+        .admin-view-option .marker {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--admin-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .admin-view-option.correct .marker,
+        .admin-view-option.correct-multi .marker {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        .cat-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--admin-border);
+            font-size: 14px;
+        }
+
+        .cat-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .cat-detail-key {
+            color: var(--admin-text-secondary);
+            min-width: 160px;
+            font-size: 13px;
+        }
+
+        .cat-detail-val {
+            font-weight: 500;
+        }
+
+        .admin-loading {
+            text-align: center;
+            padding: 32px;
+            color: var(--admin-text-secondary);
+        }
+
+        .admin-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--admin-border);
+            border-top-color: var(--admin-primary);
+            border-radius: 50%;
+            animation: adminSpin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes adminSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .admin-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--admin-text-secondary);
+        }
+
+        .admin-empty p:first-child {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .admin-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323232;
+            color: white;
+            padding: 13px 22px;
+            border-radius: 4px;
+            box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            animation: toastIn 0.2s ease-out;
+            min-width: 280px;
+            max-width: 520px;
+            font-size: 14px;
+        }
+
+        @keyframes toastIn {
+            from {
+                transform: translateX(-50%) translateY(80px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .admin-toast.show {
+            display: flex;
+        }
+
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: var(--admin-success);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* ── Config category rows ── */
+        .cfg-cat-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .cfg-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--admin-hover);
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .cfg-cat-select {
+            flex: 1;
+        }
+
+        .cfg-percent-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .cfg-percent-input {
+            width: 72px;
+            padding: 7px 10px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: right;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .cfg-percent-input:focus {
+            border-color: var(--admin-primary);
+        }
+
+        .cfg-percent-sym {
+            font-size: 14px;
+            color: var(--admin-text-secondary);
+        }
+
+        /* Percent total bar */
+        .cfg-total-bar {
+            margin-top: 14px;
+            background: var(--admin-hover);
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+
+        .cfg-total-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .cfg-total-bar-track {
+            height: 8px;
+            background: var(--admin-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cfg-total-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s, background 0.3s;
+            background: var(--admin-primary);
+        }
+
+        .cfg-total-bar-fill.ok {
+            background: var(--admin-success);
+        }
+
+        .cfg-total-bar-fill.over {
+            background: var(--admin-error);
+        }
+
+        /* Config view — category breakdown */
+        .cfg-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .cfg-breakdown-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .cfg-breakdown-name {
+            flex: 1;
+        }
+
+        .cfg-breakdown-bar-wrap {
+            width: 120px;
+            height: 6px;
+            background: var(--admin-border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .cfg-breakdown-bar-fill {
+            height: 100%;
+            background: var(--admin-primary);
+            border-radius: 3px;
+        }
+
+        .cfg-breakdown-pct {
+            min-width: 44px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--admin-primary);
+            font-size: 13px;
+        }
+
+        .cfg-breakdown-count {
+            min-width: 60px;
+            text-align: right;
+            font-size: 12px;
+            color: var(--admin-text-secondary);
+        }
+
+        /* Multi-answer info box */
+        .info-box {
+            background: var(--admin-primary-light);
+            border: 1px solid #c5d8fc;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #1a56a0;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                padding: 0 12px;
+            }
+
+            .admin-container {
+                padding: 12px;
+            }
+
+            .admin-form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-table thead {
+                display: none;
+            }
+
+            .admin-table tbody {
+                display: block;
+            }
+
+            .admin-table tbody tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid var(--admin-border);
+                border-radius: 8px;
+            }
+
+            .admin-table tbody td {
+                display: block;
+                padding: 10px 12px;
+                border-bottom: 1px solid var(--admin-border);
+            }
+
+            .admin-table tbody td:last-child {
+                border-bottom: none;
+            }
+
+            .admin-table tbody td::before {
+                content: attr(data-label);
+                display: block;
+                font-weight: 500;
+                font-size: 11px;
+                color: var(--admin-text-secondary);
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+
+            .admin-modal {
+                padding: 0;
+                align-items: flex-end;
+            }
+
+            .admin-modal-content {
+                max-width: 100%;
+                max-height: 95vh;
+                border-radius: 8px 8px 0 0;
+            }
+
+            .admin-modal-footer {
+                flex-direction: column-reverse;
+            }
+
+            .admin-modal-footer .admin-btn {
+                width: 100%;
+            }
+
+            .admin-tab {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+
+            .admin-toast {
+                left: 12px;
+                right: 12px;
+                transform: none;
+                min-width: auto;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-panel">
+
+        <div class="admin-header">
+            <div class="admin-header-top">
+                <div>
+                    <h1>⚙️ Панель администратора</h1>
+                    <div class="admin-header-subtitle">Управление категориями и вопросами тестирования</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="admin-btn admin-btn-secondary admin-btn-small" onclick="admin.refresh()">🔄
+                        Обновить</button>
+                </div>
+            </div>
+            <div class="admin-tabs">
+                <div class="admin-tab active" onclick="admin.switchTab('categories', this)">📂 Категории</div>
+                <div class="admin-tab" onclick="admin.switchTab('questions', this)">📝 Вопросы</div>
+                <div class="admin-tab" onclick="admin.switchTab('configs', this)">⚙️ Конфигурации</div>
+                <div class="admin-tab" onclick="admin.switchTab('results', this)">📊 Результаты</div>
+            </div>
+        </div>
+
+        <div class="admin-container">
+
+            <!-- TAB: CATEGORIES -->
+            <div class="tab-panel active" id="tab-categories">
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="label">Всего категорий</div>
+                        <div class="value" id="cat-stat-total">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Активных</div>
+                        <div class="value" id="cat-stat-active">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Обновлено</div>
+                        <div class="value" id="cat-stat-updated"
+                            style="font-size:13px; color:var(--admin-text-secondary);">—</div>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <div class="admin-search-box">
+                        <span class="admin-search-icon">🔍</span>
+                        <input type="text" id="cat-search" placeholder="Поиск по названию или коду..."
+                            oninput="admin.filterCategories()">
+                    </div>
+                    <select class="admin-filter-select" id="cat-filter-active" onchange="admin.filterCategories()">
+                        <option value="">Все статусы</option>
+                        <option value="1">Активные</option>
+                        <option value="0">Неактивные</option>
+                    </select>
+                    <button class="admin-btn admin-btn-primary" onclick="admin.openCatModal()">➕ Добавить
+                        категорию</button>
+                </div>
+                <div class="admin-table-container">
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:120px;">Действия</th>
+                                    <th style="width:80px;">Код</th>
+                                    <th>Название</th>
+                                    <th style="width:100px;">Лимит вопр.</th>
+                                    <th style="width:100px;">Лимит мин.</th>
+                                    <th style="width:90px;">Статус</th>
+                                    <th style="width:80px;">Порядок</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cat-tbody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="admin-loading">
+                                            <div class="admin-spinner"></div>
+                                            <div>Загрузка...</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: QUESTIONS -->
+            <div class="tab-panel" id="tab-questions">
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="label">Всего вопросов</div>
+                        <div class="value" id="q-stat-total">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Мультиответных</div>
+                        <div class="value" id="q-stat-multi">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Категорий</div>
+                        <div class="value" id="q-stat-cats">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Показано</div>
+                        <div class="value" id="q-stat-shown">—</div>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <div class="admin-search-box">
+                        <span class="admin-search-icon">🔍</span>
+                        <input type="text" id="q-search" placeholder="Поиск по тексту вопроса..."
+                            oninput="admin.filterQuestions()">
+                    </div>
+                    <select class="admin-filter-select" id="q-filter-cat" onchange="admin.filterQuestions()">
+                        <option value="">Все категории</option>
+                    </select>
+                    <select class="admin-filter-select" id="q-filter-type" onchange="admin.filterQuestions()">
+                        <option value="">Все типы</option>
+                        <option value="single">Один ответ</option>
+                        <option value="multi">Несколько ответов</option>
+                    </select>
+                    <button class="admin-btn admin-btn-primary" onclick="admin.openQModal()">➕ Добавить вопрос</button>
+                </div>
+                <div class="admin-table-container">
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:120px;">Действия</th>
+                                    <th style="width:60px;">ID</th>
+                                    <th style="width:160px;">Категория</th>
+                                    <th>Вопрос</th>
+                                    <th style="width:80px;">Вариантов</th>
+                                    <th style="width:120px;">Правильных</th>
+                                </tr>
+                            </thead>
+                            <tbody id="q-tbody">
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="admin-loading">
+                                            <div class="admin-spinner"></div>
+                                            <div>Загрузка...</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: RESULTS -->
+            <div class="tab-panel" id="tab-results">
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="label">Всего попыток</div>
+                        <div class="value" id="res-stat-total">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Средний %</div>
+                        <div class="value" id="res-stat-avg">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Пользователей</div>
+                        <div class="value" id="res-stat-users">—</div>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <div class="admin-search-box">
+                        <span class="admin-search-icon">🔍</span>
+                        <input type="text" id="res-search" placeholder="Поиск по пользователю или категории..."
+                            oninput="admin.filterResults()">
+                    </div>
+                    <select class="admin-filter-select" id="res-filter-cat" onchange="admin.filterResults()">
+                        <option value="">Все категории</option>
+                    </select>
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.loadResults()">🔄 Обновить</button>
+                </div>
+                <div class="admin-table-container">
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;">ID</th>
+                                    <th>Пользователь</th>
+                                    <th>Категория</th>
+                                    <th style="width:160px;">Дата</th>
+                                    <th style="width:80px;">Результат</th>
+                                    <th style="width:180px;">Детали</th>
+                                    <th style="width:100px;">Длительность</th>
+                                </tr>
+                            </thead>
+                            <tbody id="res-tbody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="admin-loading">
+                                            <div class="admin-spinner"></div>
+                                            <div>Загрузка...</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CONFIGS -->
+            <div class="tab-panel" id="tab-configs">
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="label">Конфигураций</div>
+                        <div class="value" id="cfg-stat-total">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Активных</div>
+                        <div class="value" id="cfg-stat-active">—</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="label">Обновлено</div>
+                        <div class="value" id="cfg-stat-updated"
+                            style="font-size:13px; color:var(--admin-text-secondary);">—</div>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <div class="admin-search-box">
+                        <span class="admin-search-icon">🔍</span>
+                        <input type="text" id="cfg-search" placeholder="Поиск по названию или коду..."
+                            oninput="admin.filterConfigs()">
+                    </div>
+                    <select class="admin-filter-select" id="cfg-filter-active" onchange="admin.filterConfigs()">
+                        <option value="">Все статусы</option>
+                        <option value="1">Активные</option>
+                        <option value="0">Неактивные</option>
+                    </select>
+                    <button class="admin-btn admin-btn-primary" onclick="admin.openCfgModal()">➕ Добавить
+                        конфигурацию</button>
+                </div>
+                <div class="admin-table-container">
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:120px;">Действия</th>
+                                    <th style="width:90px;">Код</th>
+                                    <th>Название</th>
+                                    <th style="width:110px;">Всего вопросов</th>
+                                    <th style="width:100px;">Время (мин)</th>
+                                    <th>Категории и доли</th>
+                                    <th style="width:90px;">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cfg-tbody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="admin-loading">
+                                            <div class="admin-spinner"></div>
+                                            <div>Загрузка...</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /container -->
+        <div class="admin-modal" id="modal-cat">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2 id="modal-cat-title">Добавить категорию</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeCatModal()">✕</button>
+                </div>
+                <div class="admin-modal-body">
+                    <form id="form-cat" onsubmit="admin.saveCat(event)">
+                        <input type="hidden" id="cat-id">
+                        <div class="admin-form-group">
+                            <label>Код категории <span class="required">*</span></label>
+                            <input type="text" class="admin-form-control" id="cat-code" required
+                                placeholder="например: CAT_001">
+                            <div class="admin-form-hint">Уникальный идентификатор</div>
+                        </div>
+                        <div class="admin-form-group">
+                            <label>Название <span class="required">*</span></label>
+                            <input type="text" class="admin-form-control" id="cat-sname" required
+                                placeholder="Полное название категории">
+                        </div>
+                        <div class="admin-form-group">
+                            <label>Описание</label>
+                            <textarea class="admin-form-control" id="cat-description"
+                                placeholder="Краткое описание (необязательно)"></textarea>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label>Лимит вопросов на тест</label>
+                                <input type="number" class="admin-form-control" id="cat-question-limit" min="1"
+                                    max="500" placeholder="100">
+                                <div class="admin-form-hint">По умолчанию: 100</div>
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Лимит времени (минут)</label>
+                                <input type="number" class="admin-form-control" id="cat-time-limit" min="1" max="600"
+                                    placeholder="Без ограничения">
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label>Порядок сортировки</label>
+                                <input type="number" class="admin-form-control" id="cat-sort-order" min="0"
+                                    placeholder="0">
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Статус</label>
+                                <div class="toggle-wrap" style="margin-top:10px;">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="cat-is-active" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span id="cat-active-label" style="font-size:14px;">Активна</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeCatModal()">Отмена</button>
+                    <button class="admin-btn admin-btn-success"
+                        onclick="document.getElementById('form-cat').requestSubmit()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Category View -->
+        <div class="admin-modal" id="modal-cat-view">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2>Просмотр категории</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeCatView()">✕</button>
+                </div>
+                <div class="admin-modal-body" id="modal-cat-view-body"></div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeCatView()">Закрыть</button>
+                    <button class="admin-btn admin-btn-primary" id="btn-cat-view-edit">✏️ Редактировать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Question Add/Edit (динамические варианты) -->
+        <div class="admin-modal" id="modal-q">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2 id="modal-q-title">Добавить вопрос</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeQModal()">✕</button>
+                </div>
+                <div class="admin-modal-body">
+                    <div class="info-box">
+                        ☑️ Отметьте <strong>один или несколько</strong> правильных ответов. Можно добавить до 10
+                        вариантов, убрать лишние.
+                    </div>
+
+                    <form id="form-q" onsubmit="admin.saveQ(event)">
+                        <input type="hidden" id="q-id">
+
+                        <div class="admin-form-group">
+                            <label>Категория <span class="required">*</span></label>
+                            <select class="admin-form-control" id="q-cat" required>
+                                <option value="">— Выберите категорию —</option>
+                            </select>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Вопрос <span class="required">*</span></label>
+                            <textarea class="admin-form-control" id="q-text" required
+                                placeholder="Текст вопроса"></textarea>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>
+                                Варианты ответов <span class="required">*</span>
+                                <span id="correct-count-indicator" class="correct-count-badge correct-count-0"
+                                    style="margin-left:8px; font-size:11px;">0 правильных</span>
+                            </label>
+
+                            <div class="options-list" id="options-list">
+                                <!-- Генерируется JS -->
+                            </div>
+
+                            <div class="options-toolbar">
+                                <button type="button" class="admin-btn admin-btn-secondary admin-btn-small"
+                                    onclick="admin.addOption()">➕ Добавить вариант</button>
+                                <span class="options-info" id="options-count-hint">4 варианта</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeQModal()">Отмена</button>
+                    <button class="admin-btn admin-btn-success"
+                        onclick="document.getElementById('form-q').requestSubmit()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Question View -->
+        <div class="admin-modal" id="modal-q-view">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2>Просмотр вопроса</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeQView()">✕</button>
+                </div>
+                <div class="admin-modal-body" id="modal-q-view-body"></div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeQView()">Закрыть</button>
+                    <button class="admin-btn admin-btn-primary" id="btn-q-view-edit">✏️ Редактировать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Config Add/Edit -->
+        <div class="admin-modal" id="modal-cfg">
+            <div class="admin-modal-content" style="max-width:740px;">
+                <div class="admin-modal-header">
+                    <h2 id="modal-cfg-title">Добавить конфигурацию</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeCfgModal()">✕</button>
+                </div>
+                <div class="admin-modal-body">
+                    <form id="form-cfg" onsubmit="admin.saveCfg(event)">
+                        <input type="hidden" id="cfg-id">
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label>Код конфигурации <span class="required">*</span></label>
+                                <input type="text" class="admin-form-control" id="cfg-code" required
+                                    placeholder="например: EXAM_2024">
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Название <span class="required">*</span></label>
+                                <input type="text" class="admin-form-control" id="cfg-sname" required
+                                    placeholder="Полное название">
+                            </div>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>Описание</label>
+                            <textarea class="admin-form-control" id="cfg-description"
+                                placeholder="Необязательное описание" style="min-height:60px;"></textarea>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label>Всего вопросов в тесте <span class="required">*</span></label>
+                                <input type="number" class="admin-form-control" id="cfg-total" min="1" max="1000"
+                                    value="100" required>
+                                <div class="admin-form-hint">Итоговое кол-во вопросов, которое получит пользователь
+                                </div>
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Лимит времени (минут)</label>
+                                <input type="number" class="admin-form-control" id="cfg-time" min="1" max="600"
+                                    placeholder="Без ограничения">
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label>Порядок сортировки</label>
+                                <input type="number" class="admin-form-control" id="cfg-sort" min="0" value="0">
+                            </div>
+                            <div class="admin-form-group">
+                                <label>Статус</label>
+                                <div class="toggle-wrap" style="margin-top:10px;">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="cfg-is-active" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span id="cfg-active-label" style="font-size:14px;">Активна</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category breakdown editor -->
+                        <div class="admin-form-group">
+                            <label>
+                                Категории и процентное соотношение <span class="required">*</span>
+                            </label>
+                            <div class="info-box" style="margin-bottom:10px;">
+                                📊 Укажите, из каких категорий брать вопросы и в каком соотношении. Сумма должна
+                                равняться <strong>100%</strong>.
+                                Вопросы берутся случайно из доступных вопросов каждой категории.
+                            </div>
+
+                            <div class="cfg-cat-rows" id="cfg-cat-rows">
+                                <!-- динамически -->
+                            </div>
+
+                            <div class="options-toolbar">
+                                <button type="button" class="admin-btn admin-btn-secondary admin-btn-small"
+                                    onclick="admin.addCfgCatRow()">➕ Добавить категорию</button>
+                            </div>
+
+                            <!-- Итоговая полоска -->
+                            <div class="cfg-total-bar">
+                                <div class="cfg-total-bar-label">
+                                    <span>Итого:</span>
+                                    <span id="cfg-pct-total-label" style="font-weight:600;">0%</span>
+                                </div>
+                                <div class="cfg-total-bar-track">
+                                    <div class="cfg-total-bar-fill" id="cfg-pct-bar" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeCfgModal()">Отмена</button>
+                    <button class="admin-btn admin-btn-success"
+                        onclick="document.getElementById('form-cfg').requestSubmit()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Config View -->
+        <div class="admin-modal" id="modal-cfg-view">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2>Просмотр конфигурации</h2>
+                    <button class="admin-btn admin-btn-secondary admin-btn-small"
+                        onclick="admin.closeCfgView()">✕</button>
+                </div>
+                <div class="admin-modal-body" id="modal-cfg-view-body"></div>
+                <div class="admin-modal-footer">
+                    <button class="admin-btn admin-btn-secondary" onclick="admin.closeCfgView()">Закрыть</button>
+                    <button class="admin-btn admin-btn-primary" id="btn-cfg-view-edit">✏️ Редактировать</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-toast" id="admin-toast">
+            <span class="admin-toast-icon" id="toast-icon"></span>
+            <span id="toast-msg"></span>
+        </div>
+
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────────────
+        // Helpers
+        // ─────────────────────────────────────────────────────
+        const AUTH = 'Basic ' + btoa('admin:19451945');
+        const HEADERS = { 'X-Requested-With': 'XMLHttpRequest', 'Authorization': AUTH };
+
+        function esc(text) {
+            const d = document.createElement('div');
+            d.textContent = text ?? '';
+            return d.innerHTML;
+        }
+
+        function getCsrf() {
+            const m = document.querySelector('meta[name="csrf-token"]');
+            if (m?.content) return m.content;
+            if (window.yii?.getCsrfToken) { const t = window.yii.getCsrfToken(); if (t) return t; }
+            const i = document.querySelector('input[name="_csrf-frontend"]');
+            if (i?.value) return i.value;
+            try {
+                const cookieMatch = document.cookie.match(/_csrf-frontend=([^;]+)/);
+                if (cookieMatch) {
+                    const decoded = decodeURIComponent(cookieMatch[1]);
+                    const tokenMatch = decoded.match(/"([a-zA-Z0-9_\-]{30,})"/);
+                    if (tokenMatch) return tokenMatch[1];
+                }
+            } catch { }
+            try {
+                if (window.parent && window.parent !== window) {
+                    const pm = window.parent.document.querySelector('meta[name="csrf-token"]');
+                    if (pm?.content) return pm.content;
+                }
+            } catch (e) { }
+            return '';
+        }
+
+        function fmtDate(str) {
+            if (!str) return '—';
+            const d = new Date(str);
+            return isNaN(d) ? str : d.toLocaleString('ru-RU');
+        }
+
+        function fmtDuration(sec) {
+            if (!sec) return '—';
+            const m = Math.floor(sec / 60), s = sec % 60;
+            return m ? `${m} мин ${s} с` : `${s} с`;
+        }
+
+        // Генерация буквенных идентификаторов: a, b, c, ..., z, aa, ab, ...
+        function getLetter(index) {
+            const alpha = 'abcdefghijklmnopqrstuvwxyz';
+            if (index < 26) return alpha[index];
+            return alpha[Math.floor(index / 26) - 1] + alpha[index % 26];
+        }
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('admin-toast');
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
+            document.getElementById('toast-icon').textContent = icons[type] || '✅';
+            document.getElementById('toast-msg').textContent = msg;
+            t.className = 'admin-toast show';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        async function apiGet(url) {
+            const res = await fetch(url, { headers: HEADERS });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        async function apiPost(url, formData) {
+            const res = await fetch(url, { method: 'POST', headers: HEADERS, body: formData });
+            if (!res.ok && res.status !== 302) {
+                const txt = await res.text().catch(() => '');
+                throw new Error(`HTTP ${res.status} — ${txt.slice(0, 200)}`);
+            }
+            return res;
+        }
+
+        // POST + пытается вернуть id созданной записи из тела ответа
+        async function apiCreate(url, formData) {
+            const res = await fetch(url, { method: 'POST', headers: HEADERS, body: formData });
+            if (!res.ok && res.status !== 302) {
+                const txt = await res.text().catch(() => '');
+                throw new Error(`HTTP ${res.status} — ${txt.slice(0, 200)}`);
+            }
+            try {
+                const clone = res.clone();
+                const ct = clone.headers.get('content-type') || '';
+                if (ct.includes('json')) {
+                    const data = await clone.json();
+                    if (data?.id) return Number(data.id);
+                    if (data?.data?.id) return Number(data.data.id);
+                    if (Array.isArray(data) && data[0]?.id) return Number(data[0].id);
+                }
+            } catch { }
+            return null;
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Options Editor — управление динамическими вариантами
+        // ─────────────────────────────────────────────────────
+        const optionsEditor = {
+            MAX_OPTIONS: 10,
+            MIN_OPTIONS: 2,
+
+            // Внутренний список: [{letter, text, correct}]
+            items: [],
+
+            init(initialOptions, initialCorrect) {
+                // initialOptions: [{id:'a', text:'...'}, ...]  или null (дефолт 4)
+                // initialCorrect: ['a', 'c']  или null
+                if (initialOptions && initialOptions.length) {
+                    this.items = initialOptions.map(o => ({
+                        letter: o.id,
+                        text: o.text || '',
+                        correct: (initialCorrect || []).includes(o.id)
+                    }));
+                } else {
+                    // По умолчанию 4 пустых варианта
+                    this.items = ['a', 'b', 'c', 'd'].map(l => ({ letter: l, text: '', correct: false }));
+                }
+                this.render();
+            },
+
+            render() {
+                const list = document.getElementById('options-list');
+                list.innerHTML = '';
+                this.items.forEach((item, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'option-row' + (item.correct ? ' is-correct' : '');
+                    row.dataset.idx = idx;
+                    row.innerHTML = `
+                <input type="checkbox" class="option-correct-check" ${item.correct ? 'checked' : ''}
+                       title="Отметить как правильный" onchange="optionsEditor.toggleCorrect(${idx}, this.checked)">
+                <span class="option-letter">${item.letter.toUpperCase()}</span>
+                <input type="text" class="option-text-input" value="${esc(item.text)}"
+                       placeholder="Вариант ${item.letter.toUpperCase()}"
+                       oninput="optionsEditor.updateText(${idx}, this.value)">
+                ${this.items.length > this.MIN_OPTIONS
+                            ? `<button type="button" class="admin-btn admin-btn-secondary admin-btn-icon admin-btn-small"
+                               onclick="optionsEditor.removeOption(${idx})" title="Удалить вариант" style="flex-shrink:0;">✕</button>`
+                            : ''}
+            `;
+                    list.appendChild(row);
+                });
+
+                // Обновить счётчик правильных
+                const correctCount = this.items.filter(i => i.correct).length;
+                const indicator = document.getElementById('correct-count-indicator');
+                if (indicator) {
+                    indicator.textContent = correctCount === 0 ? '0 правильных'
+                        : correctCount === 1 ? '1 правильный'
+                            : `${correctCount} правильных`;
+                    indicator.className = 'correct-count-badge ' + (
+                        correctCount === 0 ? 'correct-count-0' :
+                            correctCount === 1 ? 'correct-count-1' : 'correct-count-many'
+                    );
+                }
+
+                // Кнопка добавления
+                const addBtn = document.querySelector('.options-toolbar .admin-btn');
+                if (addBtn) addBtn.disabled = this.items.length >= this.MAX_OPTIONS;
+
+                const hint = document.getElementById('options-count-hint');
+                if (hint) hint.textContent = `${this.items.length} вариантов (макс. ${this.MAX_OPTIONS})`;
+            },
+
+            toggleCorrect(idx, checked) {
+                this.items[idx].correct = checked;
+                this.render();
+            },
+
+            updateText(idx, val) {
+                this.items[idx].text = val;
+            },
+
+            addOption() {
+                if (this.items.length >= this.MAX_OPTIONS) return;
+                const newLetter = getLetter(this.items.length);
+                this.items.push({ letter: newLetter, text: '', correct: false });
+                this.render();
+                // Фокус на новый инпут
+                setTimeout(() => {
+                    const inputs = document.querySelectorAll('.option-text-input');
+                    if (inputs.length) inputs[inputs.length - 1].focus();
+                }, 50);
+            },
+
+            removeOption(idx) {
+                if (this.items.length <= this.MIN_OPTIONS) return;
+                this.items.splice(idx, 1);
+                // Переназначить буквы по порядку
+                this.items.forEach((item, i) => { item.letter = getLetter(i); });
+                this.render();
+            },
+
+            // Возвращает данные для сохранения
+            getData() {
+                return {
+                    options: this.items.map(i => ({ id: i.letter, text: i.text.trim() })),
+                    correct_answers: this.items.filter(i => i.correct).map(i => i.letter)
+                };
+            },
+
+            validate() {
+                if (this.items.some(i => !i.text.trim())) {
+                    showToast('Заполните все варианты ответов', 'warning');
+                    return false;
+                }
+                if (!this.items.some(i => i.correct)) {
+                    showToast('Отметьте хотя бы один правильный ответ', 'warning');
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        // ─────────────────────────────────────────────────────
+        // Admin Object
+        // ─────────────────────────────────────────────────────
+        const admin = {
+            data: {
+                categories: [],
+                catFiltered: [],
+                questions: [],
+                qFiltered: [],
+                configs: [],
+                cfgFiltered: [],
+                configCats: [],
+                results: [],
+                resFiltered: [],
+                currentCatId: null,
+                currentQId: null,
+            },
+
+            async init() {
+                await this.loadCategories();
+                await this.loadQuestions();
+                await this.loadConfigs();
+                await this.loadResults();
+            },
+
+            async refresh() {
+                const tab = document.querySelector('.admin-tab.active')?.textContent?.trim();
+                if (tab?.includes('Категории')) { await this.loadCategories(); return; }
+                if (tab?.includes('Вопросы')) { await this.loadQuestions(); return; }
+                if (tab?.includes('Конфигурации')) { await this.loadConfigs(); return; }
+                if (tab?.includes('Результаты')) { await this.loadResults(); return; }
+            },
+
+            switchTab(name, el) {
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                document.getElementById(`tab-${name}`).classList.add('active');
+                el.classList.add('active');
+            },
+
+            // ── CATEGORIES ──────────────────────────────────
+            async loadCategories() {
+                const tbody = document.getElementById('cat-tbody');
+                tbody.innerHTML = '<tr><td colspan="7"><div class="admin-loading"><div class="admin-spinner"></div><div>Загрузка...</div></div></td></tr>';
+                try {
+                    const q = JSON.stringify({ columns: 'id,code,sname,i00_question_limit,i00_time_limit_minutes,i00_is_active,i00_sort_order,i00_description' });
+                    this.data.categories = await apiGet(`/api/v1/list_categories?_format=json&limit=500&query=${encodeURIComponent(q)}`);
+                    this.data.categories.sort((a, b) => (a.i00_sort_order || 0) - (b.i00_sort_order || 0));
+                    this.updateCatStats();
+                    this.filterCategories();
+                    this.populateCatDropdowns();
+                    showToast(`Загружено ${this.data.categories.length} категорий`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="7"><div class="admin-empty"><p>❌ Ошибка загрузки</p><p>${esc(e.message)}</p></div></td></tr>`;
+                    showToast('Ошибка загрузки категорий', 'error');
+                }
+            },
+
+            updateCatStats() {
+                document.getElementById('cat-stat-total').textContent = this.data.categories.length;
+                document.getElementById('cat-stat-active').textContent = this.data.categories.filter(c => c.i00_is_active == 1).length;
+                document.getElementById('cat-stat-updated').textContent = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            },
+
+            filterCategories() {
+                const search = document.getElementById('cat-search').value.toLowerCase();
+                const activeF = document.getElementById('cat-filter-active').value;
+                this.data.catFiltered = this.data.categories.filter(c => {
+                    const matchS = !search || (c.sname || '').toLowerCase().includes(search) || (c.code || '').toLowerCase().includes(search);
+                    const matchA = activeF === '' || String(c.i00_is_active) === activeF;
+                    return matchS && matchA;
+                });
+                this.renderCategories();
+            },
+
+            renderCategories() {
+                const tbody = document.getElementById('cat-tbody');
+                if (!this.data.catFiltered.length) {
+                    tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><p>📂 Категорий не найдено</p></div></td></tr>';
+                    return;
+                }
+                tbody.innerHTML = this.data.catFiltered.map(c => {
+                    const isActive = c.i00_is_active == 1;
+                    return `<tr>
+                <td data-label="Действия">
+                    <div class="admin-actions">
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.viewCat(${c.id})" title="Просмотр">👁️</button>
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.editCat(${c.id})" title="Редактировать">✏️</button>
+                        <button class="admin-btn admin-btn-danger admin-btn-icon" onclick="admin.deleteCat(${c.id})" title="Удалить">🗑️</button>
+                    </div>
+                </td>
+                <td data-label="Код"><code style="background:var(--admin-hover);padding:2px 6px;border-radius:3px;font-size:13px;">${esc(c.code)}</code></td>
+                <td data-label="Название"><strong>${esc(c.sname)}</strong></td>
+                <td data-label="Лимит вопр.">${c.i00_question_limit || '—'}</td>
+                <td data-label="Лимит мин.">${c.i00_time_limit_minutes || '—'}</td>
+                <td data-label="Статус">
+                    <span class="admin-badge ${isActive ? 'admin-badge-green' : 'admin-badge-gray'}">
+                        ${isActive ? '● Активна' : '○ Скрыта'}
+                    </span>
+                </td>
+                <td data-label="Порядок">${c.i00_sort_order ?? '—'}</td>
+            </tr>`;
+                }).join('');
+            },
+
+            populateCatDropdowns() {
+                const activeOpts = this.data.categories
+                    .filter(c => c.i00_is_active == 1)
+                    .map(c => `<option value="${esc(c.code)}">${esc(c.sname)}</option>`)
+                    .join('');
+                const allOpts = this.data.categories
+                    .map(c => `<option value="${esc(c.code)}">${esc(c.sname)}</option>`)
+                    .join('');
+
+                const qCat = document.getElementById('q-cat');
+                if (qCat) qCat.innerHTML = '<option value="">— Выберите категорию —</option>' + activeOpts;
+
+                const qFilterCat = document.getElementById('q-filter-cat');
+                if (qFilterCat) qFilterCat.innerHTML = '<option value="">Все категории</option>' + allOpts;
+
+                const resFilter = document.getElementById('res-filter-cat');
+                if (resFilter) resFilter.innerHTML = '<option value="">Все категории</option>' + activeOpts;
+            },
+
+            openCatModal() {
+                document.getElementById('modal-cat-title').textContent = 'Добавить категорию';
+                document.getElementById('form-cat').reset();
+                document.getElementById('cat-id').value = '';
+                document.getElementById('cat-is-active').checked = true;
+                document.getElementById('cat-active-label').textContent = 'Активна';
+                document.getElementById('modal-cat').classList.add('open');
+            },
+
+            editCat(id) {
+                const c = this.data.categories.find(x => x.id === id);
+                if (!c) return;
+                document.getElementById('modal-cat-title').textContent = 'Редактировать категорию';
+                document.getElementById('cat-id').value = c.id;
+                document.getElementById('cat-code').value = c.code || '';
+                document.getElementById('cat-sname').value = c.sname || '';
+                document.getElementById('cat-description').value = c.i00_description || '';
+                document.getElementById('cat-question-limit').value = c.i00_question_limit || '';
+                document.getElementById('cat-time-limit').value = c.i00_time_limit_minutes || '';
+                document.getElementById('cat-sort-order').value = c.i00_sort_order ?? '';
+                const isActive = c.i00_is_active == 1;
+                document.getElementById('cat-is-active').checked = isActive;
+                document.getElementById('cat-active-label').textContent = isActive ? 'Активна' : 'Скрыта';
+                document.getElementById('modal-cat').classList.add('open');
+            },
+
+            closeCatModal() { document.getElementById('modal-cat').classList.remove('open'); },
+
+            async saveCat(e) {
+                e.preventDefault();
+                const id = document.getElementById('cat-id').value;
+                const code = document.getElementById('cat-code').value.trim();
+                const sname = document.getElementById('cat-sname').value.trim();
+                const description = document.getElementById('cat-description').value.trim();
+                const qLimit = document.getElementById('cat-question-limit').value;
+                const tLimit = document.getElementById('cat-time-limit').value;
+                const sortOrder = document.getElementById('cat-sort-order').value;
+                const isActive = document.getElementById('cat-is-active').checked ? 1 : 0;
+
+                const fd = new FormData();
+                fd.append('_csrf-frontend', getCsrf());
+                fd.append('ListCategories[code]', code);
+                fd.append('ListCategories[sname]', sname);
+                fd.append('ListCategories[i00_description]', description);
+                fd.append('ListCategories[i00_question_limit]', qLimit || 100);
+                fd.append('ListCategories[i00_time_limit_minutes]', tLimit || '');
+                fd.append('ListCategories[i00_sort_order]', sortOrder || 0);
+                fd.append('ListCategories[i00_is_active]', isActive);
+
+                try {
+                    const url = id
+                        ? `/ru/t/update?id=${id}&tbl=list_categories&version=edit&modal=true&ajax=true&is_ajax=true`
+                        : `/ru/t/create?tbl=list_categories&version=add&modal=true&ajax=true&is_ajax=true`;
+                    await apiPost(url, fd);
+                    this.closeCatModal();
+                    await this.loadCategories();
+                    showToast(id ? 'Категория обновлена' : 'Категория добавлена', 'success');
+                } catch (err) {
+                    showToast('Ошибка сохранения: ' + err.message, 'error');
+                }
+            },
+
+            async deleteCat(id) {
+                const c = this.data.categories.find(x => x.id === id);
+                if (!confirm(`Удалить категорию "${c?.sname}"?`)) return;
+                const fd = new FormData();
+                fd.append('id', id);
+                fd.append('tblName', 'list_categories');
+                fd.append('_csrf-frontend', getCsrf());
+                try {
+                    await apiPost(`/ru/t/delete?id=${id}&tbl=list_categories&ajax=true&is_ajax=true`, fd);
+                    await this.loadCategories();
+                    showToast('Категория удалена', 'success');
+                } catch (err) {
+                    showToast('Ошибка удаления: ' + err.message, 'error');
+                }
+            },
+
+            viewCat(id) {
+                const c = this.data.categories.find(x => x.id === id);
+                if (!c) return;
+                document.getElementById('modal-cat-view-body').innerHTML = `
+            <div class="cat-detail-row"><span class="cat-detail-key">Код</span><span class="cat-detail-val"><code>${esc(c.code)}</code></span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Название</span><span class="cat-detail-val">${esc(c.sname)}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Описание</span><span class="cat-detail-val">${esc(c.i00_description) || '—'}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Лимит вопросов</span><span class="cat-detail-val">${c.i00_question_limit || 100}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Лимит времени</span><span class="cat-detail-val">${c.i00_time_limit_minutes ? c.i00_time_limit_minutes + ' мин' : 'Без ограничения'}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Порядок</span><span class="cat-detail-val">${c.i00_sort_order ?? 0}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Статус</span><span class="cat-detail-val">
+                <span class="admin-badge ${c.i00_is_active == 1 ? 'admin-badge-green' : 'admin-badge-gray'}">
+                    ${c.i00_is_active == 1 ? '● Активна' : '○ Скрыта'}
+                </span>
+            </span></div>
+        `;
+                document.getElementById('btn-cat-view-edit').onclick = () => { this.closeCatView(); this.editCat(id); };
+                document.getElementById('modal-cat-view').classList.add('open');
+            },
+
+            closeCatView() { document.getElementById('modal-cat-view').classList.remove('open'); },
+
+            // ── QUESTIONS ────────────────────────────────────
+            async loadQuestions() {
+                const tbody = document.getElementById('q-tbody');
+                tbody.innerHTML = '<tr><td colspan="6"><div class="admin-loading"><div class="admin-spinner"></div><div>Загрузка...</div></div></td></tr>';
+                try {
+                    // Новые колонки: options (JSON), correct_answers (JSON)
+                    // Для совместимости со старой схемой — запрашиваем и то и то
+                    const q = JSON.stringify({ columns: 'id,ilc_categories,question,options,correct_answers,a,b,c,d,answer' });
+                    this.data.questions = await apiGet(`/api/v1/doc_testanswers?_format=json&limit=10000&query=${encodeURIComponent(q)}`);
+
+                    // Нормализация: если пришли старые поля (a,b,c,d,answer) — конвертируем
+                    this.data.questions = this.data.questions.map(q => this._normalizeQuestion(q));
+
+                    this.updateQStats();
+                    this.filterQuestions();
+                    showToast(`Загружено ${this.data.questions.length} вопросов`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="6"><div class="admin-empty"><p>❌ Ошибка загрузки</p><p>${esc(e.message)}</p></div></td></tr>`;
+                    showToast('Ошибка загрузки вопросов', 'error');
+                }
+            },
+
+            // Нормализация вопроса к новому формату
+            _normalizeQuestion(q) {
+                // Парсим JSON-строки если нужно
+                let options = q.options;
+                let correct = q.correct_answers;
+
+                if (typeof options === 'string') {
+                    try { options = JSON.parse(options); } catch { options = null; }
+                }
+                if (typeof correct === 'string') {
+                    try { correct = JSON.parse(correct); } catch { correct = null; }
+                }
+
+                // Если новых полей нет, конвертируем из старых a/b/c/d/answer
+                if (!options || !options.length) {
+                    options = [];
+                    ['a', 'b', 'c', 'd'].forEach(k => {
+                        if (q[k] !== undefined && q[k] !== null && q[k] !== '') {
+                            options.push({ id: k, text: q[k] });
+                        }
+                    });
+                }
+                if (!correct || !correct.length) {
+                    correct = q.answer ? [q.answer.toLowerCase()] : [];
+                }
+
+                return { ...q, options, correct_answers: correct };
+            },
+
+            updateQStats() {
+                const multiCount = this.data.questions.filter(q => (q.correct_answers || []).length > 1).length;
+                document.getElementById('q-stat-total').textContent = this.data.questions.length;
+                document.getElementById('q-stat-multi').textContent = multiCount;
+                document.getElementById('q-stat-cats').textContent = new Set(this.data.questions.map(q => q.ilc_categories)).size;
+                document.getElementById('q-stat-shown').textContent = this.data.qFiltered.length || '—';
+            },
+
+            filterQuestions() {
+                const search = document.getElementById('q-search').value.toLowerCase();
+                const catF = document.getElementById('q-filter-cat').value;
+                const typeF = document.getElementById('q-filter-type').value;
+
+                this.data.qFiltered = this.data.questions.filter(q => {
+                    const matchS = !search || (q.question || '').toLowerCase().includes(search)
+                        || (q.options || []).some(o => (o.text || '').toLowerCase().includes(search));
+                    const matchC = !catF || this.getCatCode(q) === catF;
+                    const correctCount = (q.correct_answers || []).length;
+                    const matchT = !typeF
+                        || (typeF === 'single' && correctCount <= 1)
+                        || (typeF === 'multi' && correctCount > 1);
+                    return matchS && matchC && matchT;
+                });
+
+                document.getElementById('q-stat-shown').textContent = this.data.qFiltered.length;
+                this.renderQuestions();
+            },
+
+            getCatCode(q) {
+                if (q.ilc_categories_data?.code) return String(q.ilc_categories_data.code);
+                const val = String(q.ilc_categories || '');
+                const byCode = this.data.categories.find(x => String(x.code) === val);
+                if (byCode) return String(byCode.code);
+                const byName = this.data.categories.find(x => x.sname === val);
+                if (byName) return String(byName.code);
+                return val;
+            },
+
+            getCatName(code) {
+                const c = this.data.categories.find(x => String(x.code) === String(code));
+                if (c) return c.sname;
+                const byName = this.data.categories.find(x => x.sname === code);
+                if (byName) return byName.sname;
+                return code || '—';
+            },
+
+            renderQuestions() {
+                const tbody = document.getElementById('q-tbody');
+                if (!this.data.qFiltered.length) {
+                    tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><p>📝 Вопросов не найдено</p></div></td></tr>';
+                    return;
+                }
+                tbody.innerHTML = this.data.qFiltered.map(q => {
+                    const opts = q.options || [];
+                    const correct = q.correct_answers || [];
+                    const isMulti = correct.length > 1;
+
+                    const answerBadges = correct.map(ans =>
+                        `<span class="admin-answer-badge ${isMulti ? 'admin-answer-badge-multi' : ''}">${ans.toUpperCase()}</span>`
+                    ).join('');
+
+                    return `<tr>
+                <td data-label="Действия">
+                    <div class="admin-actions">
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.viewQ(${q.id})" title="Просмотр">👁️</button>
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.editQ(${q.id})" title="Редактировать">✏️</button>
+                        <button class="admin-btn admin-btn-danger admin-btn-icon" onclick="admin.deleteQ(${q.id})" title="Удалить">🗑️</button>
+                    </div>
+                </td>
+                <td data-label="ID"><strong>${q.id}</strong></td>
+                <td data-label="Категория"><span style="font-size:13px; color:var(--admin-primary);">${esc(this.getCatName(q.ilc_categories))}</span></td>
+                <td data-label="Вопрос"><div style="max-width:460px; line-height:1.5;">${esc(q.question || '')}</div></td>
+                <td data-label="Вариантов">
+                    <span class="admin-badge ${opts.length > 4 ? 'admin-badge-blue' : 'admin-badge-gray'}">${opts.length}</span>
+                </td>
+                <td data-label="Правильных">
+                    <div class="answer-badges">${answerBadges || '—'}</div>
+                    ${isMulti ? '<div style="font-size:11px;color:var(--admin-primary);margin-top:3px;">множественный выбор</div>' : ''}
+                </td>
+            </tr>`;
+                }).join('');
+            },
+
+            openQModal() {
+                document.getElementById('modal-q-title').textContent = 'Добавить вопрос';
+                document.getElementById('form-q').reset();
+                document.getElementById('q-id').value = '';
+                optionsEditor.init(null, null); // 4 пустых варианта
+                document.getElementById('modal-q').classList.add('open');
+            },
+
+            editQ(id) {
+                const q = this.data.questions.find(x => x.id === id);
+                if (!q) return;
+                document.getElementById('modal-q-title').textContent = 'Редактировать вопрос';
+                document.getElementById('q-id').value = q.id;
+                document.getElementById('q-cat').value = this.getCatCode(q);
+                document.getElementById('q-text').value = q.question || '';
+                optionsEditor.init(q.options || [], q.correct_answers || []);
+                document.getElementById('modal-q').classList.add('open');
+            },
+
+            closeQModal() { document.getElementById('modal-q').classList.remove('open'); },
+
+            // Добавить вариант ответа (вызывается из кнопки в модале)
+            addOption() {
+                optionsEditor.addOption();
+            },
+
+            async saveQ(e) {
+                e.preventDefault();
+                if (!optionsEditor.validate()) return;
+
+                const id = document.getElementById('q-id').value;
+                const cat = document.getElementById('q-cat').value;
+                const text = document.getElementById('q-text').value.trim();
+                const { options, correct_answers } = optionsEditor.getData();
+
+                const fd = new FormData();
+                fd.append('_csrf-frontend', getCsrf());
+                fd.append('DocTestanswers[ilc_categories]', cat);
+                fd.append('DocTestanswers[question]', text);
+
+                // Новые поля (JSON)
+                fd.append('DocTestanswers[options]', JSON.stringify(options));
+                fd.append('DocTestanswers[correct_answers]', JSON.stringify(correct_answers));
+
+                // Обратная совместимость: заполняем старые поля если вариантов <=4
+                ['a', 'b', 'c', 'd'].forEach((letter, idx) => {
+                    const opt = options[idx];
+                    fd.append(`DocTestanswers[${letter}]`, opt ? opt.text : '');
+                });
+                fd.append('DocTestanswers[answer]', correct_answers[0] || '');
+
+                try {
+                    const url = id
+                        ? `/ru/t/update?id=${id}&tbl=doc_testanswers&version=edit&modal=true&ajax=true&is_ajax=true`
+                        : `/ru/t/create?tbl=doc_testanswers&version=add&modal=true&ajax=true&is_ajax=true`;
+                    await apiPost(url, fd);
+                    this.closeQModal();
+                    await this.loadQuestions();
+                    showToast(id ? 'Вопрос обновлён' : 'Вопрос добавлен', 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Ошибка сохранения: ' + err.message, 'error');
+                }
+            },
+
+            async deleteQ(id) {
+                if (!confirm('Удалить этот вопрос?')) return;
+                const fd = new FormData();
+                fd.append('id', id);
+                fd.append('tblName', 'doc_testanswers');
+                fd.append('_csrf-frontend', getCsrf());
+                try {
+                    await apiPost(`/ru/t/delete?id=${id}&tbl=doc_testanswers&ajax=true&is_ajax=true`, fd);
+                    await this.loadQuestions();
+                    showToast('Вопрос удалён', 'success');
+                } catch (err) {
+                    showToast('Ошибка удаления: ' + err.message, 'error');
+                }
+            },
+
+            viewQ(id) {
+                const q = this.data.questions.find(x => x.id === id);
+                if (!q) return;
+                const opts = q.options || [];
+                const correct = q.correct_answers || [];
+                const isMulti = correct.length > 1;
+
+                const optHtml = opts.map(o => {
+                    const isCorrect = correct.includes(o.id);
+                    const cls = isCorrect ? (isMulti ? 'correct-multi' : 'correct') : '';
+                    return `<div class="admin-view-option ${cls}">
+                <div class="marker">${(o.id || '?').toUpperCase()}</div>
+                <div>${esc(o.text)}</div>
+                ${isCorrect ? `<span style="margin-left:auto; font-size:12px; opacity:0.85;">✓ верный</span>` : ''}
+            </div>`;
+                }).join('');
+
+                const typeLabel = isMulti
+                    ? `<span class="admin-badge admin-badge-blue">Множественный выбор (${correct.length} правильных)</span>`
+                    : `<span class="admin-badge admin-badge-green">Одиночный выбор</span>`;
+
+                document.getElementById('modal-q-view-body').innerHTML = `
+            <div class="admin-view-section">
+                <h3>Категория</h3>
+                <p>${esc(this.getCatName(q.ilc_categories))}</p>
+            </div>
+            <div class="admin-view-section">
+                <h3>Тип вопроса</h3>
+                <p>${typeLabel}</p>
+            </div>
+            <div class="admin-view-section">
+                <h3>Вопрос (ID: ${q.id})</h3>
+                <p>${esc(q.question)}</p>
+            </div>
+            <div class="admin-view-section">
+                <h3>Варианты ответов</h3>
+                ${optHtml}
+            </div>
+        `;
+                document.getElementById('btn-q-view-edit').onclick = () => { this.closeQView(); this.editQ(id); };
+                document.getElementById('modal-q-view').classList.add('open');
+            },
+
+            closeQView() { document.getElementById('modal-q-view').classList.remove('open'); },
+
+            // ── CONFIGS ──────────────────────────────────────
+            async loadConfigs() {
+                const tbody = document.getElementById('cfg-tbody');
+                tbody.innerHTML = '<tr><td colspan="7"><div class="admin-loading"><div class="admin-spinner"></div><div>Загрузка...</div></div></td></tr>';
+                try {
+                    const q = JSON.stringify({ columns: 'id,code,sname,description,total_questions,time_limit_minutes,i00_is_active,i00_sort_order' });
+                    this.data.configs = await apiGet(`/api/v1/list_test_configs?_format=json&limit=200&query=${encodeURIComponent(q)}`);
+                    this.data.configs.sort((a, b) => (a.i00_sort_order || 0) - (b.i00_sort_order || 0));
+
+                    // Загружаем привязки категорий для каждого конфига
+                    await this._loadConfigCategories();
+
+                    this.updateCfgStats();
+                    this.filterConfigs();
+                    showToast(`Загружено ${this.data.configs.length} конфигураций`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="7"><div class="admin-empty"><p>❌ Ошибка загрузки</p><p>${esc(e.message)}</p></div></td></tr>`;
+                    showToast('Ошибка загрузки конфигураций', 'error');
+                }
+            },
+
+            async _loadConfigCategories() {
+                try {
+                    const q = JSON.stringify({ columns: 'id,ilc_test_configs,ilc_categories,percent' });
+                    this.data.configCats = await apiGet(`/api/v1/list_test_config_categories?_format=json&limit=2000&query=${encodeURIComponent(q)}`);
+                } catch (e) {
+                    console.warn('Не удалось загрузить категории конфигов:', e.message);
+                    this.data.configCats = [];
+                }
+            },
+
+            getCfgCats(cfgCode) {
+                const needle = String(cfgCode);
+                return (this.data.configCats || []).filter(r => {
+                    const raw = r.ilc_test_configs ?? r.ilc_config ?? '';
+                    // Вложенный объект (expand): берём code
+                    if (raw && typeof raw === 'object') return String(raw.code) === needle;
+                    return String(raw) === needle;
+                });
+            },
+
+            updateCfgStats() {
+                document.getElementById('cfg-stat-total').textContent = this.data.configs.length;
+                document.getElementById('cfg-stat-active').textContent = this.data.configs.filter(c => c.i00_is_active == 1).length;
+                document.getElementById('cfg-stat-updated').textContent = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            },
+
+            filterConfigs() {
+                const search = document.getElementById('cfg-search').value.toLowerCase();
+                const activeF = document.getElementById('cfg-filter-active').value;
+                this.data.cfgFiltered = (this.data.configs || []).filter(c => {
+                    const matchS = !search || (c.sname || '').toLowerCase().includes(search) || (c.code || '').toLowerCase().includes(search);
+                    const matchA = activeF === '' || String(c.i00_is_active) === activeF;
+                    return matchS && matchA;
+                });
+                this.renderConfigs();
+            },
+
+            renderConfigs() {
+                const tbody = document.getElementById('cfg-tbody');
+                if (!this.data.cfgFiltered?.length) {
+                    tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><p>⚙️ Конфигураций не найдено</p><p>Добавьте первую конфигурацию тестирования</p></div></td></tr>';
+                    return;
+                }
+                tbody.innerHTML = this.data.cfgFiltered.map(c => {
+                    const isActive = c.i00_is_active == 1;
+                    const cats = this.getCfgCats(c.code);
+                    const catsHtml = cats.length
+                        ? cats.map(cc => {
+                            const name = this.getCatName(cc.ilc_categories);
+                            const pct = parseFloat(cc.percent) || 0;
+                            const count = Math.round((c.total_questions || 100) * pct / 100);
+                            return `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;background:var(--admin-primary-light);color:var(--admin-primary);padding:2px 8px;border-radius:10px;font-size:12px;">
+                        ${esc(name)}&nbsp;<strong>${pct}%</strong>&nbsp;<span style="color:var(--admin-text-secondary)">(${count})</span>
+                    </span>`;
+                        }).join('')
+                        : '<span style="color:var(--admin-text-secondary);font-size:13px;">— не задано —</span>';
+
+                    return `<tr>
+                <td data-label="Действия">
+                    <div class="admin-actions">
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.viewCfg(${c.id})" title="Просмотр">👁️</button>
+                        <button class="admin-btn admin-btn-secondary admin-btn-icon" onclick="admin.editCfg(${c.id})" title="Редактировать">✏️</button>
+                        <button class="admin-btn admin-btn-danger admin-btn-icon" onclick="admin.deleteCfg(${c.id})" title="Удалить">🗑️</button>
+                    </div>
+                </td>
+                <td data-label="Код"><code style="background:var(--admin-hover);padding:2px 6px;border-radius:3px;font-size:12px;">${esc(c.code)}</code></td>
+                <td data-label="Название"><strong>${esc(c.sname)}</strong>${c.description ? `<div style="font-size:12px;color:var(--admin-text-secondary);margin-top:2px;">${esc(c.description)}</div>` : ''}</td>
+                <td data-label="Всего вопросов" style="text-align:center;"><strong>${c.total_questions || 100}</strong></td>
+                <td data-label="Время">${c.time_limit_minutes ? c.time_limit_minutes + ' мин' : '—'}</td>
+                <td data-label="Категории">${catsHtml}</td>
+                <td data-label="Статус">
+                    <span class="admin-badge ${isActive ? 'admin-badge-green' : 'admin-badge-gray'}">
+                        ${isActive ? '● Активна' : '○ Скрыта'}
+                    </span>
+                </td>
+            </tr>`;
+                }).join('');
+            },
+
+            // ── Config Modal ─────────────────────────────────
+            _cfgCatRows: [],  // [{catCode, percent}]
+
+            openCfgModal() {
+                document.getElementById('modal-cfg-title').textContent = 'Добавить конфигурацию';
+                document.getElementById('form-cfg').reset();
+                document.getElementById('cfg-id').value = '';
+                document.getElementById('cfg-total').value = 100;
+                document.getElementById('cfg-sort').value = 0;
+                document.getElementById('cfg-is-active').checked = true;
+                document.getElementById('cfg-active-label').textContent = 'Активна';
+                this._cfgCatRows = [];
+                this.addCfgCatRow(); // стартуем с одной строки
+                this.renderCfgCatRows();
+                document.getElementById('modal-cfg').classList.add('open');
+            },
+
+            editCfg(id) {
+                const c = this.data.configs.find(x => x.id === id);
+                if (!c) return;
+                document.getElementById('modal-cfg-title').textContent = 'Редактировать конфигурацию';
+                document.getElementById('cfg-id').value = c.id;
+                document.getElementById('cfg-code').value = c.code || '';
+                document.getElementById('cfg-sname').value = c.sname || '';
+                document.getElementById('cfg-description').value = c.description || '';
+                document.getElementById('cfg-total').value = c.total_questions || 100;
+                document.getElementById('cfg-time').value = c.time_limit_minutes || '';
+                document.getElementById('cfg-sort').value = c.i00_sort_order ?? 0;
+                const isActive = c.i00_is_active == 1;
+                document.getElementById('cfg-is-active').checked = isActive;
+                document.getElementById('cfg-active-label').textContent = isActive ? 'Активна' : 'Скрыта';
+
+                // Заполнить строки категорий из данных
+                const cats = this.getCfgCats(c.code);
+                this._cfgCatRows = cats.length
+                    ? cats.map(cc => ({ catCode: cc.ilc_categories, percent: parseFloat(cc.percent) || 0, dbId: cc.id }))
+                    : [{ catCode: '', percent: 0 }];
+                this.renderCfgCatRows();
+                document.getElementById('modal-cfg').classList.add('open');
+            },
+
+            closeCfgModal() { document.getElementById('modal-cfg').classList.remove('open'); },
+
+            addCfgCatRow() {
+                this._cfgCatRows.push({ catCode: '', percent: 0 });
+                this.renderCfgCatRows();
+                // Фокус на последний select
+                setTimeout(() => {
+                    const selects = document.querySelectorAll('#cfg-cat-rows .cfg-cat-select');
+                    if (selects.length) selects[selects.length - 1].focus();
+                }, 50);
+            },
+
+            removeCfgCatRow(idx) {
+                if (this._cfgCatRows.length <= 1) return;
+                this._cfgCatRows.splice(idx, 1);
+                this.renderCfgCatRows();
+            },
+
+            updateCfgCatRow(idx, field, value) {
+                this._cfgCatRows[idx][field] = field === 'percent' ? parseFloat(value) || 0 : value;
+                this.updateCfgPercentBar();
+            },
+
+            renderCfgCatRows() {
+                const container = document.getElementById('cfg-cat-rows');
+                const catOpts = this.data.categories
+                    .map(c => `<option value="${esc(c.code)}">${esc(c.sname)}</option>`)
+                    .join('');
+
+                container.innerHTML = this._cfgCatRows.map((row, idx) => `
+            <div class="cfg-cat-row">
+                <select class="admin-form-control cfg-cat-select"
+                        onchange="admin.updateCfgCatRow(${idx},'catCode',this.value)">
+                    <option value="">— Выберите категорию —</option>
+                    ${catOpts.replace(`value="${esc(row.catCode)}"`, `value="${esc(row.catCode)}" selected`)}
+                </select>
+                <div class="cfg-percent-wrap">
+                    <input type="number" class="cfg-percent-input" min="0.01" max="100" step="0.01"
+                           value="${row.percent || ''}" placeholder="0"
+                           oninput="admin.updateCfgCatRow(${idx},'percent',this.value)">
+                    <span class="cfg-percent-sym">%</span>
+                </div>
+                ${this._cfgCatRows.length > 1
+                        ? `<button type="button" class="admin-btn admin-btn-danger admin-btn-icon admin-btn-small"
+                               onclick="admin.removeCfgCatRow(${idx})" title="Удалить">✕</button>`
+                        : ''}
+            </div>
+        `).join('');
+
+                this.updateCfgPercentBar();
+            },
+
+            updateCfgPercentBar() {
+                const total = this._cfgCatRows.reduce((sum, r) => sum + (parseFloat(r.percent) || 0), 0);
+                const rounded = Math.round(total * 100) / 100;
+                const bar = document.getElementById('cfg-pct-bar');
+                const label = document.getElementById('cfg-pct-total-label');
+                if (!bar || !label) return;
+                const pct = Math.min(total, 100);
+                bar.style.width = pct + '%';
+                bar.className = 'cfg-total-bar-fill' + (Math.abs(total - 100) < 0.01 ? ' ok' : total > 100 ? ' over' : '');
+                label.textContent = rounded + '%';
+                label.style.color = Math.abs(total - 100) < 0.01 ? 'var(--admin-success)'
+                    : total > 100 ? 'var(--admin-error)' : 'var(--admin-text)';
+            },
+
+            async saveCfg(e) {
+                e.preventDefault();
+
+                // Валидация процентов
+                const totalPct = this._cfgCatRows.reduce((s, r) => s + (parseFloat(r.percent) || 0), 0);
+                if (Math.abs(totalPct - 100) > 0.05) {
+                    showToast(`Сумма процентов должна быть 100% (сейчас ${Math.round(totalPct * 100) / 100}%)`, 'warning');
+                    return;
+                }
+                if (this._cfgCatRows.some(r => !r.catCode)) {
+                    showToast('Выберите категорию для каждой строки', 'warning');
+                    return;
+                }
+                // Дубли
+                const codes = this._cfgCatRows.map(r => r.catCode);
+                if (new Set(codes).size !== codes.length) {
+                    showToast('Одна категория указана несколько раз', 'warning');
+                    return;
+                }
+
+                const id = document.getElementById('cfg-id').value;
+                const code = document.getElementById('cfg-code').value.trim();
+                const sname = document.getElementById('cfg-sname').value.trim();
+                const desc = document.getElementById('cfg-description').value.trim();
+                const total = document.getElementById('cfg-total').value;
+                const time = document.getElementById('cfg-time').value;
+                const sort = document.getElementById('cfg-sort').value;
+                const isActive = document.getElementById('cfg-is-active').checked ? 1 : 0;
+
+                const fd = new FormData();
+                fd.append('_csrf-frontend', getCsrf());
+                fd.append('ListTestConfigs[code]', code);
+                fd.append('ListTestConfigs[sname]', sname);
+                fd.append('ListTestConfigs[description]', desc);
+                fd.append('ListTestConfigs[total_questions]', total || 100);
+                fd.append('ListTestConfigs[time_limit_minutes]', time || '');
+                fd.append('ListTestConfigs[i00_sort_order]', sort || 0);
+                fd.append('ListTestConfigs[i00_is_active]', isActive);
+
+                try {
+                    const url = id
+                        ? `/ru/t/update?id=${id}&tbl=list_test_configs&version=edit&modal=true&ajax=true&is_ajax=true`
+                        : `/ru/t/create?tbl=list_test_configs&version=add&modal=true&ajax=true&is_ajax=true`;
+                    let configId = id ? Number(id) : null;
+
+                    if (configId) {
+                        await apiPost(url, fd);
+                        console.log('[CFG] Обновление конфига id=', configId);
+                    } else {
+                        // Создание: читаем ответ вручную для отладки
+                        const res = await fetch(url, { method: 'POST', headers: HEADERS, body: fd });
+                        const responseText = await res.text();
+                        console.log('[CFG] CREATE статус:', res.status);
+                        console.log('[CFG] CREATE ответ (raw):', responseText.slice(0, 500));
+
+                        // Пробуем разобрать JSON
+                        try {
+                            const data = JSON.parse(responseText);
+                            console.log('[CFG] CREATE JSON:', data);
+                            // Сохраняем все возможные ID для выбора правильного FK
+                            const s = data?.success || {};
+                            console.log('[CFG] id=' + s.id + ' rec_id=' + s.rec_id + ' dir_id=' + s.dir_id + ' pk=' + data?.pk);
+                            // Используем rec_id — именно он обычно является PK в таблице для FK-связей
+                            if (s.rec_id) configId = Number(s.rec_id);
+                            else if (data?.pk) configId = Number(data.pk);
+                            else if (s.id) configId = Number(s.id);
+                            console.log('[CFG] configId из ответа:', configId);
+                            // Сохраняем весь объект success для возможного использования dir_id
+                            this._lastCreatedConfig = s;
+                        } catch (parseErr) {
+                            console.log('[CFG] Ответ не JSON:', parseErr.message);
+                        }
+
+                        // Финальный фоллбэк — берём последний по id из API
+                        if (!configId) {
+                            console.log('[CFG] id не найден в ответе, перезагружаем список...');
+                            await this.loadConfigs();
+                            const sorted = this.data.configs.slice().sort((a, b) => b.id - a.id);
+                            configId = sorted[0]?.id || null;
+                            console.log('[CFG] id из списка (последний):', configId);
+                        }
+                    }
+
+                    console.log('[CFG] Итоговый configId:', configId);
+
+                    if (!configId) {
+                        showToast('Не удалось определить ID конфигурации — проверьте консоль', 'error');
+                        return;
+                    }
+
+                    // Получаем code конфига (FK ссылается на code, не на id)
+                    const cfgCode = code; // code уже считан выше из формы
+                    await this._saveCfgCategories(configId, Boolean(id), cfgCode);
+
+                    this.closeCfgModal();
+                    await this.loadConfigs();
+                    showToast(id ? 'Конфигурация обновлена' : 'Конфигурация добавлена', 'success');
+                } catch (err) {
+                    console.error('[CFG] Ошибка:', err);
+                    showToast('Ошибка сохранения: ' + err.message, 'error');
+                }
+            },
+
+            async _saveCfgCategories(configId, isEdit, cfgCode) {
+                if (!cfgCode) {
+                    console.error('[CFG-CATS] cfgCode не передан!');
+                    return;
+                }
+
+                // При редактировании — удаляем старые строки по code конфига
+                if (isEdit) {
+                    await this._loadConfigCategories();
+                    const oldCats = this.getCfgCats(cfgCode);
+                    console.log('[CFG-CATS] Удаляем старых строк:', oldCats.length, 'для code=', cfgCode);
+                    for (const oc of oldCats) {
+                        const fd = new FormData();
+                        fd.append('id', oc.id);
+                        fd.append('tblName', 'list_test_config_categories');
+                        fd.append('_csrf-frontend', getCsrf());
+                        await apiPost(`/ru/t/delete?id=${oc.id}&tbl=list_test_config_categories&ajax=true&is_ajax=true`, fd).catch(() => { });
+                    }
+                }
+
+                // Создаём новые строки — FK = code конфига
+                console.log('[CFG-CATS] Сохраняем', this._cfgCatRows.length, 'строк, ilc_test_configs =', cfgCode);
+                for (const row of this._cfgCatRows) {
+                    const fd = new FormData();
+                    fd.append('_csrf-frontend', getCsrf());
+                    fd.append('ListTestConfigCategories[ilc_test_configs]', cfgCode);
+                    fd.append('ListTestConfigCategories[ilc_categories]', row.catCode);
+                    fd.append('ListTestConfigCategories[percent]', row.percent);
+                    fd.append('ListTestConfigCategories[sname]', `${cfgCode}_${row.catCode}`);
+                    try {
+                        const res = await fetch('/ru/t/create?tbl=list_test_config_categories&version=add&modal=true&ajax=true&is_ajax=true',
+                            { method: 'POST', headers: HEADERS, body: fd });
+                        const txt = await res.text();
+                        console.log('[CFG-CATS]', row.catCode, row.percent + '% → статус:', res.status, '| тело:', txt.slice(0, 300));
+                    } catch (err) {
+                        console.error('[CFG-CATS] Ошибка:', err);
+                    }
+                }
+            },
+            async deleteCfg(id) {
+                const c = this.data.configs.find(x => x.id === id);
+                if (!confirm(`Удалить конфигурацию "${c?.sname}"? Все привязки категорий тоже удалятся.`)) return;
+                const fd = new FormData();
+                fd.append('id', id);
+                fd.append('tblName', 'list_test_configs');
+                fd.append('_csrf-frontend', getCsrf());
+                try {
+                    await apiPost(`/ru/t/delete?id=${id}&tbl=list_test_configs&ajax=true&is_ajax=true`, fd);
+                    await this.loadConfigs();
+                    showToast('Конфигурация удалена', 'success');
+                } catch (err) {
+                    showToast('Ошибка удаления: ' + err.message, 'error');
+                }
+            },
+
+            viewCfg(id) {
+                const c = this.data.configs.find(x => x.id === id);
+                if (!c) return;
+                const cats = this.getCfgCats(c.code);
+                const total = c.total_questions || 100;
+
+                const breakdownHtml = cats.length ? cats.map(cc => {
+                    const name = this.getCatName(cc.ilc_categories);
+                    const pct = parseFloat(cc.percent) || 0;
+                    const count = Math.round(total * pct / 100);
+                    return `<div class="cfg-breakdown-row">
+                <span class="cfg-breakdown-name">${esc(name)}</span>
+                <div class="cfg-breakdown-bar-wrap"><div class="cfg-breakdown-bar-fill" style="width:${pct}%"></div></div>
+                <span class="cfg-breakdown-pct">${pct}%</span>
+                <span class="cfg-breakdown-count">≈ ${count} вопр.</span>
+            </div>`;
+                }).join('') : '<p style="color:var(--admin-text-secondary)">Категории не заданы</p>';
+
+                document.getElementById('modal-cfg-view-body').innerHTML = `
+            <div class="cat-detail-row"><span class="cat-detail-key">Код</span><span class="cat-detail-val"><code>${esc(c.code)}</code></span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Название</span><span class="cat-detail-val">${esc(c.sname)}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Описание</span><span class="cat-detail-val">${esc(c.description) || '—'}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Всего вопросов</span><span class="cat-detail-val">${total}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Лимит времени</span><span class="cat-detail-val">${c.time_limit_minutes ? c.time_limit_minutes + ' мин' : 'Без ограничения'}</span></div>
+            <div class="cat-detail-row"><span class="cat-detail-key">Статус</span><span class="cat-detail-val">
+                <span class="admin-badge ${c.i00_is_active == 1 ? 'admin-badge-green' : 'admin-badge-gray'}">
+                    ${c.i00_is_active == 1 ? '● Активна' : '○ Скрыта'}
+                </span>
+            </span></div>
+            <div style="margin-top:16px;">
+                <div style="font-size:11px;color:var(--admin-text-secondary);text-transform:uppercase;font-weight:500;letter-spacing:.5px;margin-bottom:10px;">Распределение по категориям</div>
+                <div class="cfg-breakdown">${breakdownHtml}</div>
+            </div>
+        `;
+                document.getElementById('btn-cfg-view-edit').onclick = () => { this.closeCfgView(); this.editCfg(id); };
+                document.getElementById('modal-cfg-view').classList.add('open');
+            },
+
+            closeCfgView() { document.getElementById('modal-cfg-view').classList.remove('open'); },
+
+            // ── RESULTS ──────────────────────────────────────
+            async loadResults() {
+                const tbody = document.getElementById('res-tbody');
+                tbody.innerHTML = '<tr><td colspan="7"><div class="admin-loading"><div class="admin-spinner"></div><div>Загрузка...</div></div></td></tr>';
+                try {
+                    const q = JSON.stringify({ columns: 'id,ilc_person,ilc_categories,i00_result,i00_correct_count,i00_wrong_count,i00_skipped_count,i00_total_count,i00_duration_seconds,i0d_time' });
+                    this.data.results = await apiGet(`/api/v1/doc_resultsbyuser?_format=json&limit=500&sort=-id&query=${encodeURIComponent(q)}`);
+                    this.updateResStats();
+                    this.filterResults();
+                    showToast(`Загружено ${this.data.results.length} результатов`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="7"><div class="admin-empty"><p>❌ Ошибка загрузки</p><p>${esc(e.message)}</p></div></td></tr>`;
+                    showToast('Ошибка загрузки результатов', 'error');
+                }
+            },
+
+            updateResStats() {
+                const total = this.data.results.length;
+                const percents = this.data.results.map(r => parseInt(r.i00_result) || 0).filter(p => p > 0);
+                const avg = percents.length ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0;
+                const users = new Set(this.data.results.map(r => r.ilc_person)).size;
+                document.getElementById('res-stat-total').textContent = total;
+                document.getElementById('res-stat-avg').textContent = avg + '%';
+                document.getElementById('res-stat-users').textContent = users;
+            },
+
+            filterResults() {
+                const search = document.getElementById('res-search').value.toLowerCase();
+                const catF = document.getElementById('res-filter-cat').value;
+                this.data.resFiltered = this.data.results.filter(r => {
+                    const matchS = !search
+                        || (r.ilc_person || '').toLowerCase().includes(search)
+                        || (r.ilc_categories || '').toLowerCase().includes(search)
+                        || this.getCatName(r.ilc_categories).toLowerCase().includes(search);
+                    const matchC = !catF || String(r.ilc_categories) === catF;
+                    return matchS && matchC;
+                });
+                this.renderResults();
+            },
+
+            renderResults() {
+                const tbody = document.getElementById('res-tbody');
+                if (!this.data.resFiltered.length) {
+                    tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><p>📊 Результатов не найдено</p></div></td></tr>';
+                    return;
+                }
+                tbody.innerHTML = this.data.resFiltered.map(r => {
+                    const pct = parseInt(r.i00_result) || 0;
+                    const color = pct >= 80 ? '#1e8e3e' : pct >= 50 ? '#f29900' : '#d93025';
+                    return `<tr>
+                <td data-label="ID"><strong>${r.id}</strong></td>
+                <td data-label="Пользователь"><span style="font-weight:500;">${esc(r.ilc_person || 'Гость')}</span></td>
+                <td data-label="Категория"><span style="font-size:13px; color:var(--admin-primary);">${esc(this.getCatName(r.ilc_categories))}</span></td>
+                <td data-label="Дата">${fmtDate(r.i0d_time)}</td>
+                <td data-label="Результат"><span style="font-weight:700; color:${color}; font-size:16px;">${pct}%</span></td>
+                <td data-label="Детали">
+                    <span style="font-size:12px; color:var(--admin-text-secondary);">
+                        ✅ ${r.i00_correct_count ?? '—'} &nbsp;
+                        ❌ ${r.i00_wrong_count ?? '—'} &nbsp;
+                        ⏭ ${r.i00_skipped_count ?? '—'} &nbsp;
+                        / ${r.i00_total_count ?? '—'}
+                    </span>
+                </td>
+                <td data-label="Длительность">${fmtDuration(r.i00_duration_seconds)}</td>
+            </tr>`;
+                }).join('');
+            },
+        };
+
+        // ── Init ─────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            admin.init();
+
+            // Toggle label sync
+            document.getElementById('cat-is-active').addEventListener('change', function () {
+                document.getElementById('cat-active-label').textContent = this.checked ? 'Активна' : 'Скрыта';
+            });
+            document.getElementById('cfg-is-active').addEventListener('change', function () {
+                document.getElementById('cfg-active-label').textContent = this.checked ? 'Активна' : 'Скрыта';
+            });
+
+            // Escape closes modals
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    admin.closeCatModal();
+                    admin.closeCatView();
+                    admin.closeQModal();
+                    admin.closeQView();
+                    admin.closeCfgModal();
+                    admin.closeCfgView();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймлайн Транспорта — Рудник Инкай</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f3f6f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+
+            --color-inwork: #10b981;
+            --color-reserve: #f59e0b;
+            --color-plan_to: #3b82f6;
+            --color-rem: #ef4444;
+            --color-unknown: #cbd5e1;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            --shadow-glow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 0.02) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.02) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.02) 0, transparent 50%);
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6, #06b6d4);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.25);
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-area:hover .logo-icon {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #0f172a, #334155);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .controls-area {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        select {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            background: var(--surface2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        input[type="date"]:hover,
+        input[type="text"]:hover,
+        select:hover {
+            border-color: #cbd5e1;
+            background: #ffffff;
+        }
+
+        input[type="date"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            border-color: #3b82f6;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        /* ── Navigation Links ── */
+        .quick-links {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 0 24px;
+        }
+
+        .quick-link-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            /* Сделал крупнее */
+            border-radius: 8px;
+            font-size: 14px;
+            /* Сделал крупнее */
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            /* Для кликабельности поверх всего */
+            z-index: 50;
+        }
+
+        .quick-link-btn:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        /* ── Filter Tabs ── */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 50;
+            /* Чтобы точно кликались */
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .filter-tab.active {
+            background: #3b82f6;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
+        /* ── Main content ── */
+        .container {
+            flex: 1;
+            padding: 24px;
+            width: 100%;
+            max-width: 100%;
+            /* Force full width regardless of any framework wrapper */
+            margin: 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Summary Cards ── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--card-color, transparent);
+            opacity: 0.8;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .summary-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-val {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Timeline Section ── */
+        .timeline-card {
+            background: var(--surface);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .timeline-header {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            padding-left: 240px;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .th-name {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 240px;
+            padding: 16px 20px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: inherit;
+        }
+
+        .th-scale {
+            flex: 1;
+            display: flex;
+            height: 50px;
+            position: relative;
+        }
+
+        .scale-tick {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            border-left: 1px dashed #cbd5e1;
+        }
+
+        .scale-label {
+            position: absolute;
+            top: 16px;
+            left: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .timeline-body {
+            position: relative;
+            background: #ffffff;
+        }
+
+        .ts-row {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            min-height: 56px;
+            position: relative;
+            background: var(--surface);
+            transition: background 0.2s ease;
+        }
+
+        .ts-row:hover {
+            background: #f8fafc;
+        }
+
+        .ts-name-col {
+            width: 240px;
+            flex-shrink: 0;
+            padding: 16px 20px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--surface);
+            z-index: 10;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ts-row:hover .ts-name-col {
+            background: #f8fafc;
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .ts-group-header {
+            background: linear-gradient(90deg, #f1f5f9, #ffffff);
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #475569;
+            border-bottom: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            position: relative;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ts-group-header::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 18px;
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+
+        .ts-track {
+            flex: 1;
+            position: relative;
+            background: repeating-linear-gradient(90deg,
+                    transparent,
+                    transparent calc(3.333% - 1px),
+                    rgba(203, 213, 225, 0.3) 3.333%);
+            background-attachment: local;
+        }
+
+        .ts-segment {
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            border-radius: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            min-width: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .ts-segment:hover {
+            transform: scaleY(1.3) scaleX(1.02);
+            box-shadow: var(--shadow-glow);
+            z-index: 25;
+            filter: brightness(1.1);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 4px;
+            /* Убрал сильное закругление */
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(8px) scale(0.95);
+            transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .tt-title {
+            font-weight: 800;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #38bdf8;
+            letter-spacing: -0.3px;
+        }
+
+        .tt-time {
+            color: #cbd5e1;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tt-time::before {
+            content: '⏱';
+            font-size: 14px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 64px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .empty-state::before {
+            content: '📭';
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        /* ── Loading Overlay ── */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #3b82f6;
+            border-right-color: #0ea5e9;
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader">
+        <div class="loader-ring"></div>
+        <div>Загрузка данных...</div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip">
+        <div class="tt-title" id="tt-title"></div>
+        <div class="tt-time" id="tt-time"></div>
+    </div>
+
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">🚛</div>
+            <div>
+                <div class="header-title">Таймлайн Транспорта</div>
+                <div class="header-subtitle">Детальная история статусов техники</div>
+            </div>
+
+            <!-- Quick Links перенесены на самый верх рядом с лого -->
+            <div class="quick-links" style="margin-bottom: 0; padding-left: 12px;">
+                <button class="quick-link-btn" onclick="openModule('spisok-dejstviya-i-statusov-transporta')">
+                    📝 Ввод данных
+                </button>
+                <button class="quick-link-btn" onclick="openModule('kio-i-ktg-transportnogo-otdela')">
+                    📊 КИО и КТГ
+                </button>
+                <button class="quick-link-btn" onclick="openModule('dashboard-po-ts')">
+                    📈 График по статусам
+                </button>
+            </div>
+        </div>
+        <div class="controls-area">
+            <input type="text" id="search-input" placeholder="Поиск транспорта..." oninput="filterRows()">
+            <select id="zoom-level" onchange="renderData()">
+                <option value="day">Сутки</option>
+                <option value="week">Неделя</option>
+                <option value="month" selected>Месяц</option>
+                <option value="year">Год</option>
+            </select>
+            <input type="date" id="date-picker" onchange="renderData()">
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Tabs -->
+        <div class="filter-tabs" id="filter-tabs">
+            <!-- Сюда вставятся кнопки видов ТС -->
+        </div>
+
+        <!-- Сводка -->
+        <div class="summary-grid">
+            <div class="summary-card" style="--card-color: var(--color-inwork)">
+                <div class="summary-icon" style="background:#dcfce7;color:#166534;">✅</div>
+                <div>
+                    <div class="summary-val" id="sum-inwork" style="color:#166534;">0</div>
+                    <div class="summary-label">В эксплуатации</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--card-color: var(--color-reserve)">
+                <div class="summary-icon" style="background:#fef3c7;color:#92400e;">⏸️</div>
+                <div>
+                    <div class="summary-val" id="sum-reserve" style="color:#92400e;">0</div>
+                    <div class="summary-label">Резерв</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--card-color: var(--color-plan_to)">
+                <div class="summary-icon" style="background:#dbeafe;color:#1e40af;">🔧</div>
+                <div>
+                    <div class="summary-val" id="sum-planto" style="color:#1e40af;">0</div>
+                    <div class="summary-label">Плановое ТО</div>
+                </div>
+            </div>
+            <div class="summary-card" style="--card-color: var(--color-rem)">
+                <div class="summary-icon" style="background:#fee2e2;color:#991b1b;">❌</div>
+                <div>
+                    <div class="summary-val" id="sum-rem" style="color:#991b1b;">0</div>
+                    <div class="summary-label">На ремонте</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таймлайн -->
+        <div class="timeline-card">
+            <div class="timeline-header">
+                <div class="th-name">Транспортное средство</div>
+                <div class="th-scale" id="th-scale">
+                    <!-- Будет заполнено скриптом (0..24 часа) -->
+                </div>
+            </div>
+            <div class="timeline-body" id="timeline-body">
+                <!-- Строки транспорта -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        // Статусы и их цвета
+        const STATUS_COLORS = {
+            'inwork': 'linear-gradient(90deg, #10b981, #059669)',
+            'reserve': 'linear-gradient(90deg, #f59e0b, #d97706)',
+            'plan_to': 'linear-gradient(90deg, #3b82f6, #2563eb)',
+            'rem': 'linear-gradient(90deg, #ef4444, #dc2626)',
+        };
+
+        const STATUS_NAMES = {
+            'inwork': 'В эксплуатации',
+            'reserve': 'Резерв',
+            'plan_to': 'Плановое ТО',
+            'rem': 'На ремонте',
+        };
+
+        let allTsData = null;
+        let processedData = [];
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        async function init() {
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today.getTime() - offset)).toISOString().slice(0, 10);
+            document.getElementById('date-picker').value = localISOTime;
+
+            drawHeaderScale();
+
+            try {
+                // Запрашиваем маппинг code -> rec_id из справочника list_ts
+                const tsQuery = JSON.stringify({ columns: 'code,rec_id,i00_omm_id', limit: 5000 });
+                const tsRes = await fetchJSON(`${API_BASE}/list_ts?_format=json&query=${encodeURIComponent(tsQuery)}`);
+                window.tsCodeToId = {};
+                window.tsOmniIdMap = {};
+                tsRes.forEach(t => {
+                    if (t.code && t.rec_id) {
+                        window.tsCodeToId[t.code] = t.rec_id;
+                        if (t.i00_omm_id) {
+                            window.tsOmniIdMap[t.code] = true;
+                        }
+                    }
+                });
+
+                const query = JSON.stringify({
+                    offset: '0',
+                    limit: '5000',
+                    columns: 'i0d_caldate,ilc_ts,ilc_uppevents,ilc_vid_ts',
+                    show_code: 'true',
+                    order: 'i0d_caldate|desc'
+                });
+
+                allTsData = await fetchJSON(
+                    `${API_BASE}/doc_transport_actions?_format=json&query=${encodeURIComponent(query)}`
+                );
+
+                renderData();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('timeline-body').innerHTML =
+                    `<div class="empty-state">Ошибка загрузки данных: ${err.message}</div>`;
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function openModule(pageCode) {
+            window.open(
+                window.location.origin + '/ru/cms/publish/view?code=' + pageCode,
+                '_blank'
+            );
+        }
+
+        function openTsView(tsId) {
+            if (!tsId) return;
+            window.open(
+                window.location.origin + '/ru/t/view?id=' + tsId + '&tbl=list_ts&version=info',
+                '_blank'
+            );
+        }
+
+        function drawHeaderScale() {
+            const scaleEl = document.getElementById('th-scale');
+            let scaleHtml = '';
+
+            const targetDateStr = document.getElementById('date-picker').value;
+            const zoomLevel = document.getElementById('zoom-level').value;
+            if (!targetDateStr) return;
+
+            const [ty, tm, td] = targetDateStr.split('-');
+            const targetDate = new Date(ty, tm - 1, td, 0, 0, 0, 0);
+
+            let daysToSub = 0;
+            if (zoomLevel === 'day') daysToSub = 0;
+            else if (zoomLevel === 'week') daysToSub = 6;
+            else if (zoomLevel === 'month') daysToSub = 29;
+            else if (zoomLevel === 'year') daysToSub = 364;
+
+            const startDate = new Date(targetDate.getTime() - daysToSub * 24 * 3600 * 1000);
+
+            if (zoomLevel === 'day') {
+                for (let i = 0; i <= 24; i += 2) {
+                    const pct = (i / 24) * 100;
+                    scaleHtml += `<div class="scale-tick" style="left: ${pct}%;"><div class="scale-label">${i.toString().padStart(2, '0')}:00</div></div>`;
+                }
+            } else if (zoomLevel === 'week') {
+                for (let i = 0; i <= 7; i++) {
+                    const pct = (i / 7) * 100;
+                    const d = new Date(startDate.getTime() + i * 24 * 3600 * 1000);
+                    const dayStr = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0');
+                    scaleHtml += `<div class="scale-tick" style="left: ${pct}%;"><div class="scale-label">${dayStr}</div></div>`;
+                }
+            } else if (zoomLevel === 'month') {
+                for (let i = 0; i <= 30; i++) {
+                    const pct = (i / 30) * 100;
+                    const d = new Date(startDate.getTime() + i * 24 * 3600 * 1000);
+                    const dayStr = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0');
+
+                    // Отображаем не каждый день, чтобы избежать наложения (каждые 3-4 дня)
+                    if (i % 3 === 0 || i === 30) {
+                        scaleHtml += `<div class="scale-tick" style="left: ${pct}%;">
+                            <div class="scale-label">${dayStr}</div>
+                        </div>`;
+                    } else {
+                        // Просто засечка без текста
+                        scaleHtml += `<div class="scale-tick" style="left: ${pct}%; border-left: 1px dotted #e2e8f0;"></div>`;
+                    }
+                }
+            } else if (zoomLevel === 'year') {
+                for (let i = 0; i <= 12; i++) {
+                    const pct = (i / 12) * 100;
+                    const d = new Date(startDate);
+                    d.setMonth(d.getMonth() + i);
+                    const moStr = (d.getMonth() + 1).toString().padStart(2, '0') + '.' + d.getFullYear().toString().slice(-2);
+                    scaleHtml += `<div class="scale-tick" style="left: ${pct}%;"><div class="scale-label">${moStr}</div></div>`;
+                }
+            }
+            scaleEl.innerHTML = scaleHtml;
+        }
+
+        function formatTime(ms) {
+            const d = new Date(ms);
+            const dy = d.getDate().toString().padStart(2, '0');
+            const mo = (d.getMonth() + 1).toString().padStart(2, '0');
+            const hh = d.getHours().toString().padStart(2, '0');
+            const mm = d.getMinutes().toString().padStart(2, '0');
+            return `${dy}.${mo} ${hh}:${mm}`;
+        }
+
+        function parseLocalTime(dtStr) {
+            if (!dtStr) return new Date();
+            const parts = dtStr.split(' ');
+            const datePart = parts[0];
+            const timePart = parts[1] || '00:00:00';
+
+            const [y, m, d] = datePart.split('-');
+            const [h, min, s] = timePart.split(':');
+            return new Date(y, m - 1, d, h, min, s || 0);
+        }
+
+        function renderData() {
+            const targetDateStr = document.getElementById('date-picker').value;
+            const zoomLevel = document.getElementById('zoom-level').value;
+            if (!targetDateStr || !allTsData) return;
+
+            // Перерисовываем шкалу
+            drawHeaderScale();
+
+            const [ty, tm, td] = targetDateStr.split('-');
+            const selectedDateStartMs = new Date(ty, tm - 1, td, 0, 0, 0, 0).getTime();
+            const selectedDateEndMs = selectedDateStartMs + 24 * 3600 * 1000;
+
+            let daysToSub = 0;
+            if (zoomLevel === 'day') daysToSub = 0;
+            else if (zoomLevel === 'week') daysToSub = 6;
+            else if (zoomLevel === 'month') daysToSub = 29;
+            else if (zoomLevel === 'year') daysToSub = 364;
+
+            const timelineStartMs = selectedDateStartMs - (daysToSub * 24 * 3600 * 1000);
+            const timelineEndMs = selectedDateEndMs; // конец выбранного дня
+
+            const tsHistory = {};
+
+            allTsData.forEach(r => {
+                const vId = r.ilc_ts_data ? r.ilc_ts_data.code : r.ilc_ts; // Уникальный ключ для группировки
+                const dbId = window.tsCodeToId ? (window.tsCodeToId[vId] || '') : ''; // Читаем правильный id из словаря
+                const vName = r.ilc_ts_data ? r.ilc_ts_data.sname : r.ilc_ts;
+                const statusCode = r.ilc_uppevents_data ? r.ilc_uppevents_data.code : r.ilc_uppevents;
+                const statusName = r.ilc_uppevents_data ? r.ilc_uppevents_data.sname : r.ilc_uppevents;
+                const vidName = r.ilc_vid_ts_data ? r.ilc_vid_ts_data.sname : (r.ilc_vid_ts || 'Прочее');
+
+                const dt = parseLocalTime(r.i0d_caldate);
+
+                if (!vId) return;
+
+                const hasOmniId = window.tsOmniIdMap ? !!window.tsOmniIdMap[vId] : false;
+
+                if (!tsHistory[vId]) {
+                    tsHistory[vId] = { id: dbId, name: vName || vId, vidName: vidName, hasOmniId: hasOmniId, events: [] };
+                }
+                tsHistory[vId].events.push({
+                    timeMs: dt.getTime(),
+                    code: statusCode,
+                    name: statusName || statusCode,
+                    rawDate: r.i0d_caldate
+                });
+            });
+
+            Object.values(tsHistory).forEach(ts => {
+                ts.events.sort((a, b) => a.timeMs - b.timeMs);
+            });
+
+            processedData = [];
+            const summaryCounts = { 'inwork': 0, 'reserve': 0, 'plan_to': 0, 'rem': 0 };
+
+            const nowMs = Date.now();
+            let endOfViewTime = timelineEndMs;
+
+            const today = new Date();
+            const todayStr = [today.getFullYear(), (today.getMonth() + 1).toString().padStart(2, '0'), today.getDate().toString().padStart(2, '0')].join('-');
+
+            if (targetDateStr === todayStr) {
+                endOfViewTime = Math.min(timelineEndMs, nowMs);
+            }
+
+            Object.values(tsHistory).forEach(ts => {
+                let currentStatus = null;
+                let segments = [];
+                let statusForSelectedDate = null; // статус на конец выбранного дня
+
+                // Найти статус до начала таймлайна
+                for (let i = 0; i < ts.events.length; i++) {
+                    if (ts.events[i].timeMs <= timelineStartMs) {
+                        currentStatus = ts.events[i];
+                    } else {
+                        break;
+                    }
+                }
+
+                // Найти статус конкретно для сводки на выбранный день (до конца этого дня)
+                let latestStatusBeforeSelectedDayEnd = null;
+                for (let i = 0; i < ts.events.length; i++) {
+                    if (ts.events[i].timeMs <= Math.min(selectedDateEndMs, nowMs)) {
+                        latestStatusBeforeSelectedDayEnd = ts.events[i].code;
+                    } else {
+                        break;
+                    }
+                }
+                statusForSelectedDate = latestStatusBeforeSelectedDayEnd;
+
+                let segmentStartMs = timelineStartMs;
+
+                // Построение отрезков для таймлайна
+                for (let i = 0; i < ts.events.length; i++) {
+                    const ev = ts.events[i];
+                    if (ev.timeMs > timelineStartMs && ev.timeMs < timelineEndMs) {
+                        if (currentStatus) {
+                            segments.push({
+                                code: currentStatus.code,
+                                name: currentStatus.name,
+                                startMs: segmentStartMs,
+                                endMs: Math.min(ev.timeMs, endOfViewTime),
+                            });
+                        }
+                        currentStatus = ev;
+                        segmentStartMs = ev.timeMs;
+                    }
+                }
+
+                // Последний отрезок, если событие не закрыто следующим
+                if (currentStatus && segmentStartMs < endOfViewTime) {
+                    segments.push({
+                        code: currentStatus.code,
+                        name: currentStatus.name,
+                        startMs: segmentStartMs,
+                        endMs: endOfViewTime,
+                    });
+                }
+
+                if (statusForSelectedDate && summaryCounts[statusForSelectedDate] !== undefined) {
+                    summaryCounts[statusForSelectedDate]++;
+                }
+
+                if (segments.length > 0) {
+                    processedData.push({
+                        id: ts.id,
+                        name: ts.name,
+                        vidName: ts.vidName,
+                        hasOmniId: ts.hasOmniId,
+                        segments: segments
+                    });
+                }
+            });
+
+            processedData.sort((a, b) => a.name.localeCompare(b.name));
+
+            document.getElementById('sum-inwork').textContent = summaryCounts['inwork'];
+            document.getElementById('sum-reserve').textContent = summaryCounts['reserve'];
+            document.getElementById('sum-planto').textContent = summaryCounts['plan_to'];
+            document.getElementById('sum-rem').textContent = summaryCounts['rem'];
+
+            renderFilterTabs();
+            filterRows();
+        }
+
+        let activeFilter = 'all';
+
+        function renderFilterTabs() {
+            const tabsContainer = document.getElementById('filter-tabs');
+            const uniqueTypes = new Set(processedData.map(d => d.vidName));
+            const sortedTypes = Array.from(uniqueTypes).sort();
+
+            let tabsHtml = `<button class="filter-tab ${activeFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">Все виды</button>`;
+
+            sortedTypes.forEach(type => {
+                const isActive = activeFilter === type ? 'active' : '';
+                tabsHtml += `<button class="filter-tab ${isActive}" onclick="setFilter('${escHtml(type)}')">${escHtml(type)}</button>`;
+            });
+
+            tabsContainer.innerHTML = tabsHtml;
+        }
+
+        function setFilter(type) {
+            activeFilter = type;
+            renderFilterTabs();
+            filterRows();
+        }
+
+        const tooltip = document.getElementById('tooltip');
+        let hoverTimeout = null;
+
+        function showTooltipFromEl(e, el) {
+            clearTimeout(hoverTimeout);
+            const name = el.getAttribute('data-label');
+            const startMs = parseInt(el.getAttribute('data-start'));
+            const endMs = parseInt(el.getAttribute('data-end'));
+            const tsName = el.getAttribute('data-ts');
+
+            document.getElementById('tt-title').textContent = `${tsName} — ${name}`;
+            document.getElementById('tt-time').textContent = `${formatTime(startMs)} – ${formatTime(endMs)}`;
+
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideTooltip() {
+            hoverTimeout = setTimeout(() => {
+                tooltip.style.opacity = '0';
+            }, 100);
+        }
+
+        function filterRows() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const tb = document.getElementById('timeline-body');
+
+            const targetDateStr = document.getElementById('date-picker').value;
+            const zoomLevel = document.getElementById('zoom-level').value;
+            const [ty, tm, td] = targetDateStr.split('-');
+            const selectedDateStartMs = new Date(ty, tm - 1, td, 0, 0, 0, 0).getTime();
+
+            let daysToSub = 0;
+            let WindowDays = 1;
+            if (zoomLevel === 'day') { daysToSub = 0; WindowDays = 1; }
+            else if (zoomLevel === 'week') { daysToSub = 6; WindowDays = 7; }
+            else if (zoomLevel === 'month') { daysToSub = 29; WindowDays = 30; }
+            else if (zoomLevel === 'year') { daysToSub = 364; WindowDays = 365; }
+
+            const timelineStartMs = selectedDateStartMs - (daysToSub * 24 * 3600 * 1000);
+            const WindowMs = WindowDays * 24 * 3600 * 1000;
+
+            let html = '';
+
+            let filtered = processedData.filter(d => d.name.toLowerCase().includes(search));
+
+            if (activeFilter !== 'all') {
+                filtered = filtered.filter(d => d.vidName === activeFilter);
+            }
+
+            if (filtered.length === 0) {
+                tb.innerHTML = '<div class="empty-state">Нет данных для отображения</div>';
+                return;
+            }
+
+            // Группировка по виду ТС
+            const grouped = {};
+            filtered.forEach(ts => {
+                const groupName = ts.vidName;
+                if (!grouped[groupName]) grouped[groupName] = [];
+                grouped[groupName].push(ts);
+            });
+
+            // Сортировка групп по алфавиту
+            const sortedGroups = Object.keys(grouped).sort();
+
+            sortedGroups.forEach(groupName => {
+                // Добавляем заголовок группы
+                html += `<div class="ts-group-header" style="text-align: left; padding-left: 28px; background-color: #f1f5f9; border-top: 1px solid #cbd5e1;">${escHtml(groupName)}</div>`;
+
+                // Отрисовка строк внутри группы
+                grouped[groupName].forEach(ts => {
+                    let segmentsHtml = '';
+                    ts.segments.forEach(seg => {
+                        const startPx = ((seg.startMs - timelineStartMs) / WindowMs) * 100;
+                        const widthPx = ((seg.endMs - seg.startMs) / WindowMs) * 100;
+
+                        const color = STATUS_COLORS[seg.code] || 'var(--color-unknown)';
+                        const label = STATUS_NAMES[seg.code] || seg.name;
+
+                        segmentsHtml += `
+                            <div class="ts-segment" 
+                                 style="left: ${startPx}%; width: ${Math.max(widthPx, 0.1)}%; background: ${color};"
+                                 data-label="${escHtml(label)}"
+                                 data-start="${seg.startMs}"
+                                 data-end="${seg.endMs}"
+                                 data-ts="${escHtml(ts.name)}"
+                                 onmousemove="showTooltipFromEl(event, this)"
+                                 onmouseleave="hideTooltip()">
+                            </div>
+                        `;
+                    });
+
+                    const mapIconHtml = ts.hasOmniId ? ` <span style="font-size: 13px;" title="Доступен трек (Omnicomm)">📍</span>` : '';
+
+                    html += `
+                        <div class="ts-row">
+                            <div class="ts-name-col" onclick="openTsView('${escHtml(ts.id)}')">${escHtml(ts.name)}${mapIconHtml}</div>
+                            <div class="ts-track">
+                                ${segmentsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            tb.innerHTML = html;
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>

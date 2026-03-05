@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сводка лаборатории - Переработка</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-light: #eff6ff;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+            --radius-lg: 16px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-teal: #14b8a6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Header Area ── */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .title-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), #1e40af);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+        }
+
+        .title-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Controls (Date & Fetch) ── */
+        .controls-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .date-input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--surface2);
+        }
+
+        .date-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background: var(--surface);
+        }
+
+        .lab-btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 41px;
+            /* matches inputs */
+        }
+
+        .lab-btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .lab-btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        /* ── Section Toggles (Участки) ── */
+        .org-toggles {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .lab-org-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .lab-org-btn:hover {
+            border-color: #cbd5e1;
+            background: var(--surface2);
+            color: var(--text);
+            transform: translateY(-1px);
+        }
+
+        .lab-org-btn.active {
+            background: var(--text);
+            color: white;
+            border-color: var(--text);
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+        }
+
+        /* ── Dashboard Grid ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        /* ── Card ── */
+        .process-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .process-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Different colored headers based on process */
+        .process-card[data-proc="Сорбция"] .card-icon {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .process-card[data-proc="Десорбция"] .card-icon {
+            background: #fee2e2;
+            color: var(--accent-rose);
+        }
+
+        .process-card[data-proc="Химреагенты"] .card-icon {
+            background: #fef3c7;
+            color: var(--accent-orange);
+        }
+
+        .process-card[data-proc="Отгрузка"] .card-icon {
+            background: #dcfce7;
+            color: var(--accent-green);
+        }
+
+        .process-card[data-proc="Осаждение"] .card-icon {
+            background: #ede9fe;
+            color: var(--accent-purple);
+        }
+
+        .process-card[data-proc="Смола"] .card-icon {
+            background: #ccfbf1;
+            color: var(--accent-teal);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .card-body {
+            padding: 0;
+            flex: 1;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            text-align: right;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th:first-child {
+            text-align: left;
+        }
+
+        .data-table td {
+            text-align: right;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        .data-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .val-badge {
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-variant-numeric: tabular-nums;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .val-badge.val-total {
+            background: var(--primary-light);
+            color: var(--primary-hover);
+            border-color: #bfdbfe;
+            font-weight: 700;
+        }
+
+        .empty-state {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* ── Loader ── */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+            display: none;
+            /* hidden by default */
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ── Chart Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 800px;
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .modal-filters {
+            display: flex;
+            gap: 12px;
+            margin-right: 16px;
+        }
+
+        .modal-filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+            background: var(--surface2);
+            min-width: 140px;
+        }
+
+        .modal-filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+            background: var(--surface);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--surface2);
+            color: var(--accent-rose);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        /* ── Clickable Rows ── */
+        .data-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .data-table tbody tr:hover td {
+            background-color: var(--primary-light);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Синхронизация данных...</div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="page-title">
+                <div class="title-icon">
+                    <i data-lucide="flask-conical" style="width: 28px; height: 28px;"></i>
+                </div>
+                <div>
+                    <h1>Сводка лаборатории</h1>
+                    <div class="title-subtitle">Количество определений элементов в пробах (Переработка)</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls-card">
+            <div class="control-group">
+                <label class="control-label">Период С</label>
+                <input type="date" id="dateFrom" class="date-input">
+            </div>
+            <div class="control-group">
+                <label class="control-label">Период По</label>
+                <input type="date" id="dateTo" class="date-input">
+            </div>
+            <button id="searchLabBtn" class="lab-btn-primary">
+                <i data-lucide="filter" style="width: 18px; height: 18px;"></i>
+                Сформировать
+            </button>
+        </div>
+
+        <!-- Section Toggles -->
+        <div class="org-toggles" id="orgToggles">
+            <!-- Buttons will be generated here -->
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="dashboard-grid" id="dashboardGrid">
+            <!-- Process cards will be generated here -->
+        </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div id="chartModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-lucide="bar-chart-2" style="width: 24px; height: 24px; color: var(--primary);"></i>
+                    <span id="chartModalTitle">Динамика показателя</span>
+                </div>
+                <div class="modal-filters">
+                    <select id="modalFilterOrg" class="modal-filter-select">
+                        <option value="">Все участки</option>
+                    </select>
+                    <select id="modalFilterShift" class="modal-filter-select">
+                        <option value="">Все смены</option>
+                        <option value="day">Дневная</option>
+                        <option value="night">Ночная</option>
+                    </select>
+                    <select id="modalFilterPos" class="modal-filter-select">
+                        <option value="">Все позиции</option>
+                    </select>
+                </div>
+                <button class="modal-close" id="closeChartModal">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+            <div class="chart-container">
+                <canvas id="indicatorChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        const API_BASE = window.location.origin + '/api/v1';
+
+        // Dictionary of indicators mapping column -> Display Name
+        const indicatorsMap = {
+            'i00_lab_u_gl': 'U, мг/л',
+            'i00_lab_ph': 'pH',
+            'i00_lab_h2so4_gl': 'H2SO4, г/л',
+            'i00_lab_fe': 'Fe, г/л',
+            'i00_lab_so4': 'SO4, г/л',
+            'i00_lab_no3': 'NO3, г/л',
+            'i00_lab_cl_gl': 'Cl, г/л',
+            'i00_lab_mehprim_gl': 'Мех. Прим., г/л',
+            'i00_lab_h2so2': 'H2O2' // Used in osazhdenie instead of h2o2 based on view
+        };
+
+        const PROCESSES = [
+            { id: 1, key: 'i00_sorb', name: 'Сорбция', icon: 'filter' },
+            { id: 2, key: 'i00_desorb', name: 'Десорбция', icon: 'droplets' },
+            { id: 3, key: 'i00_chem', name: 'Химреагенты', icon: 'test-tubes' },
+            { id: 4, key: 'i00_otgr', name: 'Отгрузка', icon: 'truck' },
+            { id: 5, key: 'i00_osazhd', name: 'Осаждение', icon: 'snowflake' },
+            { id: 6, key: 'i00_smola', name: 'Смола', icon: 'server-cog' }
+        ];
+
+        let globalRawData = [];
+        let uniqueOrgstructs = [];
+        let currentFilterOrg = 'Все участки';
+
+        // Chart State
+        let chartInstance = null;
+        let currentChartData = [];
+        let currentChartProc = '';
+        let currentChartKey = '';
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        async function updatePeriodAndLoadData() {
+            const dateFrom = document.getElementById('dateFrom')?.value;
+            const dateTo = document.getElementById('dateTo')?.value;
+
+            if (!dateFrom || !dateTo) {
+                showToast('Пожалуйста, выберите даты для формирования отчета.');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'flex';
+
+            try {
+                const updateUrl = window.location.origin + '/api/data/update?id=1';
+
+                const payload = {
+                    "tbl": "doc_lab_vygr_period",
+                    "data": {
+                        "i0d_ot": dateFrom,
+                        "i0d_do": dateTo
+                    }
+                };
+
+                const res = await fetch(updateUrl, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Ошибка обновления периода на сервере: HTTP ${res.status}`);
+                }
+
+                await new Promise(r => setTimeout(r, 200));
+
+                await loadLabData();
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка настройки периода: " + err.message);
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        }
+
+        async function setInitialDates() {
+            const dFrom = document.getElementById('dateFrom');
+            const dTo = document.getElementById('dateTo');
+
+            try {
+                const qStr = JSON.stringify({
+                    "columns": "id,i0d_ot,i0d_do",
+                    "id": 1
+                });
+                const url = `${API_BASE}/doc_lab_vygr_period?_format=json&query=${encodeURIComponent(qStr)}`;
+                const data = await fetchJSON(url);
+
+                if (data && data.length > 0) {
+                    const rec = data[0];
+
+                    if (rec.i0d_ot && typeof rec.i0d_ot === 'string') {
+                        const dateStr = rec.i0d_ot.split(' ')[0];
+                        if (dateStr.includes('-') && dFrom) {
+                            dFrom.value = dateStr;
+                        } else if (dateStr.includes('.')) {
+                            const parts = dateStr.split('.');
+                            if (parts.length === 3 && dFrom) dFrom.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                    }
+                    if (rec.i0d_do && typeof rec.i0d_do === 'string') {
+                        const dateStr = rec.i0d_do.split(' ')[0];
+                        if (dateStr.includes('-') && dTo) {
+                            dTo.value = dateStr;
+                        } else if (dateStr.includes('.')) {
+                            const parts = dateStr.split('.');
+                            if (parts.length === 3 && dTo) dTo.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not fetch initial dates from doc_lab_vygr_period", err);
+            }
+
+            if (!dFrom?.value || !dTo?.value) {
+                const today = new Date();
+                const lastMonth = new Date();
+                lastMonth.setMonth(today.getMonth() - 1);
+
+                if (dFrom && !dFrom.value) dFrom.value = lastMonth.toISOString().split('T')[0];
+                if (dTo && !dTo.value) dTo.value = today.toISOString().split('T')[0];
+            }
+        }
+
+        async function loadLabData() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+
+            try {
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+
+                // Fetch all records for the required columns, filter in front.
+                const queryStr = JSON.stringify({
+                    "columns": "id,i0d_caldate,ilc_vakhta_day_night,ilc_orgstruct,i00_lab_u_gl,i00_lab_ph,i00_lab_h2so4_gl,i00_lab_fe,i00_lab_so4,i00_lab_no3,i00_lab_cl_gl,i00_lab_mehprim_gl,i00_lab_h2so2,i00_sorb,i00_desorb,i00_chem,i00_otgr,i00_osazhd,i00_smola",
+                    "limit": 20000
+                });
+
+                const url = `${API_BASE}/doc_lab_svodka_pererabotka?_format=json&query=${encodeURIComponent(queryStr)}`;
+                const data = await fetchJSON(url);
+
+                globalRawData = data;
+
+                showToast(`Загружено ${globalRawData.length} записей`);
+
+                extractOrgstructs();
+                renderToggles();
+                updateLabDashboard();
+
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка загрузки данных: " + err.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function extractOrgstructs() {
+            const set = new Set();
+            globalRawData.forEach(r => {
+                let org = r.ilc_orgstruct_data?.sname || r.ilc_orgstruct || 'Не указан участкок';
+                set.add(org);
+            });
+            uniqueOrgstructs = Array.from(set).sort();
+
+            // Adjust current filter if old one not found
+            if (currentFilterOrg !== 'Все участки' && !uniqueOrgstructs.includes(currentFilterOrg)) {
+                currentFilterOrg = 'Все участки';
+            }
+        }
+
+        function renderToggles() {
+            const container = document.getElementById('orgToggles');
+            let html = `<button class="lab-org-btn ${currentFilterOrg === 'Все участки' ? 'active' : ''}" data-org="Все участки">
+                <i data-lucide="layers" style="width: 16px; height: 16px;"></i> Все участки
+            </button>`;
+
+            uniqueOrgstructs.forEach(org => {
+                const isActive = currentFilterOrg === org ? 'active' : '';
+                html += `<button class="lab-org-btn ${isActive}" data-org="${escHtml(org)}">${escHtml(org)}</button>`;
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            // Re-attach event listeners because innerHTML wipes them
+            const generatedBtns = container.querySelectorAll('.lab-org-btn');
+            generatedBtns.forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    setLabFilter(this.getAttribute('data-org'));
+                });
+            });
+        }
+
+        window.setLabFilter = function (org) {
+            currentFilterOrg = org;
+            renderToggles();
+            updateLabDashboard();
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function getProcessName(row) {
+            for (let p of PROCESSES) {
+                if (row[p.key] == p.id) return p.name; // Some uses 1, 2, 3.. 
+                // Alternatively, simply checking for not null if they are mutually exclusive flags
+                if (row[p.key] !== null && row[p.key] !== undefined && String(row[p.key]) !== '0') {
+                    if (row[p.key] == p.id) return p.name;
+                }
+            }
+            return 'Неизвестно';
+        }
+
+        /* ── Modal & Chart Logic ── */
+
+        function populateModalFilters() {
+            const orgSelect = document.getElementById('modalFilterOrg');
+            const posSelect = document.getElementById('modalFilterPos');
+
+            const orgs = new Set();
+            const pos = new Set();
+
+            currentChartData.forEach(row => {
+                let org = row.ilc_orgstruct_data?.sname || row.ilc_orgstruct || 'Не указан участкок';
+                orgs.add(org);
+
+                if (row.ilc_poziciya_data?.sname) {
+                    pos.add(row.ilc_poziciya_data.sname);
+                } else if (row.ilc_poziciya) {
+                    pos.add(row.ilc_poziciya);
+                }
+            });
+
+            const currOrg = orgSelect.value;
+            const currPos = posSelect.value;
+
+            let orgHtml = '<option value="">Все участки</option>';
+            Array.from(orgs).sort().forEach(o => {
+                const sel = (o === currOrg) ? 'selected' : '';
+                orgHtml += `<option value="${escHtml(o)}" ${sel}>${escHtml(o)}</option>`;
+            });
+            orgSelect.innerHTML = orgHtml;
+
+            let posHtml = '<option value="">Все позиции</option>';
+            Array.from(pos).sort().forEach(p => {
+                const sel = (p === currPos) ? 'selected' : '';
+                posHtml += `<option value="${escHtml(p)}" ${sel}>${escHtml(p)}</option>`;
+            });
+            posSelect.innerHTML = posHtml;
+
+            if (currOrg && !orgs.has(currOrg)) orgSelect.value = '';
+            if (currPos && !pos.has(currPos)) posSelect.value = '';
+        }
+
+        function applyModalFiltersAndRender() {
+            const orgFilter = document.getElementById('modalFilterOrg').value;
+            const shiftFilter = document.getElementById('modalFilterShift').value;
+            const posFilter = document.getElementById('modalFilterPos').value;
+
+            const filtered = currentChartData.filter(row => {
+                if (orgFilter) {
+                    let org = row.ilc_orgstruct_data?.sname || row.ilc_orgstruct || 'Не указан участкок';
+                    if (org !== orgFilter) return false;
+                }
+
+                if (shiftFilter) {
+                    let shift = 'day';
+                    if (row.ilc_vakhta_day_night_data?.code) {
+                        shift = String(row.ilc_vakhta_day_night_data.code).toLowerCase();
+                    } else if (row.ilc_vakhta_day_night) {
+                        const rawShift = String(row.ilc_vakhta_day_night).toLowerCase();
+                        if (rawShift === 'день' || rawShift === 'day') {
+                            shift = 'day';
+                        } else if (rawShift === 'ночь' || rawShift === 'night') {
+                            shift = 'night';
+                        }
+                    } else if (row.i0d_caldate) {
+                        const hr = parseInt(String(row.i0d_caldate).substring(11, 13));
+                        shift = (hr >= 7 && hr <= 19) ? 'day' : 'night';
+                    }
+                    if (shift !== shiftFilter) return false;
+                }
+
+                if (posFilter) {
+                    let p = row.ilc_poziciya_data?.sname || row.ilc_poziciya || '';
+                    if (p !== posFilter) return false;
+                }
+
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                const tA = new Date(String(a.i0d_caldate).replace(' ', 'T')).getTime();
+                const tB = new Date(String(b.i0d_caldate).replace(' ', 'T')).getTime();
+                return tA - tB;
+            });
+
+            const labels = [];
+            const dataPoints = [];
+
+            filtered.forEach(row => {
+                if (!row.i0d_caldate) return;
+                const dStr = String(row.i0d_caldate);
+                let label = dStr;
+                if (dStr.includes(' ')) {
+                    const parts = dStr.split(' ');
+                    const hm = parts[1].substring(0, 5);
+                    const ymd = parts[0].split('-');
+                    if (ymd.length === 3) {
+                        label = `${ymd[2]}.${ymd[1]} ${hm}`;
+                    } else {
+                        label = parts[0] + ' ' + hm;
+                    }
+                }
+                labels.push(label);
+                dataPoints.push(parseFloat(row[currentChartKey]));
+            });
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const canvas = document.getElementById('indicatorChart');
+            const ctx = canvas.getContext('2d');
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: indicatorsMap[currentChartKey],
+                        data: dataPoints,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#3b82f6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { size: 13, family: 'Inter' },
+                            bodyFont: { size: 14, weight: 'bold', family: 'Inter' },
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: function (context) { return context[0].label; },
+                                label: function (context) { return `${indicatorsMap[currentChartKey]}: ${context.parsed.y}`; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { family: 'Inter', size: 10 }, color: '#64748b', maxRotation: 45, minRotation: 45 }
+                        },
+                        y: {
+                            border: { display: false },
+                            grid: { color: '#e2e8f0', drawBorder: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function openChartModal(processName, indicatorKey) {
+            const modal = document.getElementById('chartModal');
+            const title = document.getElementById('chartModalTitle');
+
+            if (!modal || !title) return;
+
+            currentChartProc = processName;
+            currentChartKey = indicatorKey;
+            title.textContent = `Динамика: ${indicatorsMap[indicatorKey]} (${processName})`;
+
+            document.getElementById('modalFilterOrg').value = '';
+            document.getElementById('modalFilterShift').value = '';
+            document.getElementById('modalFilterPos').value = '';
+
+            currentChartData = globalRawData.filter(row => {
+                let org = row.ilc_orgstruct_data?.sname || row.ilc_orgstruct || 'Не указан участкок';
+                if (currentFilterOrg !== 'Все участки' && org !== currentFilterOrg) return false;
+
+                if (getProcessName(row) !== processName) return false;
+
+                const val = parseFloat(row[indicatorKey]);
+                if (isNaN(val) || val === 0) return false;
+
+                if (!row.i0d_caldate) return false;
+
+                return true;
+            });
+
+            if (currentChartData.length === 0) {
+                showToast('Нет данных для графика');
+                return;
+            }
+
+            populateModalFilters();
+            applyModalFiltersAndRender();
+
+            modal.classList.add('show');
+        }
+
+        function updateLabDashboard() {
+            // Aggregate data
+            // stats[processName][shift][indicatorKey] = count
+            const stats = {};
+            PROCESSES.forEach(p => {
+                stats[p.name] = { day: {}, night: {}, hasData: false };
+            });
+
+            globalRawData.forEach(row => {
+                let org = row.ilc_orgstruct_data?.sname || row.ilc_orgstruct || 'Не указан участкок';
+                if (currentFilterOrg !== 'Все участки' && org !== currentFilterOrg) return;
+
+                const procName = getProcessName(row);
+                if (!stats[procName]) return; // Skip unknown
+
+                // Identify shift
+                let shift = String(row.ilc_vakhta_day_night).toLowerCase();
+                if (shift !== 'day' && shift !== 'night') {
+                    if (row.i0d_caldate) {
+                        const hr = parseInt(String(row.i0d_caldate).substring(11, 13));
+                        shift = (hr >= 7 && hr <= 19) ? 'day' : 'night';
+                    } else {
+                        shift = 'day';
+                    }
+                }
+
+                const targetObj = stats[procName][shift];
+
+                let rowHasIndicators = false;
+                for (let key in indicatorsMap) {
+                    const val = parseFloat(row[key]);
+                    if (!isNaN(val) && val !== 0) {
+                        targetObj[key] = (targetObj[key] || 0) + 1;
+                        rowHasIndicators = true;
+                    }
+                }
+
+                if (rowHasIndicators) {
+                    stats[procName].hasData = true;
+                }
+            });
+
+            renderLabDashboard(stats);
+        }
+
+        function renderLabDashboard(stats) {
+            const grid = document.getElementById('dashboardGrid');
+            let html = '';
+
+            PROCESSES.forEach(p => {
+                const pStats = stats[p.name];
+                if (!pStats || !pStats.hasData) return; // Hide empty cards
+
+                // Find all keys that have data in this process
+                const availableKeys = Object.keys(indicatorsMap).filter(key =>
+                    (pStats.day[key] || 0) > 0 || (pStats.night[key] || 0) > 0
+                );
+
+                if (availableKeys.length === 0) return;
+
+                html += `
+                <div class="process-card" data-proc="${p.name}">
+                    <div class="card-header">
+                        <div class="card-icon"><i data-lucide="${p.icon}"></i></div>
+                        <div class="card-title">${p.name}</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Показатель</th>
+                                    <th>Дневная</th>
+                                    <th>Ночная</th>
+                                    <th>Итого</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                availableKeys.forEach(key => {
+                    const dayCount = pStats.day[key] || 0;
+                    const nightCount = pStats.night[key] || 0;
+                    const totalCount = dayCount + nightCount;
+
+                    html += `
+                        <tr data-key="${key}" data-proc="${escHtml(p.name)}">
+                            <td>${indicatorsMap[key]}</td>
+                            <td><span class="val-badge">${dayCount}</span></td>
+                            <td><span class="val-badge">${nightCount}</span></td>
+                            <td><span class="val-badge val-total">${totalCount}</span></td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                `;
+            });
+
+            if (html === '') {
+                html = `
+                <div style="grid-column: 1 / -1; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 48px; text-align: center;">
+                    <i data-lucide="inbox" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+                    <h3 style="color: var(--text); font-size: 18px; margin-bottom: 8px;">Нет данных</h3>
+                    <p style="color: var(--text-muted);">За выбранный период на выбранном участке нет определений показателей.</p>
+                </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+            lucide.createIcons();
+
+            // Bind click to open modal
+            const rows = grid.querySelectorAll('.data-table tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('click', function () {
+                    const key = this.getAttribute('data-key');
+                    const proc = this.getAttribute('data-proc');
+                    if (key && proc) {
+                        openChartModal(proc, key);
+                    }
+                });
+            });
+        }
+
+        // Attach events
+        document.getElementById('searchLabBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            updatePeriodAndLoadData();
+        });
+
+        // Close Modal Events
+        document.getElementById('closeChartModal')?.addEventListener('click', () => {
+            document.getElementById('chartModal').classList.remove('show');
+        });
+        document.getElementById('chartModal')?.addEventListener('click', function (e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+
+        // Filter events
+        document.getElementById('modalFilterOrg')?.addEventListener('change', applyModalFiltersAndRender);
+        document.getElementById('modalFilterShift')?.addEventListener('change', applyModalFiltersAndRender);
+        document.getElementById('modalFilterPos')?.addEventListener('change', applyModalFiltersAndRender);
+
+        // Init
+        setInitialDates().then(() => {
+            setTimeout(loadLabData, 300);
+        });
+    </script>
+</body>
+
+</html>

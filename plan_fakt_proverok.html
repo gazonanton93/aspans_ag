@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>План-Факт по проверкам</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+
+            --c-fact-cur: #22c55e;
+            --c-plan-cur: #86efac;
+            --c-fact-ytd: #1d4ed8;
+            --c-plan-ytd: #93c5fd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, .3);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Level tabs ── */
+        .level-tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        .level-tab {
+            padding: 7px 20px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .18s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .level-tab:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .level-tab.active {
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, .25);
+        }
+
+        /* ── Period badge ── */
+        .period-badge {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ── Loading / Error ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin .9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        #error-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 9998;
+        }
+
+        #error-screen.show {
+            display: flex;
+        }
+
+        .error-msg {
+            font-size: 16px;
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .error-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ── KPI strip ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .stat-card.amber::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card.purple::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .stat-card.blue .stat-value {
+            color: #3b82f6;
+        }
+
+        .stat-card.green .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.amber .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.purple .stat-value {
+            color: #8b5cf6;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+            opacity: .13;
+        }
+
+        /* ── Legend ── */
+        .legend-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            padding: 12px 0;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        /* ── Chart section ── */
+        .chart-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .chart-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ── Bar chart grid ── */
+        .bars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 0;
+        }
+
+        .dept-card {
+            padding: 18px 22px;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+        }
+
+        .dept-card:hover {
+            background: #f8faff;
+        }
+
+        .dept-name {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-label-side {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+            width: 100px;
+            flex-shrink: 0;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width .5s cubic-bezier(.4, 0, .2, 1);
+            min-width: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 5px;
+        }
+
+        .bar-fill-val {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+        }
+
+        .bar-val-outside {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text);
+            min-width: 20px;
+        }
+
+        /* Bar colors */
+        .bar-fact-cur {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+        }
+
+        .bar-plan-cur {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .bar-fact-ytd {
+            background: linear-gradient(90deg, #065f46, #10b981);
+        }
+
+        .bar-plan-ytd {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+        }
+
+        /* Pct badge */
+        .pct-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            flex-shrink: 0;
+        }
+
+        .pct-good {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .pct-warn {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .pct-bad {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .pct-neut {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* ── Fade-in ── */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity .5s ease, transform .5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 14px 16px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading -->
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Загрузка данных...</div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-screen">
+        <div style="font-size:48px;">⚠️</div>
+        <div class="error-msg" id="error-msg">Ошибка загрузки данных</div>
+        <div class="error-sub" id="error-sub"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">📊</div>
+            <div>
+                <div class="header-title">План-Факт по проверкам</div>
+                <div class="header-subtitle" id="header-subtitle">Загрузка...</div>
+            </div>
+        </div>
+        <div class="header-controls">
+            <div class="level-tabs" id="level-tabs"></div>
+            <div class="period-badge" id="period-badge">—</div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container" id="main-content" style="display:none;">
+
+        <!-- KPI -->
+        <div class="stats-grid fade-in" id="stats-row">
+            <div class="stat-card green">
+                <div class="stat-label">Факт (период)</div>
+                <div class="stat-value" id="stat-fact-cur">—</div>
+                <div class="stat-icon">✅</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-label">План (период)</div>
+                <div class="stat-value" id="stat-plan-cur">—</div>
+                <div class="stat-icon">📋</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-label">Факт (с начала года)</div>
+                <div class="stat-value" id="stat-fact-ytd">—</div>
+                <div class="stat-icon">📈</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label" id="stat-pct-label">Выполнение (период)</div>
+                <div class="stat-value" id="stat-pct">—</div>
+                <div class="stat-icon">🎯</div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-section fade-in" id="chart-section" style="transition-delay:.1s;">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title" id="chart-title">Загрузка...</div>
+                    <div class="chart-subtitle" id="chart-subtitle"></div>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-item">
+                        <div class="legend-dot bar-fact-cur"></div><span id="leg-fact-cur">Факт (период)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot bar-plan-cur"></div><span id="leg-plan-cur">План (период)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot bar-fact-ytd"></div><span id="leg-fact-ytd">Факт (год)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot bar-plan-ytd"></div><span id="leg-plan-ytd">План (год)</span>
+                    </div>
+                </div>
+            </div>
+            <div id="chart-body">
+                <div class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <div class="empty-text">Загрузка данных...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── CONFIG ────────────────────────────────────────────────────────────────
+        const API_BASE = '/api/v1';
+        const PLAN_TABLE = 'doc_pk_plan_2_level';
+        const FACT_TABLE = 'doc_safety_input_document';
+
+        const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        const MONTH_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн',
+            'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+
+        // ── DATE HELPERS ──────────────────────────────────────────────────────────
+        function getCurrentYear() { return new Date().getFullYear(); }
+        function getCurrentMonth() { return new Date().getMonth() + 1; } // 1-based
+
+        function getISOWeek(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const day = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - day);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        }
+        function getCurrentWeek() { return getISOWeek(new Date()); }
+
+        // week (1-based) → month (1-based)
+        function weekToMonth1(w) {
+            return Math.min(12, Math.floor((w - 1) / 4.348) + 1);
+        }
+
+        // ── AUTH ──────────────────────────────────────────────────────────────────
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8 = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8)
+            };
+        }
+
+        async function fetchAll(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const rows = Array.isArray(data) ? data : (data.items || []);
+            console.log(`[PlanFact] ${url.split('?')[0]} → ${rows.length} rows`);
+            return rows;
+        }
+
+        // ── STATE ─────────────────────────────────────────────────────────────────
+        let planRows = [];
+        let factRows = [];
+        let selectedLevel = 2;
+        const YEAR = getCurrentYear();
+        const CUR_WEEK = getCurrentWeek();
+        const CUR_MONTH = getCurrentMonth();
+
+        // ── INIT ──────────────────────────────────────────────────────────────────
+        async function init() {
+            try {
+                const [planData, factData] = await Promise.all([
+                    fetchAll(`${API_BASE}/${PLAN_TABLE}?_format=json&query=${encodeURIComponent(JSON.stringify({
+                        columns: 'id,i00_level,ilc_otdel,ilc_person,i00_ned,i00_cnt',
+                        limit: 20000
+                    }))}`),
+                    fetchAll(`${API_BASE}/${FACT_TABLE}?_format=json&query=${encodeURIComponent(JSON.stringify({
+                        columns: 'id,ilc2_otdel,ilc5_person,ilc2_safety_control_level,i0d2_index19_end_date',
+                        limit: 50000
+                    }))}`)
+                ]);
+
+                planRows = planData;
+                // Filter fact to current year
+                factRows = factData.filter(r => {
+                    const d = parseDate(r.i0d2_index19_end_date);
+                    return d && d.getFullYear() === YEAR;
+                });
+
+                console.log(`[PlanFact] plan=${planRows.length}, fact=${factRows.length}`);
+
+                document.getElementById('header-subtitle').textContent =
+                    `${YEAR} год · Данные обновлены`;
+
+                buildLevelTabs();
+                renderAll();
+                showContent();
+            } catch (err) {
+                console.error(err);
+                showError('Ошибка загрузки данных', err.message);
+            }
+        }
+
+        function parseDate(val) {
+            if (!val) return null;
+            // Support ISO string or timestamp
+            const d = new Date(val);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        // ── LEVEL TABS ────────────────────────────────────────────────────────────
+        function buildLevelTabs() {
+            const c = document.getElementById('level-tabs');
+            c.innerHTML = [2, 3, 4].map(lv => `
+            <button class="level-tab ${lv === selectedLevel ? 'active' : ''}"
+                onclick="selectLevel(${lv})">Уровень ${lv}</button>
+        `).join('');
+        }
+
+        function selectLevel(lv) {
+            selectedLevel = lv;
+            document.querySelectorAll('.level-tab').forEach(btn =>
+                btn.classList.toggle('active', btn.textContent.trim() === `Уровень ${lv}`)
+            );
+            renderAll();
+        }
+
+        // ── RENDER ────────────────────────────────────────────────────────────────
+        function renderAll() {
+            const isWeekly = selectedLevel === 2;
+            const periodLabel = isWeekly
+                ? `Неделя ${CUR_WEEK}`
+                : MONTH_NAMES[CUR_MONTH - 1];
+
+            document.getElementById('period-badge').textContent =
+                `${YEAR} · ${periodLabel}`;
+
+            // Legend labels
+            document.getElementById('leg-fact-cur').textContent = isWeekly
+                ? `Факт нед. ${CUR_WEEK}` : `Факт ${MONTH_SHORT[CUR_MONTH - 1]}`;
+            document.getElementById('leg-plan-cur').textContent = isWeekly
+                ? `План нед. ${CUR_WEEK}` : `План ${MONTH_SHORT[CUR_MONTH - 1]}`;
+            document.getElementById('leg-fact-ytd').textContent = isWeekly
+                ? `Факт по нед. ${CUR_WEEK}` : `Факт по ${MONTH_SHORT[CUR_MONTH - 1]}`;
+            document.getElementById('leg-plan-ytd').textContent = isWeekly
+                ? `План по нед. ${CUR_WEEK}` : `План по ${MONTH_SHORT[CUR_MONTH - 1]}`;
+
+            // ── Map level code ────────────────────────────────────────────────
+            const levelCode = selectedLevel === 2 ? 'level2'
+                : selectedLevel === 3 ? 'level3'
+                    : 'level4';
+
+            // ── PLAN aggregation ──────────────────────────────────────────────
+            // Plan rows for this level
+            const planLvl = planRows.filter(r => Number(r.i00_level) === selectedLevel);
+
+            // key = dept (or person for lv4)
+            const planMap = new Map(); // key → { cur, ytd }
+
+            planLvl.forEach(r => {
+                const key = selectedLevel === 4
+                    ? (r.ilc_person || '—')
+                    : (r.ilc_otdel || '—');
+                const week = Number(r.i00_ned);
+                const cnt = Number(r.i00_cnt) || 0;
+                if (isNaN(week) || week < 1 || week > 53) return;
+
+                if (!planMap.has(key)) planMap.set(key, { cur: 0, ytd: 0 });
+                const e = planMap.get(key);
+
+                if (isWeekly) {
+                    if (week === CUR_WEEK) e.cur += cnt;
+                    if (week <= CUR_WEEK) e.ytd += cnt;
+                } else {
+                    // Level 3: i00_ned = week number → convert to month
+                    // Level 4: i00_ned = month number directly (1=Янв, 2=Фев...)
+                    const mo = selectedLevel === 4 ? week : weekToMonth1(week);
+                    if (mo === CUR_MONTH) e.cur += cnt;
+                    if (mo <= CUR_MONTH) e.ytd += cnt;
+                }
+            });
+
+            // ── FACT aggregation ──────────────────────────────────────────────
+            // API auto-expands linked fields: ilc2_safety_control_level_data.code = 'level2'/'level3'/'level4'
+            const factLvl = factRows.filter(r => {
+                const code = (r.ilc2_safety_control_level_data && r.ilc2_safety_control_level_data.code)
+                    || (r.ilc2_safety_control_level || '');
+                return code === levelCode;
+            });
+
+            const factMap = new Map(); // key → { cur, ytd }
+
+            factLvl.forEach(r => {
+                const key = selectedLevel === 4
+                    ? (r.ilc5_person || '—')
+                    : (r.ilc2_otdel || '—');
+                const d = parseDate(r.i0d2_index19_end_date);
+                if (!d) return;
+
+                if (!factMap.has(key)) factMap.set(key, { cur: 0, ytd: 0 });
+                const e = factMap.get(key);
+
+                if (isWeekly) {
+                    const w = getISOWeek(d);
+                    if (w === CUR_WEEK) e.cur += 1;
+                    if (w <= CUR_WEEK) e.ytd += 1;
+                } else {
+                    const mo = d.getMonth() + 1;
+                    if (mo === CUR_MONTH) e.cur += 1;
+                    if (mo <= CUR_MONTH) e.ytd += 1;
+                }
+            });
+
+            // ── Only plan keys — fact without plan is excluded ────────────────
+            const allKeys = new Set([...planMap.keys()]);
+
+            // Build dep entries sorted
+            const entries = [...allKeys].map(key => ({
+                key,
+                planCur: planMap.get(key)?.cur || 0,
+                planYtd: planMap.get(key)?.ytd || 0,
+                factCur: factMap.get(key)?.cur || 0,
+                factYtd: factMap.get(key)?.ytd || 0,
+            })).sort((a, b) => a.key.localeCompare(b.key));
+
+            // ── Stats ─────────────────────────────────────────────────────────
+            const totFactCur = entries.reduce((s, e) => s + e.factCur, 0);
+            const totPlanCur = entries.reduce((s, e) => s + e.planCur, 0);
+            const totFactYtd = entries.reduce((s, e) => s + e.factYtd, 0);
+            const totPlanYtd = entries.reduce((s, e) => s + e.planYtd, 0);
+
+            let pct = null;
+            if (totPlanCur > 0) pct = Math.round(totFactCur / totPlanCur * 100);
+            else if (totFactCur > 0) pct = 100; // Plan is 0, but there is fact = overachieved
+
+            document.getElementById('stat-fact-cur').textContent = totFactCur.toLocaleString('ru');
+            document.getElementById('stat-plan-cur').textContent = totPlanCur.toLocaleString('ru');
+            document.getElementById('stat-fact-ytd').textContent = totFactYtd.toLocaleString('ru');
+            document.getElementById('stat-pct').textContent = pct !== null ? `${pct}%` : '—';
+            document.getElementById('stat-pct-label').textContent =
+                `Выполнение (${isWeekly ? 'нед. ' + CUR_WEEK : MONTH_SHORT[CUR_MONTH - 1]})`;
+
+            // ── Chart title ───────────────────────────────────────────────────
+            document.getElementById('chart-title').textContent =
+                `Уровень ${selectedLevel} · ${isWeekly ? 'Понедельное' : 'Помесячное'} сравнение`;
+            document.getElementById('chart-subtitle').textContent =
+                `${isWeekly ? `Текущая неделя: ${CUR_WEEK}` : `Текущий месяц: ${MONTH_NAMES[CUR_MONTH - 1]}`} · ${YEAR} год · Всего записей: ${entries.length}`;
+
+            if (entries.length === 0) {
+                document.getElementById('chart-body').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔎</div>
+                    <div class="empty-text">Нет данных для выбранного уровня</div>
+                </div>`;
+                return;
+            }
+
+            // ── Max for bar scale ─────────────────────────────────────────────
+            const maxVal = Math.max(1, ...entries.map(e => Math.max(e.planCur, e.factCur, e.planYtd, e.factYtd)));
+
+            // ── Render cards ──────────────────────────────────────────────────
+            const isLevel4 = selectedLevel === 4;
+            const deptLabel = isLevel4 ? 'ФИО' : 'Отдел';
+            const curLabel = isWeekly
+                ? `Нед. ${CUR_WEEK}`
+                : MONTH_SHORT[CUR_MONTH - 1];
+
+            let html = '<div class="bars-grid">';
+            entries.forEach(({ key, planCur, planYtd, factCur, factYtd }) => {
+                let pctCur = null;
+                if (planCur > 0) pctCur = Math.round(factCur / planCur * 100);
+                else if (factCur > 0) pctCur = 100;
+
+                const pctCls = pctCur === null ? 'pct-neut'
+                    : pctCur >= 100 ? 'pct-good'
+                        : pctCur >= 70 ? 'pct-warn'
+                            : 'pct-bad';
+
+                html += `
+            <div class="dept-card">
+                <div class="dept-name" title="${escHtml(key)}">${escHtml(key)}</div>
+                <div class="bar-group">
+                    ${barRow('Факт ' + curLabel, factCur, maxVal, 'bar-fact-cur')}
+                    ${barRow('План ' + curLabel, planCur, maxVal, 'bar-plan-cur')}
+                    ${barRow('Факт (год)', factYtd, maxVal, 'bar-fact-ytd')}
+                    ${barRow('План (год)', planYtd, maxVal, 'bar-plan-ytd')}
+                </div>
+                <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:10px;color:var(--text-muted);">Выполнение ${escHtml(curLabel)}:</span>
+                    <span class="pct-badge ${pctCls}">${pctCur !== null ? pctCur + '%' : '—'}</span>
+                </div>
+            </div>`;
+            });
+            html += '</div>';
+
+            document.getElementById('chart-body').innerHTML = html;
+        }
+
+        function barRow(label, val, maxVal, colorCls) {
+            const pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
+            const showInner = pct >= 20;
+            return `
+        <div class="bar-row">
+            <div class="bar-label-side">${escHtml(label)}</div>
+            <div class="bar-track">
+                <div class="bar-fill ${colorCls}" style="width:${pct}%;">
+                    ${showInner ? `<span class="bar-fill-val">${val}</span>` : ''}
+                </div>
+            </div>
+            <div class="bar-val-outside">${!showInner ? val : ''}</div>
+        </div>`;
+        }
+
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── UI HELPERS ────────────────────────────────────────────────────────────
+        function showContent() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = '';
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+            });
+        }
+
+        function showError(msg, sub) {
+            document.getElementById('loading-screen').style.display = 'none';
+            const es = document.getElementById('error-screen');
+            es.classList.add('show');
+            document.getElementById('error-msg').textContent = msg;
+            document.getElementById('error-sub').textContent = sub || '';
+        }
+
+        // ── START ─────────────────────────────────────────────────────────────────
+        init();
+    </script>
+
+</body>
+
+</html>

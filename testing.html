@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --container-max: 800px;
+            --radius: 16px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-home {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .view-test {
+            height: 100vh;
+            height: 100dvh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--surface);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-badge {
+            background: #f1f5f9;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: var(--primary);
+        }
+
+        .timer-badge.warning {
+            color: var(--warning);
+            background: #fffbeb;
+        }
+
+        .timer-badge.danger {
+            color: var(--error);
+            background: #fef2f2;
+        }
+
+        main {
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: block;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .question-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 2rem auto;
+            height: fit-content;
+        }
+
+        .q-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Badge for multi-answer hint */
+        .q-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #dbeafe;
+            color: var(--primary);
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .q-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .option-item:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        /* Single-answer selected */
+        .option-item.selected {
+            border-color: var(--primary);
+            background-color: #eef2ff;
+        }
+
+        /* Multi-answer: checked item */
+        .option-item.checked {
+            border-color: var(--primary);
+            background-color: #eef2ff;
+        }
+
+        .option-marker {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        /* Multi-answer: square marker */
+        .option-item.multi-option .option-marker {
+            border-radius: 6px;
+        }
+
+        .option-item.selected .option-marker,
+        .option-item.checked .option-marker {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .option-text {
+            font-size: 1rem;
+            font-weight: 500;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+        }
+
+        .controls-bar {
+            background: var(--surface);
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grid-overlay.open {
+            display: flex;
+        }
+
+        .grid-panel {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .grid-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: #f1f5f9;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .grid-item.answered {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .grid-item.active {
+            border: 2px solid var(--primary);
+        }
+
+        .grid-item.correct {
+            background: var(--success);
+            color: white;
+        }
+
+        .grid-item.wrong {
+            background: var(--error);
+            color: white;
+        }
+
+        .grid-item.skipped {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* Review mode option states */
+        .correct-answer {
+            border-color: var(--success) !important;
+            background-color: #ecfdf5 !important;
+        }
+
+        .correct-answer .option-marker {
+            border-color: var(--success) !important;
+            background-color: var(--success);
+            color: white !important;
+        }
+
+        .wrong-answer {
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+        }
+
+        .wrong-answer .option-marker {
+            border-color: var(--error) !important;
+            background-color: var(--error);
+            color: white !important;
+        }
+
+        /* Missed correct answer (user didn't pick it but it was correct) */
+        .missed-answer {
+            border-color: var(--success) !important;
+            background-color: #f0fdf4 !important;
+            border-style: dashed !important;
+        }
+
+        .missed-answer .option-marker {
+            border-color: var(--success) !important;
+            color: var(--success) !important;
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: 1rem;
+                padding-bottom: 2rem;
+            }
+
+            .view-home {
+                padding: 1.5rem;
+            }
+
+            .view-home h1 {
+                font-size: 1.75rem !important;
+                margin-bottom: 2rem !important;
+            }
+
+            .view-home .btn {
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            .question-card {
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+            }
+
+            .q-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                font-size: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .q-text {
+                font-size: 1.1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .option-item {
+                padding: 0.75rem 1rem;
+            }
+
+            .option-text {
+                font-size: 0.95rem;
+            }
+
+            .controls-bar {
+                display: grid !important;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 0.75rem !important;
+                padding: 1rem;
+                justify-items: center;
+                align-items: center;
+            }
+
+            .controls-bar>.flex.gap-2 {
+                display: contents !important;
+            }
+
+            #btn-prev {
+                grid-row: 1;
+                grid-column: 1;
+                width: 100%;
+            }
+
+            .controls-bar>.flex.flex-col {
+                grid-row: 1;
+                grid-column: 2;
+                font-size: 0.9rem;
+            }
+
+            #btn-next,
+            #btn-finish {
+                grid-row: 1;
+                grid-column: 3;
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            #btn-finish-early {
+                grid-row: 2;
+                grid-column: 1 / -1;
+                width: 100%;
+                margin-top: 0.5rem !important;
+                margin-right: 0 !important;
+                order: 2;
+            }
+
+            #current-q-num {
+                font-size: 1.2rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 0.35rem;
+            }
+
+            .grid-item {
+                font-size: 0.75rem;
+                border-radius: 4px;
+            }
+        }
+
+        .backgroundVideo {
+            display: none !important;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 1.2rem;
+            letter-spacing: -0.01em;
+        }
+
+        /* Category & config selection */
+        .category-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        .category-card:hover {
+            border-color: var(--primary);
+            background: #f8fbff;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .category-card.active {
+            border-color: var(--primary);
+            background: #eef2ff;
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .category-card .cat-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text);
+            line-height: 1.4;
+            text-align: center;
+            width: 100%;
+        }
+
+        .category-card .cat-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .category-card .cat-count {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .category-card.active .cat-count {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Config card breakdown bar */
+        .config-breakdown {
+            width: 100%;
+            display: flex;
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            gap: 2px;
+            margin-top: 4px;
+        }
+
+        .config-breakdown-seg {
+            height: 100%;
+            border-radius: 2px;
+        }
+
+        /* Mode tabs inside overlay */
+        .mode-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.25rem;
+        }
+
+        .mode-tab {
+            padding: 0.6rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: color 0.2s;
+        }
+
+        .mode-tab:hover {
+            color: var(--primary);
+        }
+
+        .mode-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- view-home -->
+        <div id="view-home" class="view-home">
+            <h1
+                style="font-size: 2.5rem; font-weight: 800; margin-bottom: 3rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Тестирование
+            </h1>
+            <button onclick="app.showCategorySelection()" class="btn btn-primary"
+                style="width: 100%; max-width: 300px; padding: 1rem; font-size: 1.1rem; margin-bottom: 1rem;">
+                Начать тестирование
+            </button>
+            <button onclick="app.showHistory()" class="btn btn-secondary" style="width: 100%; max-width: 300px;">
+                Мои результаты
+            </button>
+        </div>
+
+        <!-- view-test -->
+        <div id="view-test" class="view-test hidden">
+            <header>
+                <div class="timer-badge" id="timer">00:00</div>
+                <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-light);" id="timer-limit-label">
+                </div>
+                <button onclick="document.getElementById('grid-overlay').classList.add('open')"
+                    style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:600; padding: 0.5rem;">
+                    Карта вопросов
+                </button>
+            </header>
+
+            <main>
+                <div id="question-card" class="question-card"></div>
+            </main>
+
+            <div class="controls-bar" style="justify-content: center; gap: 2rem;">
+                <button onclick="app.prevQuestion()" class="btn btn-secondary" id="btn-prev"
+                    style="min-width: 100px;">Назад</button>
+
+                <div class="flex flex-col items-center">
+                    <div style="font-weight: 700; color: var(--text-light); font-variant-numeric: tabular-nums;">
+                        <span id="current-q-num">1</span> / <span id="total-q-num">100</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="app.finishEarly()" class="btn btn-secondary" id="btn-finish-early"
+                        style="color: var(--error); border-color: #fecaca; background: #fef2f2; margin-right: 0.5rem;">
+                        Завершить
+                    </button>
+                    <button onclick="app.nextQuestion()" class="btn btn-primary" id="btn-next"
+                        style="min-width: 100px;">Вперед</button>
+                    <button onclick="app.finishTest()" class="btn btn-primary hidden" id="btn-finish"
+                        style="background-color: var(--success); min-width: 100px;">Завершить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loading-text">Загрузка вопросов...</div>
+        </div>
+
+        <!-- Category / Config Selection Overlay -->
+        <div id="category-overlay" class="grid-overlay" style="display: none;">
+            <div class="grid-panel" style="max-width: 1100px; width: 95%;" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center" style="margin-bottom: 0.75rem;">
+                    <h3 style="font-weight: 700;">Выберите тест</h3>
+                    <button onclick="app.closeCategorySelection()" class="btn btn-secondary"
+                        style="padding:0.25rem 0.75rem;">Закрыть</button>
+                </div>
+
+                <!-- Mode tabs: Configs / Categories -->
+                <div class="mode-tabs">
+                    <div class="mode-tab active" id="tab-configs-btn" onclick="app.switchSelectionMode('configs')">⚙️ По
+                        конфигурации</div>
+                    <div class="mode-tab" id="tab-cats-btn" onclick="app.switchSelectionMode('cats')">📂 По категории
+                    </div>
+                </div>
+
+                <!-- Configs list -->
+                <div id="selection-configs">
+                    <p style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">Готовые конфигурации с
+                        настроенным соотношением тем:</p>
+                    <div id="config-list"
+                        style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 50vh; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <!-- Categories list (hidden by default) -->
+                <div id="selection-cats" class="hidden">
+                    <p style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">Выберите категорию из
+                        которой будут браться вопросы:</p>
+                    <div id="category-list"
+                        style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; max-height: 50vh; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <button onclick="app.startTestWithCategory()" class="btn btn-primary" style="width: 100%;"
+                    id="confirm-category-btn">
+                    Начать тест
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid Overlay -->
+        <div id="grid-overlay" class="grid-overlay" onclick="if(event.target===this) this.classList.remove('open')">
+            <div class="grid-panel">
+                <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                    <h3 style="font-weight: 700;">Карта вопросов</h3>
+                    <div class="flex gap-2" style="margin-left:auto;">
+                        <div id="grid-legend" class="hidden"
+                            style="display:flex; gap:10px; font-size:0.75rem; align-items:center;">
+                            <span style="color:var(--success)">● Верно</span>
+                            <span style="color:var(--error)">● Ошибка</span>
+                        </div>
+                        <button onclick="document.getElementById('grid-overlay').classList.remove('open')"
+                            class="btn btn-secondary" style="padding:0.25rem 0.75rem;">Закрыть</button>
+                    </div>
+                </div>
+                <div id="nav-grid" class="nav-grid"></div>
+            </div>
+        </div>
+
+        <!-- view-results -->
+        <div id="view-results" class="view-home hidden" style="justify-content: flex-start; padding-top: 4rem;">
+            <div
+                style="width: 80px; height: 80px; background: #ecfdf5; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 2rem;">
+                ✓</div>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Тест завершен</h2>
+            <p id="result-message"
+                style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 2rem; text-align: center; max-width: 500px;">
+            </p>
+
+            <div class="flex gap-4"
+                style="width: 100%; max-width: 400px; justify-content: center; margin-bottom: 2rem;">
+                <div class="text-center">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--success);" id="stat-correct">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light); font-weight: 600;">ВЕРНО</div>
+                </div>
+                <div class="text-center" style="width: 1px; background: var(--border);"></div>
+                <div class="text-center">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--error);" id="stat-wrong">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light); font-weight: 600;">ОШИБКИ</div>
+                </div>
+                <div class="text-center" style="width: 1px; background: var(--border);"></div>
+                <div class="text-center">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--warning);" id="stat-skipped">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light); font-weight: 600;">ПРОПУСК</div>
+                </div>
+                <div class="text-center" style="width: 1px; background: var(--border);"></div>
+                <div class="text-center">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--text);" id="stat-total">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light); font-weight: 600;">ВСЕГО</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4" style="width: 100%; max-width: 300px;">
+                <button onclick="app.reviewTest()" class="btn btn-secondary">Просмотреть ответы</button>
+                <button onclick="app.reset()" class="btn btn-primary">В меню</button>
+            </div>
+        </div>
+
+        <!-- view-history -->
+        <div id="view-history" class="hidden" style="height: 100%; overflow-y: auto; z-index: 100;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 2rem;">
+                <div style="margin-bottom: 1rem;">
+                    <button onclick="app.reset()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">← Назад в
+                        меню</button>
+                </div>
+                <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">Мои результаты</h2>
+                </div>
+                <div id="history-list" class="flex flex-col gap-4"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────
+        // DataService
+        // ─────────────────────────────────────────────
+        class DataService {
+            constructor() {
+                this.apiBase = '/api/v1/doc_testanswers';
+                this.apiResults = '/api/v1/doc_resultsbyuser';
+                this.apiCategories = '/api/v1/list_categories';
+                this.apiConfigs = '/api/v1/list_test_configs';
+                this.apiConfigCats = '/api/v1/list_test_config_categories';
+                this.currentUser = localStorage.getItem('personCode') || 'anonymous';
+                this.updateAuthHeader();
+            }
+
+            init() {
+                this.currentUser = localStorage.getItem('personCode') || 'anonymous';
+                this.updateAuthHeader();
+            }
+
+            updateAuthHeader() {
+                const str = this.currentUser + ':19451945';
+                const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+                    String.fromCharCode('0x' + p1)
+                );
+                this.authHeader = 'Basic ' + btoa(utf8Bytes);
+            }
+
+            getAuthHeaders() {
+                return {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Authorization': this.authHeader
+                };
+            }
+
+            getUsername() { return this.currentUser; }
+
+            // ── Helpers ─────────────────────────────────
+            async _fetchJSON(url) {
+                const res = await fetch(url, { headers: this.getAuthHeaders() });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                return Array.isArray(data) ? data : (data.items || []);
+            }
+
+            // ── Categories ──────────────────────────────
+            async getAvailableCategories() {
+                try {
+                    const query = JSON.stringify({
+                        columns: 'id,code,sname,i00_question_limit,i00_time_limit_minutes,i00_is_active,i00_sort_order',
+                        i00_is_active: 1
+                    });
+                    const url = `${this.apiCategories}?_format=json&limit=200&sort=i00_sort_order&query=${encodeURIComponent(query)}`;
+                    const items = await this._fetchJSON(url);
+                    return items.map(cat => ({
+                        id: cat.id,
+                        code: cat.code,
+                        name: cat.sname || `Категория ${cat.code}`,
+                        description: cat.i00_description || '',
+                        questionLimit: parseInt(cat.i00_question_limit) || 100,
+                        timeLimitMinutes: parseInt(cat.i00_time_limit_minutes) || null,
+                        sortOrder: parseInt(cat.i00_sort_order) || 0
+                    }));
+                } catch (e) {
+                    console.error('Ошибка загрузки категорий:', e);
+                    return [];
+                }
+            }
+
+            // ── Test Configs ────────────────────────────
+            async getAvailableConfigs() {
+                try {
+                    const query = JSON.stringify({
+                        columns: 'id,code,sname,description,total_questions,time_limit_minutes,i00_is_active,i00_sort_order',
+                        i00_is_active: 1
+                    });
+                    const url = `${this.apiConfigs}?_format=json&limit=100&sort=i00_sort_order&query=${encodeURIComponent(query)}`;
+                    const items = await this._fetchJSON(url);
+                    return items.map(c => ({
+                        id: c.id,
+                        code: c.code,
+                        name: c.sname,
+                        description: c.description || '',
+                        totalQuestions: parseInt(c.total_questions) || 100,
+                        timeLimitMinutes: parseInt(c.time_limit_minutes) || null,
+                        sortOrder: parseInt(c.i00_sort_order) || 0
+                    }));
+                } catch (e) {
+                    console.error('Ошибка загрузки конфигураций:', e);
+                    return [];
+                }
+            }
+
+            // Admin-panel сохраняет ilc_test_configs как code конфига (строка),
+            // а не числовой id. Поэтому передаём cfg.code, а не cfg.id.
+            async getConfigCategories(configCode) {
+                try {
+                    const query = JSON.stringify({
+                        columns: 'id,ilc_test_configs,ilc_categories,percent',
+                        ilc_test_configs: configCode
+                    });
+                    const url = `${this.apiConfigCats}?_format=json&limit=50&query=${encodeURIComponent(query)}`;
+                    const items = await this._fetchJSON(url);
+                    // API возвращает ilc_categories как sname категории (строку-название),
+                    // реальный code лежит в ilc_categories_data.code — тот же паттерн,
+                    // что в _normalizeQuestion для вопросов.
+                    return items.map(r => ({
+                        catCode: r.ilc_categories_data?.code
+                            ? String(r.ilc_categories_data.code)
+                            : String(r.ilc_categories),
+                        percent: parseFloat(r.percent) || 0
+                    }));
+                } catch (e) {
+                    console.error('Ошибка загрузки категорий конфига:', e);
+                    return [];
+                }
+            }
+
+            // ── Questions ───────────────────────────────
+            // Нормализует вопрос к новому формату (options + correct_answers)
+            // с обратной совместимостью для старых полей a/b/c/d/answer
+            _normalizeQuestion(q) {
+                let options = q.options;
+                let correctAnswers = q.correct_answers;
+
+                // Парсим если строки
+                if (typeof options === 'string') {
+                    try { options = JSON.parse(options); } catch { options = null; }
+                }
+                if (typeof correctAnswers === 'string') {
+                    try { correctAnswers = JSON.parse(correctAnswers); } catch { correctAnswers = null; }
+                }
+
+                // Fallback: строим options из старых полей a/b/c/d
+                if (!options || !options.length) {
+                    options = [];
+                    ['a', 'b', 'c', 'd'].forEach(k => {
+                        if (q[k] !== undefined && q[k] !== null && q[k] !== '') {
+                            options.push({ id: k, text: String(q[k]) });
+                        }
+                    });
+                }
+
+                // Fallback: correct_answers из старого поля answer
+                if (!correctAnswers || !correctAnswers.length) {
+                    correctAnswers = q.answer ? [q.answer.toString().toLowerCase()] : [];
+                }
+
+                const catCode = q.ilc_categories_data
+                    ? String(q.ilc_categories_data.code)
+                    : String(q.ilc_categories || '');
+
+                return {
+                    id: q.id,
+                    categoryCode: catCode,
+                    question: q.question || '',
+                    options,
+                    correctAnswers, // массив id-шников верных ответов
+                    isMulti: correctAnswers.length > 1
+                };
+            }
+
+            async getTestQuestions(categoryCode, limit = 100) {
+                try {
+                    const query = JSON.stringify({
+                        columns: 'id,ilc_categories,question,options,correct_answers,a,b,c,d,answer',
+                        ilc_categories: categoryCode
+                    });
+                    const url = `${this.apiBase}?_format=json&limit=10000&query=${encodeURIComponent(query)}`;
+                    const items = await this._fetchJSON(url);
+
+                    const normalized = items
+                        .map(q => this._normalizeQuestion(q))
+                        .filter(q => q.categoryCode === String(categoryCode));
+
+                    console.log(`📚 Категория "${categoryCode}": ${normalized.length} вопросов, лимит ${limit}`);
+                    return this.shuffle(normalized).slice(0, limit);
+                } catch (e) {
+                    console.error('Ошибка загрузки вопросов:', e);
+                    return [];
+                }
+            }
+
+            // Загружает вопросы по конфигу: из каждой категории берёт нужный % вопросов
+            async getTestQuestionsByConfig(config, configCats) {
+                const total = config.totalQuestions;
+                let allQuestions = [];
+
+                for (const cc of configCats) {
+                    const count = Math.round(total * cc.percent / 100);
+                    if (count <= 0) continue;
+
+                    const questions = await this.getTestQuestions(cc.catCode, count);
+                    allQuestions = allQuestions.concat(questions);
+                    console.log(`  📂 ${cc.catCode}: ${cc.percent}% → ${count} запрошено, ${questions.length} получено`);
+                }
+
+                // Финальное перемешивание всех вопросов
+                return this.shuffle(allQuestions);
+            }
+
+            // ── History ─────────────────────────────────
+            async getHistory() {
+                try {
+                    const query = JSON.stringify({ ilc_person: this.currentUser });
+                    const url = `${this.apiResults}?_format=json&limit=200&sort=-id&query=${encodeURIComponent(query)}`;
+                    const items = await this._fetchJSON(url);
+                    return items.map(item => ({
+                        date: item.i0d_time || new Date().toISOString(),
+                        categoryCode: item.ilc_categories,
+                        configCode: item.ilc_test_configs || '',
+                        percent: parseInt(item.i00_result) || 0,
+                        correct: parseInt(item.i00_correct_count) || 0,
+                        wrong: parseInt(item.i00_wrong_count) || 0,
+                        skipped: parseInt(item.i00_skipped_count) || 0,
+                        total: parseInt(item.i00_total_count) || 0,
+                        duration: parseInt(item.i00_duration_seconds) || 0
+                    }));
+                } catch (e) {
+                    console.warn('Ошибка загрузки истории:', e);
+                    return [];
+                }
+            }
+
+            // ── Save Result ─────────────────────────────
+            async saveResult(results) {
+                try {
+                    const formData = new FormData();
+                    formData.append('_csrf-frontend', this.getCsrfToken());
+                    formData.append('DocResultsbyuser[ilc_person]', this.currentUser);
+                    formData.append('DocResultsbyuser[ilc_categories]', results.categoryCode || '');
+                    formData.append('DocResultsbyuser[ilc_test_configs]', results.configCode || '');
+                    formData.append('DocResultsbyuser[i00_result]', results.percent);
+                    formData.append('DocResultsbyuser[i00_correct_count]', results.correct);
+                    formData.append('DocResultsbyuser[i00_wrong_count]', results.wrong);
+                    formData.append('DocResultsbyuser[i00_skipped_count]', results.skipped);
+                    formData.append('DocResultsbyuser[i00_total_count]', results.total);
+                    formData.append('DocResultsbyuser[i00_duration_seconds]', results.durationSeconds);
+                    formData.append('DocResultsbyuser[i0d_time]', this.formatDateForDB(new Date()));
+
+                    const params = new URLSearchParams({ tbl: 'doc_resultsbyuser', version: 'add', modal: 'true', ajax: 'true', is_ajax: 'true' });
+                    const res = await fetch(`/ru/t/create?${params}`, {
+                        method: 'POST',
+                        headers: this.getAuthHeaders(),
+                        body: formData
+                    });
+
+                    if (!res.ok) throw new Error('Save failed: ' + res.status);
+                    console.log('✅ Результат сохранён');
+                } catch (e) {
+                    console.error('Ошибка сохранения результата:', e);
+                }
+            }
+
+            getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) return meta.content;
+                if (window.yii?.getCsrfToken) return window.yii.getCsrfToken();
+                const input = document.querySelector('input[name="_csrf-frontend"]');
+                if (input) return input.value;
+                return '';
+            }
+
+            shuffle(array) {
+                let i = array.length, j;
+                while (i) {
+                    j = Math.floor(Math.random() * i--);
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            formatDateForDB(date) {
+                const p = n => String(n).padStart(2, '0');
+                return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())} ${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // App
+        // ─────────────────────────────────────────────
+        const SEG_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#f97316', '#84cc16'];
+
+        const app = {
+            state: {
+                view: 'home',
+                questions: [],
+                // answers: { questionId: ['a'] | ['b','c'] }   — всегда массив
+                answers: {},
+                currentIdx: 0,
+                timerSeconds: 0,
+                timerInterval: null,
+                timeLimitSeconds: null,
+                isReviewMode: false,
+                selectionMode: 'configs',     // 'configs' | 'cats'
+                selectedCategory: null,          // категория { code, name, ... }
+                selectedConfig: null,          // конфиг { id, name, totalQuestions, ... }
+                selectedConfigCats: [],            // [{ catCode, percent }]
+                availableCategories: [],
+                availableConfigs: []
+            },
+
+            dataService: new DataService(),
+
+            async init() {
+                this.dataService.init();
+                await this.loadSelectionData();
+                this.render();
+            },
+
+            async loadSelectionData() {
+                const [cats, configs] = await Promise.all([
+                    this.dataService.getAvailableCategories(),
+                    this.dataService.getAvailableConfigs()
+                ]);
+                this.state.availableCategories = cats;
+                this.state.availableConfigs = configs;
+            },
+
+            render() { },
+
+            // ── Selection mode (configs / categories) ───
+            switchSelectionMode(mode) {
+                this.state.selectionMode = mode;
+                this.state.selectedCategory = null;
+                this.state.selectedConfig = null;
+
+                document.getElementById('tab-configs-btn').classList.toggle('active', mode === 'configs');
+                document.getElementById('tab-cats-btn').classList.toggle('active', mode === 'cats');
+                document.getElementById('selection-configs').classList.toggle('hidden', mode !== 'configs');
+                document.getElementById('selection-cats').classList.toggle('hidden', mode !== 'cats');
+
+                if (mode === 'configs') this.renderConfigs();
+                else this.renderCategories();
+            },
+
+            showCategorySelection() {
+                this.renderConfigs();
+                this.renderCategories();
+                document.getElementById('category-overlay').style.display = 'flex';
+            },
+
+            closeCategorySelection() {
+                document.getElementById('category-overlay').style.display = 'none';
+                // Не сбрасываем selectedConfig/selectedCategory здесь —
+                // при отмене пользователем состояние сбрасывается через switchSelectionMode или повторный выбор
+            },
+
+            // ── Render configs list ──────────────────────
+            renderConfigs() {
+                const container = document.getElementById('config-list');
+                if (!container) return;
+
+                if (!this.state.availableConfigs.length) {
+                    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-light);">Конфигурации не найдены</div>';
+                    return;
+                }
+
+                container.innerHTML = this.state.availableConfigs.map((cfg, cfgIdx) => {
+                    const isActive = this.state.selectedConfig?.id === cfg.id;
+                    const timeInfo = cfg.timeLimitMinutes ? `⏱ ${cfg.timeLimitMinutes} мин` : '';
+
+                    // Breakdown segments — заглушка пока не знаем проценты без доп. запроса
+                    // Реальные % загружаем при выборе
+                    return `
+                <div class="category-card ${isActive ? 'active' : ''}"
+                     onclick="app.selectConfig(${cfg.id})">
+                    <div class="cat-name">${cfg.name}</div>
+                    ${cfg.description ? `<div style="font-size:0.85rem;color:var(--text-light);text-align:center;">${cfg.description}</div>` : ''}
+                    <div class="cat-meta">
+                        <span class="cat-count">${cfg.totalQuestions} вопр.</span>
+                        ${timeInfo ? `<span style="font-size:0.8rem;">${timeInfo}</span>` : ''}
+                    </div>
+                </div>
+            `;
+                }).join('');
+            },
+
+            async selectConfig(configId) {
+                // configId — числовой id конфига (как в admin-panel)
+                const cfg = this.state.availableConfigs.find(c => c.id === configId);
+                if (!cfg) return;
+                this.state.selectedConfig = cfg;
+                this.state.selectedCategory = null;
+
+                // Загружаем привязки категорий по CODE конфига (именно code хранится
+                // в поле ilc_test_configs таблицы list_test_config_categories)
+                this.state.selectedConfigCats = await this.dataService.getConfigCategories(cfg.code);
+
+                document.querySelectorAll('#config-list .category-card').forEach(el => el.classList.remove('active'));
+                const cards = document.querySelectorAll('#config-list .category-card');
+                const idx = this.state.availableConfigs.findIndex(c => c.id === configId);
+                if (cards[idx]) cards[idx].classList.add('active');
+            },
+
+            // ── Render categories list ───────────────────
+            renderCategories() {
+                const container = document.getElementById('category-list');
+                if (!container) return;
+
+                if (!this.state.availableCategories.length) {
+                    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-light);">Категории не найдены</div>';
+                    return;
+                }
+
+                container.innerHTML = this.state.availableCategories.map(cat => {
+                    const isActive = this.state.selectedCategory?.code === cat.code;
+                    const timeInfo = cat.timeLimitMinutes ? `⏱ ${cat.timeLimitMinutes} мин` : '';
+                    return `
+                <div class="category-card ${isActive ? 'active' : ''}"
+                     onclick="app.selectCategory('${cat.code}', this)">
+                    <div class="cat-name">${cat.name}</div>
+                    <div class="cat-meta">
+                        <span class="cat-count">${cat.questionLimit} вопр.</span>
+                        ${timeInfo ? `<span style="font-size:0.8rem;">${timeInfo}</span>` : ''}
+                    </div>
+                </div>
+            `;
+                }).join('');
+            },
+
+            selectCategory(categoryCode, el) {
+                const cat = this.state.availableCategories.find(c => c.code == categoryCode);
+                if (!cat) return;
+                this.state.selectedCategory = cat;
+                this.state.selectedConfig = null;
+                document.querySelectorAll('#category-list .category-card').forEach(c => c.classList.remove('active'));
+                if (el) el.classList.add('active');
+            },
+
+            // ── Start test ───────────────────────────────
+            async startTestWithCategory() {
+                const isConfig = this.state.selectionMode === 'configs' && this.state.selectedConfig;
+                const isCat = this.state.selectionMode === 'cats' && this.state.selectedCategory;
+
+                if (!isConfig && !isCat) {
+                    alert(this.state.selectionMode === 'configs'
+                        ? 'Пожалуйста, выберите конфигурацию'
+                        : 'Пожалуйста, выберите категорию');
+                    return;
+                }
+
+                // Сохраняем ссылки ДО того как closeCategorySelection() обнулит state
+                const cfg = isConfig ? this.state.selectedConfig : null;
+                const cat = isCat ? this.state.selectedCategory : null;
+                const configCats = isConfig ? this.state.selectedConfigCats.slice() : [];
+
+                const loadingOverlay = document.getElementById('loading-overlay');
+                const loadingText = document.getElementById('loading-text');
+                if (loadingText) loadingText.textContent = 'Загрузка вопросов...';
+                if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+                this.closeCategorySelection();   // обнуляет selectedConfig / selectedCategory — но нам уже не важно
+                await new Promise(r => setTimeout(r, 300));
+
+                let questions = [];
+                let timeLimitMins = null;
+                let categoryCodeForSave = '';
+
+                if (isConfig) {
+                    if (loadingText) loadingText.textContent = `Загрузка из ${configCats.length} категорий...`;
+                    questions = await this.dataService.getTestQuestionsByConfig(cfg, configCats);
+                    timeLimitMins = cfg.timeLimitMinutes;
+                    // ilc_categories — FK только на list_categories, туда нельзя писать код конфига.
+                    categoryCodeForSave = '';
+                    this.state._configCodeForSave = cfg.code;   // → ilc_test_configs в БД
+                    this.state._testLabelForDisplay = cfg.name;
+                } else {
+                    questions = await this.dataService.getTestQuestions(cat.code, cat.questionLimit);
+                    timeLimitMins = cat.timeLimitMinutes;
+                    categoryCodeForSave = cat.code;
+                    this.state._configCodeForSave = '';           // категория, не конфиг
+                    this.state._testLabelForDisplay = cat.name;
+                }
+
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+                if (!questions.length) {
+                    alert('Не удалось загрузить вопросы. Проверьте настройки категорий.');
+                    return;
+                }
+
+                this.state.questions = questions;
+                this.state.answers = {};
+                this.state.currentIdx = 0;
+                this.state.timerSeconds = 0;
+                this.state.isReviewMode = false;
+                this.state.timeLimitSeconds = timeLimitMins ? timeLimitMins * 60 : null;
+                this.state._categoryCodeForSave = categoryCodeForSave;
+
+                document.getElementById('total-q-num').textContent = questions.length;
+
+                const limitLabel = document.getElementById('timer-limit-label');
+                if (limitLabel) limitLabel.textContent = timeLimitMins ? `Лимит: ${timeLimitMins} мин` : '';
+
+                this.switchView('test');
+                this.startTimer();
+                this.renderQuestion();
+                this.renderGrid();
+                this.updateButtons();
+            },
+
+            finishTest() {
+                if (this.state.isReviewMode) { this.reset(); return; }
+                clearInterval(this.state.timerInterval);
+                const results = this.calculateResults();
+                this.dataService.saveResult(results);
+                this.switchView('results');
+            },
+
+            finishEarly() {
+                if (confirm('Вы уверены, что хотите завершить тест досрочно?')) {
+                    this.finishTest();
+                }
+            },
+
+            reviewTest() {
+                this.state.isReviewMode = true;
+                this.state.currentIdx = 0;
+                this.switchView('test');
+                this.renderGrid();
+                this.renderQuestion();
+                this.updateButtons();
+            },
+
+            reset() { this.switchView('home'); },
+
+            // ── Navigation ──────────────────────────────
+            nextQuestion() {
+                if (this.state.currentIdx < this.state.questions.length - 1) {
+                    this.state.currentIdx++;
+                    this.renderQuestion();
+                    this.updateButtons();
+                    this.updateGridActive();
+                }
+            },
+
+            prevQuestion() {
+                if (this.state.currentIdx > 0) {
+                    this.state.currentIdx--;
+                    this.renderQuestion();
+                    this.updateButtons();
+                    this.updateGridActive();
+                }
+            },
+
+            goToQuestion(idx) {
+                this.state.currentIdx = idx;
+                this.renderQuestion();
+                this.updateButtons();
+                this.updateGridActive();
+            },
+
+            // ── Answer selection ─────────────────────────
+            // Для одиночного выбора (isMulti=false) — всегда массив из 1 элемента
+            // Для множественного (isMulti=true) — тоглим вхождение элемента в массив
+            selectAnswer(optionId) {
+                if (this.state.isReviewMode) return;
+                const q = this.state.questions[this.state.currentIdx];
+
+                if (q.isMulti) {
+                    // Множественный выбор: тоглим
+                    const current = this.state.answers[q.id] || [];
+                    const idx = current.indexOf(optionId);
+                    if (idx === -1) current.push(optionId);
+                    else current.splice(idx, 1);
+                    this.state.answers[q.id] = current;
+                } else {
+                    // Одиночный: заменяем
+                    this.state.answers[q.id] = [optionId];
+                }
+
+                this.renderOptions(q);
+                this.renderGridItem(this.state.currentIdx);
+            },
+
+            // ── Views ────────────────────────────────────
+            switchView(viewName) {
+                document.querySelectorAll('#app > [id^="view-"]').forEach(el => el.classList.add('hidden'));
+                const target = document.getElementById(`view-${viewName}`);
+                if (target) target.classList.remove('hidden');
+                this.state.view = viewName;
+            },
+
+            // ── Render ───────────────────────────────────
+            renderQuestion() {
+                const q = this.state.questions[this.state.currentIdx];
+                const card = document.getElementById('question-card');
+                const num = this.state.currentIdx + 1;
+
+                document.getElementById('current-q-num').textContent = num;
+                if (!q) return;
+
+                const typeHint = q.isMulti
+                    ? `<span class="q-type-badge">☑ Несколько правильных ответов</span>`
+                    : '';
+
+                card.innerHTML = `
+            <div class="q-meta">
+                <span>Вопрос ${num} / ${this.state.questions.length}</span>
+                ${typeHint}
+            </div>
+            <div class="q-text">${q.question}</div>
+            <div class="options-list" id="options-list"></div>
+        `;
+                this.renderOptions(q);
+            },
+
+            renderOptions(q) {
+                const container = document.getElementById('options-list');
+                const userChoice = this.state.answers[q.id] || [];   // массив
+
+                container.innerHTML = q.options.map(opt => {
+                    const isSelected = userChoice.includes(opt.id);
+                    const isCorrect = q.correctAnswers.includes(opt.id);
+                    const isUserPick = isSelected;
+
+                    let classes = 'option-item';
+                    let markerContent = opt.id.toUpperCase();
+
+                    if (q.isMulti) classes += ' multi-option';
+
+                    if (this.state.isReviewMode) {
+                        if (isCorrect && isUserPick) { classes += ' correct-answer'; markerContent = '✓'; }
+                        else if (!isCorrect && isUserPick) { classes += ' wrong-answer'; markerContent = '✕'; }
+                        else if (isCorrect && !isUserPick) { classes += ' missed-answer'; markerContent = '○'; }
+                    } else {
+                        if (isSelected) classes += q.isMulti ? ' checked' : ' selected';
+                    }
+
+                    return `
+                <div class="${classes}" onclick="app.selectAnswer('${opt.id}')">
+                    <div class="option-marker">${markerContent}</div>
+                    <div class="option-text">${opt.text}</div>
+                </div>
+            `;
+                }).join('');
+            },
+
+            renderGrid() {
+                const grid = document.getElementById('nav-grid');
+                if (!grid) return;
+
+                const legend = document.getElementById('grid-legend');
+                if (legend) legend.style.display = this.state.isReviewMode ? 'flex' : 'none';
+
+                grid.innerHTML = '';
+                this.state.questions.forEach((q, idx) => {
+                    const el = document.createElement('div');
+                    el.className = 'grid-item';
+                    el.textContent = idx + 1;
+                    el.id = `grid-item-${idx}`;
+                    el.onclick = () => {
+                        this.goToQuestion(idx);
+                        document.getElementById('grid-overlay').classList.remove('open');
+                    };
+                    grid.appendChild(el);
+                    this.renderGridItem(idx);
+                });
+                this.updateGridActive();
+            },
+
+            renderGridItem(idx) {
+                const q = this.state.questions[idx];
+                const el = document.getElementById(`grid-item-${idx}`);
+                if (!el) return;
+
+                el.className = 'grid-item';
+
+                const userChoice = this.state.answers[q.id] || [];
+                const hasAnswer = userChoice.length > 0;
+
+                if (this.state.isReviewMode) {
+                    if (!hasAnswer) {
+                        el.classList.add('skipped');
+                    } else {
+                        // Для мультивыбора: верно только если все правильные выбраны и ничего лишнего
+                        const isCorrect = this._isAnswerCorrect(q, userChoice);
+                        el.classList.add(isCorrect ? 'correct' : 'wrong');
+                    }
+                } else {
+                    if (hasAnswer) el.classList.add('answered');
+                }
+
+                if (idx === this.state.currentIdx) el.classList.add('active');
+            },
+
+            // Проверяет корректность ответа для вопроса (работает и для одиночных и для множественных)
+            _isAnswerCorrect(q, userChoice) {
+                const correct = q.correctAnswers.slice().sort();
+                const user = (userChoice || []).slice().sort();
+                if (correct.length !== user.length) return false;
+                return correct.every((v, i) => v === user[i]);
+            },
+
+            updateGridActive() {
+                document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('active'));
+                const cur = document.getElementById(`grid-item-${this.state.currentIdx}`);
+                if (cur) { cur.classList.add('active'); cur.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+            },
+
+            updateButtons() {
+                const isLast = this.state.currentIdx === this.state.questions.length - 1;
+                const nextBtn = document.getElementById('btn-next');
+                const finBtn = document.getElementById('btn-finish');
+                const controls = document.querySelector('.controls-bar');
+                const finEarlyBtn = document.getElementById('btn-finish-early');
+                let backBtn = document.getElementById('btn-review-back');
+
+                if (this.state.isReviewMode) {
+                    nextBtn.classList.toggle('hidden', isLast);
+                    finBtn.classList.add('hidden');
+                    if (finEarlyBtn) finEarlyBtn.classList.add('hidden');
+
+                    if (!backBtn) {
+                        backBtn = document.createElement('button');
+                        backBtn.id = 'btn-review-back';
+                        backBtn.className = 'btn btn-secondary';
+                        backBtn.textContent = 'В меню';
+                        backBtn.onclick = () => app.reset();
+                        controls.insertBefore(backBtn, controls.firstChild);
+                    }
+                    backBtn.classList.remove('hidden');
+                } else {
+                    if (backBtn) backBtn.classList.add('hidden');
+                    if (finEarlyBtn) finEarlyBtn.classList.remove('hidden');
+                    nextBtn.classList.toggle('hidden', isLast);
+                    finBtn.classList.toggle('hidden', !isLast);
+                }
+            },
+
+            // ── Timer ────────────────────────────────────
+            startTimer() {
+                const timerEl = document.getElementById('timer');
+                this.state.timerInterval = setInterval(() => {
+                    this.state.timerSeconds++;
+
+                    if (this.state.timeLimitSeconds) {
+                        const remaining = this.state.timeLimitSeconds - this.state.timerSeconds;
+                        if (remaining <= 0) {
+                            clearInterval(this.state.timerInterval);
+                            timerEl.textContent = '00:00';
+                            alert('Время вышло! Тест будет завершён автоматически.');
+                            this.finishTest();
+                            return;
+                        }
+                        const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+                        const s = (remaining % 60).toString().padStart(2, '0');
+                        timerEl.textContent = `${m}:${s}`;
+                        timerEl.className = 'timer-badge';
+                        if (remaining <= 60) timerEl.classList.add('danger');
+                        else if (remaining <= this.state.timeLimitSeconds * 0.25) timerEl.classList.add('warning');
+                    } else {
+                        const m = Math.floor(this.state.timerSeconds / 60).toString().padStart(2, '0');
+                        const s = (this.state.timerSeconds % 60).toString().padStart(2, '0');
+                        timerEl.textContent = `${m}:${s}`;
+                    }
+                }, 1000);
+            },
+
+            // ── Results ──────────────────────────────────
+            calculateResults() {
+                let correct = 0, wrong = 0, skipped = 0;
+
+                this.state.questions.forEach(q => {
+                    const userChoice = this.state.answers[q.id] || [];
+                    if (!userChoice.length) skipped++;
+                    else if (this._isAnswerCorrect(q, userChoice)) correct++;
+                    else wrong++;
+                });
+
+                const total = this.state.questions.length;
+                const percent = Math.round((correct / total) * 100);
+
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-correct').textContent = correct;
+                document.getElementById('stat-wrong').textContent = wrong;
+                document.getElementById('stat-skipped').textContent = skipped;
+                document.getElementById('result-message').textContent = `Вы ответили правильно на ${percent}% вопросов.`;
+
+                return {
+                    correct,
+                    wrong,
+                    skipped,
+                    total,
+                    percent,
+                    durationSeconds: this.state.timerSeconds,
+                    categoryCode: this.state._categoryCodeForSave || '',
+                    configCode: this.state._configCodeForSave || ''
+                };
+            },
+
+            // ── History ──────────────────────────────────
+            async showHistory() {
+                this.switchView('history');
+                const list = document.getElementById('history-list');
+                list.innerHTML = '<div style="text-align:center;padding:2rem;">Загрузка...</div>';
+
+                const history = await this.dataService.getHistory();
+
+                if (!history.length) {
+                    list.innerHTML = `
+                <div style="text-align:center;padding:2rem;color:var(--text-light);">
+                    <div style="font-size:1.2rem;margin-bottom:0.5rem;">История пуста</div>
+                    <div style="font-size:0.8rem;margin-top:1rem;opacity:0.7;">Пользователь: ${this.dataService.getUsername()}</div>
+                </div>`;
+                    return;
+                }
+
+                // Двойной маппинг: по code И по name — API может вернуть любое из двух
+                const catMap = {};
+                this.state.availableCategories.forEach(c => {
+                    catMap[c.code] = c.name;   // code → name
+                    catMap[c.name] = c.name;   // name → name (если API вернул sname)
+                });
+                const cfgMap = {};
+                this.state.availableConfigs.forEach(c => {
+                    cfgMap[c.code] = c.name;   // code → name
+                    cfgMap[c.name] = c.name;   // name → name
+                });
+
+                list.innerHTML = history.map(item => {
+                    const dateStr = isNaN(new Date(item.date)) ? item.date : new Date(item.date).toLocaleString('ru-RU');
+                    // configCode → имя конфига; categoryCode → имя категории
+                    const label = cfgMap[item.configCode] || cfgMap[item.categoryCode]
+                        || catMap[item.categoryCode]
+                        || (item.configCode ? item.configCode : '')
+                        || (item.categoryCode ? item.categoryCode : 'Сборный тест');
+                    const mins = item.duration ? Math.floor(item.duration / 60) + ' мин ' + (item.duration % 60) + ' с' : '';
+                    const color = item.percent >= 80 ? 'var(--success)' : item.percent >= 50 ? 'var(--warning)' : 'var(--error)';
+
+                    return `
+                <div style="background:white;padding:1.5rem;border-radius:12px;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                        <div style="font-weight:700;font-size:1.1rem;color:${color};">${item.percent}%</div>
+                        <div style="font-size:0.85rem;color:var(--text-light);">${dateStr}</div>
+                    </div>
+                    <div style="font-size:0.9rem;color:var(--text-light);margin-bottom:0.25rem;">${label}</div>
+                    <div style="font-size:0.85rem;color:var(--text-light);display:flex;gap:1rem;flex-wrap:wrap;">
+                        <span style="color:var(--success);">✓ ${item.correct}</span>
+                        <span style="color:var(--error);">✕ ${item.wrong}</span>
+                        <span style="color:var(--warning);">— ${item.skipped}</span>
+                        ${mins ? `<span>⏱ ${mins}</span>` : ''}
+                    </div>
+                </div>
+            `;
+                }).join('');
+            }
+        };
+
+        window.app = app;
+        app.init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль транспорта</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+            --radius-lg: 16px;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px;
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ── Banner Card ── */
+        .profile-banner {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .pb-top {
+            height: 140px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            position: relative;
+        }
+
+        .pb-content {
+            padding: 24px 32px 32px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: -64px;
+        }
+
+        .pb-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 64px;
+            /* Space for absolute positioning if needed */
+        }
+
+        .pb-dept {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pb-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .pb-badge {
+            display: inline-block;
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+            margin-top: 8px;
+        }
+
+        .pb-avatar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pb-avatar {
+            width: 128px;
+            height: 128px;
+            background: #ffffff;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            color: #cbd5e1;
+        }
+
+        .pb-driver-name {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .pb-driver-role {
+            font-size: 13px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ── Layout Grid ── */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* ── Main Content Area (Cards) ── */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .info-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .card-header-icon {
+            font-size: 20px;
+        }
+
+        /* ── Sidebar Tabs ── */
+        .sidebar {
+            position: relative;
+            z-index: 50;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: var(--shadow-sm);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            text-align: left;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* ── History Table ── */
+        .history-table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: var(--surface2);
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-inwork {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-reserve {
+            background: #fef08a;
+            color: #854d0e;
+        }
+
+        .status-planto {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .status-rem {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-unknown {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* ── Timeline ── */
+        .timeline-wrapper {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .tl-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .tl-track {
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .tl-segment {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            border-left: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .tl-segment:hover {
+            filter: brightness(1.1);
+            z-index: 10;
+        }
+
+        .tl-scale {
+            display: flex;
+            position: relative;
+            height: 24px;
+            margin-top: 8px;
+        }
+
+        .tl-tick {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transform: translateX(-50%);
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #3b82f6;
+            border-right-color: #0ea5e9;
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Map Tab ── */
+        #tab-map {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 500px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            z-index: 1;
+            /* Keep leaflet under modals/header */
+        }
+    </style>
+
+    <!-- Leaflet.js for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <div id="loader">
+        <div class="loader-ring"></div>
+        <div>Загрузка профиля транспота...</div>
+    </div>
+
+    <div class="container">
+        <!-- Banner -->
+        <div class="profile-banner">
+            <div class="pb-top"></div>
+            <div class="pb-content">
+                <div class="pb-info">
+                    <div class="pb-dept">🚛 ТРАНСПОРТНОЕ СРЕДСТВО</div>
+                    <div class="pb-title" id="ts-title">Загрузка...</div>
+                    <div class="pb-badge" id="ts-type">Тип ТС загружается...</div>
+                </div>
+
+                <div class="pb-avatar-wrap">
+                    <div class="pb-avatar">🚛</div>
+                    <div class="pb-driver-name" id="ts-code-display">-</div>
+                    <div class="pb-driver-role">Внутренний код</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layout -->
+        <div class="grid-layout">
+            <!-- Content -->
+            <div class="content-area">
+
+                <!-- History Tab -->
+                <div id="tab-history" class="info-card">
+                    <div class="card-header">
+                        <span class="card-header-icon">📜</span>
+                        История статусов
+                    </div>
+
+                    <div class="timeline-wrapper" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <div class="tl-header">Таймлайн (последние 30 дней)</div>
+                        <div id="profile-timeline">
+                            <div style="color: #64748b; font-size: 14px;">Загрузка таймлайна...</div>
+                        </div>
+                    </div>
+
+                    <div class="history-table-container" style="margin-top: 24px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Дата и Время</th>
+                                    <th>Событие (Статус)</th>
+                                    <th>Описание неисправности</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #64748b;">Загрузка истории...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty State for unimplemented tabs -->
+                <div id="tab-empty" class="info-card"
+                    style="display: none; align-items: center; justify-content: center; min-height: 200px; color: #64748b; font-weight: 600;">
+                    Данный раздел находится в разработке
+                </div>
+
+                <!-- Track Map Tab -->
+                <div id="tab-map" class="info-card">
+                    <div class="card-header" style="justify-content: space-between;">
+                        <div>
+                            <span class="card-header-icon">📍</span>
+                            Трек и геолокация
+                        </div>
+                        <div id="map-status" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">
+                            Загрузка данных...
+                        </div>
+                    </div>
+                    <div id="map-container"></div>
+                </div>
+
+            </div>
+
+            <!-- Sidebar Tabs -->
+            <div class="sidebar">
+                <button class="tab-btn active" onclick="switchTab('history', this)">История статусов</button>
+                <button class="tab-btn" onclick="switchTab('map', this)">Трек</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api/v1';
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function switchTab(tabId, btn) {
+            try {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+
+                const tabHistory = document.getElementById('tab-history');
+                const tabEmpty = document.getElementById('tab-empty');
+                const tabMap = document.getElementById('tab-map');
+
+                if (tabHistory) tabHistory.style.display = 'none';
+                if (tabEmpty) tabEmpty.style.display = 'none';
+                if (tabMap) tabMap.style.display = 'none';
+
+                if (tabId === 'history' && tabHistory) {
+                    tabHistory.style.display = 'block';
+                } else if (tabId === 'map' && tabMap) {
+                    tabMap.style.display = 'flex';
+                    if (window.profileMap) window.profileMap.invalidateSize(); // FIX for leaflet rendering grey box
+                } else if (tabEmpty) {
+                    tabEmpty.style.display = 'flex';
+                }
+            } catch (err) {
+                console.error("Tab switch error:", err);
+            }
+        }
+
+        function formatDateTime(isoStr) {
+            if (!isoStr) return '';
+            const parts = isoStr.split(' ');
+            if (parts.length === 2) {
+                const [y, m, d] = parts[0].split('-');
+                const [h, min] = parts[1].split(':');
+                return `${d}.${m}.${y} ${h}:${min}`;
+            }
+            return isoStr;
+        }
+
+        const STATUS_COLORS = {
+            'inwork': 'status-inwork',
+            'reserve': 'status-reserve',
+            'plan_to': 'status-planto',
+            'rem': 'status-rem'
+        };
+
+        function getStatusColorClass(code) {
+            return STATUS_COLORS[code] || 'status-unknown';
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function loadProfile() {
+            const targetId = getQueryParam('id');
+            if (!targetId) {
+                document.getElementById('loader').innerHTML = 'Ошибка: не передан ID транспорта в URL (параметр ?id=)';
+                return;
+            }
+
+            try {
+                // 1. Fetch Transport Info from list_ts
+                const tsQuery = JSON.stringify({
+                    "rec_id": targetId,
+                    "columns": "code,sname,ilc_vid_ts,i00_omm_id"
+                });
+                const tsInfoData = await fetchJSON(`${API_BASE}/list_ts?_format=json&query=${encodeURIComponent(tsQuery)}`);
+
+                if (!tsInfoData || tsInfoData.length === 0) {
+                    throw new Error("Транспорт не найден в справочнике list_ts");
+                }
+
+                const ts = tsInfoData[0];
+                const tsCode = ts.code; // Unique string code for querying history
+
+                // Set Header Info
+                const vName = ts.sname || ts.code;
+                const vCode = ts.code;
+                const vType = ts.ilc_vid_ts_data ? ts.ilc_vid_ts_data.sname : (ts.ilc_vid_ts || 'Вид не указан');
+
+                document.getElementById('ts-title').textContent = vName;
+                document.getElementById('ts-code-display').textContent = vCode;
+                document.getElementById('ts-type').textContent = vType;
+
+                // Initialize Map Data if ID exists
+                if (ts.i00_omm_id) {
+                    loadOmnicommData(ts.i00_omm_id, vName);
+                } else {
+                    document.getElementById('map-status').innerHTML = '<span style="color: #ef4444;">i00_omm_id не указан в справочнике</span>';
+                }
+
+                // 2. Fetch Transport Actions from doc_transport_actions
+                const histQuery = JSON.stringify({
+                    "ilc_ts": tsCode,
+                    "columns": "i0d_caldate,ilc_uppevents,i00_neispr_desc",
+                    "show_code": "true",
+                    "order": "i0d_caldate|desc",
+                    "limit": "100"
+                });
+
+                const historyData = await fetchJSON(`${API_BASE}/doc_transport_actions?_format=json&query=${encodeURIComponent(histQuery)}`);
+
+                renderProfileTimeline(historyData);
+                renderHistoryTable(historyData);
+
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка загрузки: ' + err.message);
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function renderHistoryTable(data) {
+            const tbody = document.getElementById('history-tbody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">История статусов пуста.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(row => {
+                const dateStr = formatDateTime(row.i0d_caldate);
+                const statusCode = row.ilc_uppevents_data ? row.ilc_uppevents_data.code : row.ilc_uppevents;
+                const statusName = row.ilc_uppevents_data ? row.ilc_uppevents_data.sname : row.ilc_uppevents;
+                const desc = row.i00_neispr_desc || '-';
+
+                const badgeClass = getStatusColorClass(statusCode);
+
+                html += `
+                    <tr>
+                        <td style="font-weight: 500; white-space: nowrap;">${escHtml(dateStr)}</td>
+                        <td>
+                            <div class="status-badge ${badgeClass}">${escHtml(statusName)}</div>
+                        </td>
+                        <td style="color: #475569;">${escHtml(desc)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function formatTimeMs(ms) {
+            const d = new Date(ms);
+            const dy = d.getDate().toString().padStart(2, '0');
+            const mo = (d.getMonth() + 1).toString().padStart(2, '0');
+            const hh = d.getHours().toString().padStart(2, '0');
+            const min = d.getMinutes().toString().padStart(2, '0');
+            return `${dy}.${mo} ${hh}:${min}`;
+        }
+
+        function parseLocalTime(dtStr) {
+            if (!dtStr) return new Date();
+            const parts = dtStr.split(' ');
+            const datePart = parts[0];
+            const timePart = parts[1] || '00:00:00';
+            const [y, m, d] = datePart.split('-');
+            const [h, min, s] = timePart.split(':');
+            return new Date(y, m - 1, d, h, min, s || 0);
+        }
+
+        function renderProfileTimeline(data) {
+            const container = document.getElementById('profile-timeline');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="color: #64748b;">Недостаточно данных для таймлайна</div>';
+                return;
+            }
+
+            // Convert and sort ASC
+            const events = [...data].map(r => ({
+                timeMs: parseLocalTime(r.i0d_caldate).getTime(),
+                code: r.ilc_uppevents_data ? r.ilc_uppevents_data.code : r.ilc_uppevents,
+                name: r.ilc_uppevents_data ? r.ilc_uppevents_data.sname : r.ilc_uppevents
+            })).sort((a, b) => a.timeMs - b.timeMs);
+
+            const nowMs = Date.now();
+            const WindowDays = 30;
+            const WindowMs = WindowDays * 24 * 3600 * 1000;
+            const timelineEndMs = nowMs;
+            const timelineStartMs = nowMs - WindowMs;
+
+            let currentStatus = 'unknown';
+            let currentName = 'Неизвестно';
+            let segmentStart = timelineStartMs;
+
+            // Find status before 30-day window
+            let statusAtStart = null;
+            for (let i = events.length - 1; i >= 0; i--) {
+                if (events[i].timeMs <= timelineStartMs) {
+                    statusAtStart = events[i];
+                    break;
+                }
+            }
+            if (statusAtStart) {
+                currentStatus = statusAtStart.code;
+                currentName = statusAtStart.name;
+            } else if (events.length > 0 && events[0].timeMs > timelineStartMs) {
+                currentStatus = events[0].code;
+                currentName = events[0].name;
+            }
+
+            let segments = [];
+            for (let i = 0; i < events.length; i++) {
+                const ev = events[i];
+                if (ev.timeMs <= timelineStartMs) continue;
+                if (ev.timeMs >= timelineEndMs) break;
+
+                segments.push({
+                    code: currentStatus,
+                    name: currentName,
+                    startMs: segmentStart,
+                    endMs: ev.timeMs
+                });
+
+                currentStatus = ev.code;
+                currentName = ev.name;
+                segmentStart = ev.timeMs;
+            }
+
+            // Last segment up to now
+            if (segmentStart < timelineEndMs) {
+                segments.push({
+                    code: currentStatus,
+                    name: currentName,
+                    startMs: segmentStart,
+                    endMs: timelineEndMs
+                });
+            }
+
+            const colorHex = {
+                'status-inwork': '#22c55e',
+                'status-reserve': '#eab308',
+                'status-planto': '#0ea5e9',
+                'status-rem': '#ef4444',
+                'status-unknown': '#94a3b8'
+            };
+
+            let trackHtml = '<div class="tl-track">';
+            segments.forEach(seg => {
+                const startPx = ((seg.startMs - timelineStartMs) / WindowMs) * 100;
+                const widthPx = ((seg.endMs - seg.startMs) / WindowMs) * 100;
+                const cClass = getStatusColorClass(seg.code);
+                const hex = colorHex[cClass] || '#94a3b8';
+
+                trackHtml += `<div class="tl-segment" 
+                    style="left: ${startPx}%; width: ${Math.max(widthPx, 0.2)}%; background: ${hex};"
+                    title="${escHtml(seg.name)}\n${formatTimeMs(seg.startMs)} – ${formatTimeMs(seg.endMs)}"></div>`;
+            });
+            trackHtml += '</div>';
+
+            let scaleHtml = '<div class="tl-scale">';
+            for (let i = 0; i <= WindowDays; i += 3) {
+                const pct = (i / WindowDays) * 100;
+                const d = new Date(timelineStartMs + i * 24 * 3600 * 1000);
+                const dayStr = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0');
+                scaleHtml += `<div class="tl-tick" style="left: ${pct}%;">${dayStr}</div>`;
+            }
+            scaleHtml += '</div>';
+
+            container.innerHTML = trackHtml + scaleHtml;
+        }
+
+        // --- MAP AND OMNICOMM INTEGRATION ---
+
+        const OMNI_LOGIN = "dpozhitkov";
+        const OMNI_PASS = "c1MmnYYGw";
+        const OMNI_URL = "https://online.omnicomm.ru";
+
+        async function getOmnicommToken() {
+            const res = await fetch(`${OMNI_URL}/auth/login?jwt=1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: OMNI_LOGIN, password: OMNI_PASS })
+            });
+            const data = await res.json();
+            return data.jwt;
+        }
+
+        function createVehicleIcon(isOnline) {
+            const markerColor = isOnline ? '#28a745' : '#dc3545';
+            return L.divIcon({
+                className: 'vehicle-marker',
+                html: `<div style="
+                    background: ${markerColor};
+                    width: 28px; height: 28px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+                    display: flex; align-items: center; justify-content: center;
+                    color: white; font-size: 14px; font-weight: bold;
+                ">🚗</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+        }
+
+        async function loadOmnicommData(ommId, vehicleName) {
+            const statusEl = document.getElementById('map-status');
+            try {
+                const token = await getOmnicommToken();
+
+                const now = Date.now();
+                const params = new URLSearchParams({
+                    action: "getLastKnownPosition",
+                    vehicles: JSON.stringify([parseInt(ommId)]),
+                    fromDatetime: (now - 86400000).toString(), // Last 24 hours
+                    toDatetime: now.toString(),
+                    type: "lkpInfo",
+                    userID: "1904",
+                    repConfigId: "5408"
+                });
+
+                const res = await fetch(`${OMNI_URL}/track?${params.toString()}`, {
+                    headers: { 'Authorization': `JWT ${token}` }
+                });
+
+                if (!res.ok) throw new Error("Ошибка HTTP статуса от Omnicomm");
+
+                const resData = await res.json();
+
+                if (resData && resData.data && resData.data[ommId]) {
+                    const vehicle = resData.data[ommId];
+                    if (vehicle.success && vehicle.latitude && vehicle.longitude) {
+
+                        // Parse Data
+                        const coords = [vehicle.latitude, vehicle.longitude];
+                        const isOnline = vehicle.gsmOn;
+                        const fuelLiters = (vehicle.fuelVolume / 1000).toFixed(1);
+                        const lastUpdate = new Date(vehicle.eventDate || vehicle.gpsDataActualDate);
+
+                        // Init Map
+                        if (!window.profileMap) {
+                            window.profileMap = L.map('map-container').setView(coords, 16);
+                            L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                                maxZoom: 21,
+                                attribution: '&copy; Google Maps'
+                            }).addTo(window.profileMap);
+                        }
+
+                        // Set Marker
+                        const marker = L.marker(coords, { icon: createVehicleIcon(isOnline) })
+                            .bindPopup(`
+                                <div style="min-width: 200px; font-family: 'Inter', sans-serif;">
+                                    <b style="font-size: 14px;">${escHtml(vehicleName)}</b><br><br>
+                                    <b>Статус:</b> ${isOnline ? '<span style="color:#16a34a">Онлайн</span>' : '<span style="color:#dc2626">Оффлайн</span>'}<br>
+                                    <b>Скорость:</b> ${vehicle.speed || 0} км/ч<br>
+                                    <b>Топливо:</b> ${fuelLiters} л<br>
+                                    <b>Зажигание:</b> ${vehicle.ignition ? 'Вкл' : 'Выкл'}<br>
+                                    <b>Обновлено:</b> <br><span style="color: #64748b; font-size: 12px;">${lastUpdate.toLocaleString('ru-RU')}</span>
+                                </div>
+                            `)
+                            .addTo(window.profileMap);
+
+                        // Update Status UI
+                        statusEl.innerHTML = `
+                            ${isOnline ? '🟢' : '🔴'} Обновлено: ${lastUpdate.toLocaleTimeString('ru-RU')}
+                            &nbsp;&middot;&nbsp; Скорость: <b>${vehicle.speed || 0} км/ч</b>
+                        `;
+
+                        // Recenter and open
+                        window.profileMap.setView(coords, 16);
+
+                        // Delay opening popup so leaflet initializes fully if tab was hidden
+                        setTimeout(() => marker.openPopup(), 500);
+
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #f59e0b;">Omnicomm не вернул координаты для данного ID</span>';
+                    }
+                } else {
+                    statusEl.innerHTML = '<span style="color: #ef4444;">Транспорт не найден в Omincomm (ответ пуст)</span>';
+                }
+
+            } catch (err) {
+                console.error("Omnicomm Error:", err);
+                statusEl.innerHTML = '<span style="color: #ef4444;">Ошибка запроса к серверу Omnicomm</span>';
+            }
+        }
+
+        window.onload = loadProfile;
+    </script>
+</body>
+
+</html>

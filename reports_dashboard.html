@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёты и аналитика</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 22px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* ── Section Title ── */
+        .section-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .section-badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* ── Grid ── */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        /* ── Report Card ── */
+        .report-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+
+        /* Top colored stripe */
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--border);
+            transition: background 0.3s;
+        }
+
+        .report-card.green::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .report-card.blue::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .report-card.purple::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .report-card.amber::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .rc-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .rc-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+        }
+
+        .report-card.green .rc-icon {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #10b981;
+        }
+
+        .report-card.blue .rc-icon {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #3b82f6;
+        }
+
+        .report-card.purple .rc-icon {
+            background: #f5f3ff;
+            border-color: #ddd6fe;
+            color: #8b5cf6;
+        }
+
+        .report-card.amber .rc-icon {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #f59e0b;
+        }
+
+        .rc-title {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+
+        .rc-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .rc-footer {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px dashed var(--border);
+            padding-top: 16px;
+        }
+
+        .rc-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--surface2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rc-action {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: gap 0.2s;
+        }
+
+        .report-card:hover .rc-action {
+            gap: 8px;
+        }
+
+        /* ── Empty State ── */
+        .empty-card {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+            min-height: 200px;
+        }
+
+        .empty-card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-card-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* ── Fade-in ── */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeIn .5s forwards ease;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 16px;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">📂</div>
+            <div>
+                <div class="header-title">Отчёты и аналитика</div>
+                <div class="header-subtitle">Единый центр мониторинга показателей</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="container fade-in">
+
+        <!-- Группа отчетов: Проверки ПК -->
+        <div class="section-header">
+            <h2>Производственный контроль</h2>
+            <div class="section-badge">1 Отчет</div>
+        </div>
+
+        <div class="reports-grid" style="margin-bottom: 48px;">
+
+            <!-- Карточка 1: План-Факт -->
+            <div class="report-card green" onclick="openModule('plan-fakt-po-urovnyam-proverok-pk')">
+                <div class="rc-header">
+                    <div class="rc-icon">📊</div>
+                    <div>
+                        <div class="rc-title">План-Факт по проверкам ПК</div>
+                        <div class="rc-desc">Сравнение планового и фактического количества проверок 2, 3 и 4 уровней с
+                            расчетом прогресса (YTD).</div>
+                    </div>
+                </div>
+                <div class="rc-footer">
+                    <div class="rc-tag">Аналитика</div>
+                    <div class="rc-action">Открыть <span>→</span></div>
+                </div>
+            </div>
+
+            <!-- Можно сюда добавлять новые отчеты -->
+            <div class="empty-card">
+                <div class="empty-card-icon">➕</div>
+                <div class="empty-card-text">Здесь будут появляться<br>новые отчёты</div>
+            </div>
+
+        </div>
+
+        <!-- Группа отчетов: ПАБ -->
+        <div class="section-header" style="margin-top: 40px;">
+            <h2>Поведенческий аудит безопасности</h2>
+            <div class="section-badge">1 Отчет</div>
+        </div>
+
+        <div class="reports-grid" style="margin-bottom: 48px;">
+            <!-- Карточка: ПАБ Остановка -->
+            <div class="report-card amber" onclick="openModule('pab_stop_report')">
+                <div class="rc-header">
+                    <div class="rc-icon">🛑</div>
+                    <div>
+                        <div class="rc-title">Остановка работ (ПАБ)</div>
+                        <div class="rc-desc">Аналитика и журнал всех случаев остановки работ при проведении ПАБ.</div>
+                    </div>
+                </div>
+                <div class="rc-footer">
+                    <div class="rc-tag">Аналитика</div>
+                    <div class="rc-action">Открыть <span>→</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── openModule ─────────────────────────────────────────────────────────
+        function openModule(pageCode) {
+            // Сохраняем домен, меняем только код страницы
+            window.open(
+                window.location.origin + '/ru/cms/publish/view?code=' + pageCode,
+                '_blank'
+            );
+        }
+    </script>
+</body>
+
+</html>

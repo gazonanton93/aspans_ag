@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расследование происшествий и ПБП — Отчёт</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+            --accent2: #ef4444;
+            --accent3: #10b981;
+            --accent4: #3b82f6;
+            --accent5: #8b5cf6;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Year switcher ── */
+        .year-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .year-tab {
+            padding: 7px 18px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1.5px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.18s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .year-tab:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .year-tab.active {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        /* ── Loading ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            gap: 20px;
+        }
+
+        .loader-ring {
+            width: 56px;
+            height: 56px;
+            border: 4px solid var(--border);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Error screen ── */
+        #error-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 9998;
+        }
+
+        #error-screen.show {
+            display: flex;
+        }
+
+        .error-icon {
+            font-size: 48px;
+        }
+
+        .error-msg {
+            font-size: 16px;
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .error-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ── Main container ── */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Stats row ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .stat-card.amber::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card.red::before {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .stat-card.green::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .stat-card.purple::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .stat-card.amber .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.red .stat-value {
+            color: #ef4444;
+        }
+
+        .stat-card.green .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.blue .stat-value {
+            color: #3b82f6;
+        }
+
+        .stat-card.purple .stat-value {
+            color: #8b5cf6;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 32px;
+            opacity: 0.15;
+        }
+
+        /* ── Charts row ── */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: start;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .bar-chart-wrap {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+        }
+
+        /* Donut card */
+        .donut-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            min-width: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .donut-wrap {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 16px auto;
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .donut-pct {
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+
+        .donut-pct-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .legend-name {
+            flex: 1;
+            color: var(--text-muted);
+        }
+
+        .legend-count {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Progress */
+        .progress-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            width: 100%;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-wrap {
+            background: var(--surface2);
+            border-radius: 999px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 1s ease;
+        }
+
+        /* ── Table ── */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .table-search {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            width: 240px;
+            transition: border-color 0.2s;
+        }
+
+        .table-search:focus {
+            border-color: #3b82f6;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            text-align: left;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            transition: background 0.15s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--surface2);
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .td-num {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .td-dept {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .td-name {
+            color: var(--text-muted);
+            max-width: 340px;
+        }
+
+        .td-date {
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .badge-0 {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .badge-0 .badge-dot {
+            background: #f59e0b;
+        }
+
+        .badge-1 {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .badge-1 .badge-dot {
+            background: #60a5fa;
+        }
+
+        .badge-2 {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .badge-2 .badge-dot {
+            background: #34d399;
+        }
+
+        .badge-3 {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .badge-3 .badge-dot {
+            background: #f87171;
+        }
+
+        .badge-default {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94a3b8;
+        }
+
+        .badge-default .badge-dot {
+            background: #94a3b8;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .page-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface2);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        /* Fade-in */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 900px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .donut-card {
+                min-width: unset;
+            }
+
+            .page-header {
+                padding: 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading -->
+    <div id="loading-screen">
+        <div class="loader-ring"></div>
+        <div class="loader-text">Загрузка данных...</div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-screen">
+        <div class="error-icon">⚠️</div>
+        <div class="error-msg" id="error-msg">Ошибка загрузки данных</div>
+        <div class="error-sub" id="error-sub"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-area">
+            <div class="logo-icon">🛡️</div>
+            <div>
+                <div class="header-title">Расследование происшествий и ПБП (Near Miss)</div>
+                <div class="header-subtitle">Статус выполнения пунктов расследования — таблица doc_prois_merop</div>
+            </div>
+        </div>
+        <div class="year-tabs" id="year-tabs"></div>
+    </div>
+
+    <!-- Main content (hidden until loaded) -->
+    <div class="container" id="main-content" style="display:none;">
+
+        <!-- KPI Stats -->
+        <div class="stats-grid fade-in" id="stats-row">
+            <div class="stat-card amber">
+                <div class="stat-label">Всего мероприятий</div>
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-icon">📋</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-label">В процессе</div>
+                <div class="stat-value" id="stat-inprogress">—</div>
+                <div class="stat-icon">🔄</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Выполнено</div>
+                <div class="stat-value" id="stat-done">—</div>
+                <div class="stat-icon">✅</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">Просрочено</div>
+                <div class="stat-value" id="stat-overdue">—</div>
+                <div class="stat-icon">⏰</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Отделов</div>
+                <div class="stat-value" id="stat-depts">—</div>
+                <div class="stat-icon">🏢</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row fade-in" id="charts-row" style="transition-delay:0.1s;">
+
+            <!-- Bar chart -->
+            <div class="chart-card">
+                <div class="chart-title">Статус выполнения пунктов расследования происшествий за <span
+                        id="chart-year">···</span> год</div>
+                <div class="chart-subtitle">Распределение по отделам</div>
+                <div class="bar-chart-wrap">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Donut chart -->
+            <div class="donut-card">
+                <div class="chart-title" style="text-align:center;">Общий прогресс</div>
+                <div class="donut-wrap">
+                    <canvas id="donutChart"></canvas>
+                    <div class="donut-center">
+                        <div class="donut-pct" id="donut-pct">0%</div>
+                        <div class="donut-pct-label">выполнено</div>
+                    </div>
+                </div>
+
+                <div class="legend" id="donut-legend"></div>
+
+                <div class="progress-section">
+                    <div class="progress-label">Прогресс выполнения <span id="progress-pct-label">0</span>%</div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data table -->
+        <div class="table-card fade-in" id="table-section" style="transition-delay:0.2s;">
+            <div class="table-header">
+                <div class="table-title">Детальный список мероприятий</div>
+                <input type="text" class="table-search" id="table-search"
+                    placeholder="🔍  Поиск по отделу или названию..." oninput="filterTable()">
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">№</th>
+                            <th>Отдел</th>
+                            <th>Мероприятие</th>
+                            <th>Дата</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+                <div class="empty-state" id="empty-state" style="display:none;">
+                    <div class="empty-icon">🔎</div>
+                    <div class="empty-text">Ничего не найдено</div>
+                </div>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── CONFIG ───────────────────────────────────────────────────────────
+        const API_BASE = '/api/v1';
+        const TABLE_MAIN = 'doc_prois_merop';
+        const TABLE_STATUS = 'list_prois_act_status';
+        const PAGE_SIZE = 25;
+        const CURRENT_YEAR = new Date().getFullYear();
+
+        // ── AUTH ─────────────────────────────────────────────────────────────
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        // ── STATUS CONFIG ─────────────────────────────────────────────────────
+        // Assign chart colors by status name/code patterns
+        // ── STATUS COLORS (keyword-based, not index-based) ────────────────────
+        // Fallback palette for statuses that don't match any keyword
+        const STATUS_FALLBACK_COLORS = ['#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
+        let _fallbackIdx = 0;
+        const _snameColorCache = {};
+
+        function getStatusColor(sname) {
+            if (_snameColorCache[sname]) return _snameColorCache[sname];
+            const s = (sname || '').toLowerCase();
+            let color;
+            if (/(закрыт|closed|done|completed|выполн)/i.test(s)) color = '#10b981'; // зелёный
+            else if (/(открыт|open|в процессе|in.progress)/i.test(s)) color = '#f59e0b'; // жёлтый — в работе
+            else if (/(просроч|overdue|expired)/i.test(s)) color = '#ef4444'; // красный
+            else {
+                color = STATUS_FALLBACK_COLORS[_fallbackIdx % STATUS_FALLBACK_COLORS.length];
+                _fallbackIdx++;
+            }
+            _snameColorCache[sname] = color;
+            return color;
+        }
+
+        function getBadgeClass(sname) {
+            const s = (sname || '').toLowerCase();
+            if (/(закрыт|closed|done|completed|выполн)/i.test(s)) return 'badge-2'; // green
+            else if (/(открыт|open|в процессе|in.progress)/i.test(s)) return 'badge-0'; // amber
+            else if (/(просроч|overdue|expired)/i.test(s)) return 'badge-3'; // red
+            return 'badge-1'; // blue fallback
+        }
+
+        const TODAY = new Date();
+        TODAY.setHours(0, 0, 0, 0);
+
+        function isClosed(r) {
+            return /(закрыт|closed|done|completed|выполн)/i.test(r.ils_prois_act || '');
+        }
+
+        function isOverdue(r) {
+            if (isClosed(r)) return false;          // закрытые не просрочены
+            if (!r.i0d_srok) return false;          // срок не указан
+            const d = new Date(r.i0d_srok);
+            return !isNaN(d) && d < TODAY;
+        }
+
+        // ── STATUS COLOR / BADGE ────────────────────────────────────
+        // These functions accept the ROW (not just sname) so overdue can be checked
+        function getRowStatusColor(r) {
+            if (isOverdue(r)) return '#ef4444'; // красный
+            return getStatusColor(r.ils_prois_act || '');
+        }
+
+        function getRowBadgeClass(r) {
+            if (isOverdue(r)) return 'badge-3'; // red
+            return getBadgeClass(r.ils_prois_act || '');
+        }
+
+        // Display label — shows «Просрочено» if overdue
+        function getDisplayStatus(r) {
+            if (isOverdue(r)) return 'Просрочено';
+            return r.ils_prois_act || '—';
+        }
+
+        let allRows = [];
+        let yearRows = [];  // rows for the selected year
+        let filtered = [];
+        let statusMap = {};         // code  → {sname, idx}
+        let statusMapBySname = {};  // sname → {code,  idx}  (API returns sname in joined fields)
+        let currentPage = 1;
+
+        // Charts
+        let barChartInst = null;
+        let donutChartInst = null;
+
+        // ── MAIN ──────────────────────────────────────────────────────────────
+        let selectedYear = CURRENT_YEAR;
+
+        async function init() {
+            try {
+                // 1. Load statuses
+                const statusQuery = JSON.stringify({ columns: 'id,code,sname' });
+                const statuses = await fetchJSON(
+                    `${API_BASE}/${TABLE_STATUS}?_format=json&limit=200&query=${encodeURIComponent(statusQuery)}`
+                );
+                statuses.forEach((s, idx) => {
+                    statusMap[s.code] = { sname: s.sname || s.code, idx };
+                    statusMapBySname[s.sname] = { code: s.code, idx };
+                });
+
+                // 2. Load ALL rows (no year filter — we filter client-side)
+                // NOTE: API auto-joins linked tables and returns sname, not code.
+                // ilc_otdel  → list_otdel.sname
+                // ils_prois_act → list_prois_act_status.sname
+                const mainQuery = JSON.stringify({
+                    columns: 'id,ilc_otdel,i00_action,i0d_caldate,i0d_srok,ils_prois_act',
+                });
+                const rows = await fetchJSON(
+                    `${API_BASE}/${TABLE_MAIN}?_format=json&limit=10000` +
+                    `&query=${encodeURIComponent(mainQuery)}`
+                );
+
+                allRows = rows;
+
+                // 3. Build year tabs from unique years in data
+                buildYearTabs();
+
+                // 4. Initial render for selected year
+                applyYearFilter();
+                showContent();
+            } catch (err) {
+                console.error(err);
+                showError('Ошибка загрузки данных', err.message);
+            }
+        }
+
+        function getRowYear(r) {
+            if (!r.i0d_caldate) return null;
+            return new Date(r.i0d_caldate).getFullYear();
+        }
+
+        function buildYearTabs() {
+            const years = [...new Set(
+                allRows.map(getRowYear).filter(y => y !== null && !isNaN(y))
+            )].sort((a, b) => b - a); // newest first
+
+            if (!years.includes(selectedYear)) {
+                selectedYear = years[0] || CURRENT_YEAR;
+            }
+
+            const container = document.getElementById('year-tabs');
+            container.innerHTML = years.map(y => `
+                <button class="year-tab ${y === selectedYear ? 'active' : ''}" onclick="selectYear(${y})">${y} г.</button>
+            `).join('');
+        }
+
+        function selectYear(year) {
+            selectedYear = year;
+            // Update tab active state
+            document.querySelectorAll('.year-tab').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === year);
+            });
+            applyYearFilter();
+        }
+
+        function applyYearFilter() {
+            // Filter allRows to only current year
+            const yearRows = allRows.filter(r => getRowYear(r) === selectedYear);
+            // Update chart title year
+            document.getElementById('chart-year').textContent = selectedYear;
+            // Re-render with year-filtered rows
+            renderAll(yearRows);
+        }
+
+        // ── RENDER ────────────────────────────────────────────────────────────
+        function renderAll(rows) {
+            yearRows = rows;    // remember current-year subset
+            filtered = rows;    // initial table view = all year rows
+            buildStats(rows);
+            buildCharts(rows);
+            renderTable();
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+            }, 100);
+        }
+
+        // ── STATS ─────────────────────────────────────────────────────────────
+        function buildStats(rows) {
+            const total = rows.length;
+
+            // Use isClosed/isOverdue helpers (account for i0d_srok deadline)
+            let done = 0, inprog = 0, overdue = 0;
+            rows.forEach(r => {
+                if (isClosed(r)) done++;
+                else if (isOverdue(r)) overdue++;
+                else inprog++;
+            });
+
+            const depts = new Set(rows.map(r => r.ilc_otdel || '—')).size;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-inprogress').textContent = inprog;
+            document.getElementById('stat-done').textContent = done;
+            document.getElementById('stat-overdue').textContent = overdue;
+            document.getElementById('stat-depts').textContent = depts;
+
+            // donut %
+            const pct = total > 0 ? Math.round(done / total * 100) : 0;
+            document.getElementById('donut-pct').textContent = pct + '%';
+            document.getElementById('progress-pct-label').textContent = pct;
+            setTimeout(() => {
+                document.getElementById('progress-fill').style.width = pct + '%';
+            }, 400);
+        }
+
+        // ── CHARTS ────────────────────────────────────────────────────────────
+        function buildCharts(rows) {
+            // Group by department × status
+            const deptSet = new Set();
+            const statusSet = new Set();
+
+            rows.forEach(r => {
+                deptSet.add(getDeptName(r));
+                statusSet.add(getDisplayStatus(r)); // overdue rows → «Просрочено»
+            });
+
+            const depts = [...deptSet].sort();
+            const statuses = [...statusSet];
+
+            // Build datasets — color driven by display label
+            const datasets = statuses.map((st) => {
+                const data = depts.map(dept =>
+                    rows.filter(r => getDeptName(r) === dept && getDisplayStatus(r) === st).length
+                );
+                return {
+                    label: st,
+                    data,
+                    backgroundColor: getStatusColor(st),
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    maxBarThickness: 36,
+                };
+            });
+
+            // Bar chart
+            if (barChartInst) barChartInst.destroy();
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            barChartInst = new Chart(barCtx, {
+                type: 'bar',
+                data: { labels: depts, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#475569', font: { family: 'Inter', size: 12 }, boxWidth: 14, padding: 16 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#ffffff',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            titleColor: '#0f172a',
+                            bodyColor: '#64748b',
+                            padding: 12,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'Inter', size: 11 },
+                                maxRotation: 45,
+                                minRotation: 0,
+                            },
+                            grid: { color: 'rgba(226,232,240,0.8)' }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'Inter', size: 11 },
+                                stepSize: 1,
+                            },
+                            grid: { color: 'rgba(226,232,240,0.8)' },
+                            beginAtZero: true,
+                        }
+                    },
+                    animation: { duration: 800, easing: 'easeOutQuart' }
+                }
+            });
+            document.querySelector('.bar-chart-wrap').style.minHeight = Math.max(300, depts.length * 28) + 'px';
+
+            // Donut chart
+            const donutCounts = statuses.map(st =>
+                rows.filter(r => getDisplayStatus(r) === st).length
+            );
+            const donutColors = statuses.map(st => getStatusColor(st));
+
+            if (donutChartInst) donutChartInst.destroy();
+            const donutCtx = document.getElementById('donutChart').getContext('2d');
+            donutChartInst = new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statuses,
+                    datasets: [{
+                        data: donutCounts,
+                        backgroundColor: donutColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverBorderColor: '#f1f5f9',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            padding: 12,
+                        }
+                    },
+                    animation: { duration: 1000, easing: 'easeOutQuart' }
+                }
+            });
+
+            // Legend
+            const legendEl = document.getElementById('donut-legend');
+            legendEl.innerHTML = statuses.map((st, si) => `
+        <div class="legend-item">
+            <div class="legend-dot" style="background:${donutColors[si]};"></div>
+            <div class="legend-name">${st}</div>
+            <div class="legend-count" style="color:${donutColors[si]};">${donutCounts[si]}</div>
+        </div>
+    `).join('');
+        }
+
+        // ── TABLE ─────────────────────────────────────────────────────────────
+        function filterTable() {
+            const q = document.getElementById('table-search').value.toLowerCase();
+            if (!q) {
+                filtered = yearRows;
+            } else {
+                filtered = yearRows.filter(r => {
+                    const dept = getDeptName(r).toLowerCase();
+                    const status = getStatusName(r).toLowerCase();
+                    const action = (r.i00_action || '').toLowerCase();
+                    return dept.includes(q) || status.includes(q) || action.includes(q);
+                });
+            }
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const total = filtered.length;
+            const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            if (currentPage > pages) currentPage = pages;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const slice = filtered.slice(start, start + PAGE_SIZE);
+
+            if (slice.length === 0) {
+                tbody.innerHTML = '';
+                document.getElementById('empty-state').style.display = 'block';
+            } else {
+                document.getElementById('empty-state').style.display = 'none';
+                tbody.innerHTML = slice.map((r, i) => {
+                    const displayStatus = getDisplayStatus(r);  // may be «Просрочено»
+                    const bClass = getRowBadgeClass(r);  // red if overdue
+                    const dept = getDeptName(r);
+                    const action = r.i00_action || '—';
+                    const calDate = formatDate(r.i0d_caldate);
+                    const srokDate = formatDate(r.i0d_srok);
+                    const globalIdx = start + i + 1;
+                    const overdueWarn = isOverdue(r)
+                        ? `<span style="font-size:10px;color:#ef4444;font-weight:600;margin-left:4px;">⏰ ${srokDate}</span>`
+                        : '';
+                    return `
+            <tr${isOverdue(r) ? ' style="background:rgba(239,68,68,0.04);"' : ''}>
+                <td class="td-num">${globalIdx}</td>
+                <td class="td-dept">${escHtml(dept)}</td>
+                <td class="td-name">${escHtml(action)}</td>
+                <td class="td-date">${calDate}</td>
+                <td><span class="badge ${bClass}"><span class="badge-dot"></span>${escHtml(displayStatus)}</span>${overdueWarn}</td>
+            </tr>`;
+                }).join('');
+            }
+
+            renderPagination(total, pages);
+        }
+
+        function renderPagination(total, pages) {
+            const el = document.getElementById('pagination');
+            if (total === 0) { el.innerHTML = ''; return; }
+
+            const start = (currentPage - 1) * PAGE_SIZE + 1;
+            const end = Math.min(currentPage * PAGE_SIZE, total);
+
+            let btns = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>← Назад</button>`;
+
+            const range = pagRange(currentPage, pages);
+            range.forEach(p => {
+                if (p === '…') {
+                    btns += `<span style="color:var(--text-muted);padding:0 4px;">…</span>`;
+                } else {
+                    btns += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+                }
+            });
+
+            btns += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage >= pages ? 'disabled' : ''}>Вперёд →</button>`;
+
+            el.innerHTML = `<span>Показано ${start}–${end} из ${total}</span><div class="page-btns">${btns}</div>`;
+        }
+
+        function pagRange(cur, total) {
+            if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+            const r = [1];
+            if (cur > 3) r.push('…');
+            for (let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) r.push(p);
+            if (cur < total - 2) r.push('…');
+            r.push(total);
+            return r;
+        }
+
+        function goPage(p) {
+            const pages = Math.ceil(filtered.length / PAGE_SIZE);
+            if (p < 1 || p > pages) return;
+            currentPage = p;
+            renderTable();
+            document.getElementById('table-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── HELPERS ───────────────────────────────────────────────────────────
+        function getDeptName(r) {
+            // ilc_otdel holds the raw value (code or name depending on API)
+            return r.ilc_otdel || '—';
+        }
+
+        function getStatusName(r) {
+            // API returns sname directly in ils_prois_act (join resolved server-side)
+            return r.ils_prois_act || 'Не задан';
+        }
+
+        function formatDate(val) {
+            if (!val) return '—';
+            const d = new Date(val);
+            if (isNaN(d)) return val;
+            return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── UI STATES ─────────────────────────────────────────────────────────
+        function showContent() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+
+        function showError(msg, sub) {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('error-msg').textContent = msg;
+            document.getElementById('error-sub').textContent = sub || '';
+            document.getElementById('error-screen').classList.add('show');
+        }
+
+        // ── START ──────────────────────────────────────────────────────────────
+        init();
+    </script>
+</body>
+
+</html>

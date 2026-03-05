@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лаборатория</title>
+    <!-- Use standard font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .header-icon {
+            font-size: 36px;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .icon-dobycha {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .icon-pererabotka {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .icon-ekologiya {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link-button {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .link-button:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: scale(1.02);
+            z-index: 15;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .link-button:active {
+            transform: scale(0.98);
+        }
+
+        .link-icon {
+            font-size: 18px;
+            opacity: 0.8;
+            transition: transform 0.2s ease;
+        }
+
+        .link-button:hover .link-icon {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+
+        .link-chevron {
+            margin-left: auto;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .link-button:hover .link-chevron {
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="header-icon">🔬</div>
+        <div>
+            <div class="header-title">Лаборатория</div>
+            <div class="header-subtitle">Аналитика и показатели лабораторных исследований</div>
+        </div>
+    </div>
+
+    <div class="grid-container">
+
+        <!-- Добыча -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon icon-dobycha">🚜</div>
+                <div class="section-title">Добыча</div>
+            </div>
+            <div class="links-list">
+                <button class="link-button" onclick="openModule('pokazateli-gtp')">
+                    <span class="link-icon">📈</span>
+                    Показатели ГТП
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-pr-na-uchastke-opz')">
+                    <span class="link-icon">💧</span>
+                    Показатели ПР
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-vr')">
+                    <span class="link-icon">🌊</span>
+                    Показатели ВР
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('analiz-skvazhin-pri-osvoenii')">
+                    <span class="link-icon">🕳️</span>
+                    Анализ скважин при освоении
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-nablyud-skvazhin')">
+                    <span class="link-icon">👁️‍🗨️</span>
+                    Показатели наблюдательных скважин
+                    <span class="link-chevron">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Переработка -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon icon-pererabotka">⚗️</div>
+                <div class="section-title">Переработка</div>
+            </div>
+            <div class="links-list">
+                <button class="link-button" onclick="openModule('pokazalteli_zakachki')">
+                    <span class="link-icon">🧲</span>
+                    Сорбция
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('laboratoriya-desorbciya_new')">
+                    <span class="link-icon">🧪</span>
+                    Десорбция
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-himreagentov')">
+                    <span class="link-icon">🔬</span>
+                    Анализы химреагентов
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-otgruzki')">
+                    <span class="link-icon">📦</span>
+                    Отгрузка
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('pokazateli-osazhdeniya')">
+                    <span class="link-icon">⚱️</span>
+                    Осаждение
+                    <span class="link-chevron">→</span>
+                </button>
+                <button class="link-button" onclick="openModule('analiz-smoly')">
+                    <span class="link-icon">🟡</span>
+                    Анализ смолы
+                    <span class="link-chevron">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Экология -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon icon-ekologiya">🌱</div>
+                <div class="section-title">Экология</div>
+            </div>
+            <div class="links-list">
+                <button class="link-button" onclick="openModule('laboratoriya-grunt')">
+                    <span class="link-icon">🪨</span>
+                    Анализ грунта
+                    <span class="link-chevron">→</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openModule(pageCode) {
+            // Сохраняем домен, меняем только код страницы
+            window.open(
+                window.location.origin + '/ru/cms/publish/view?code=' + pageCode,
+                '_blank'
+            );
+        }
+    </script>
+</body>
+
+</html>
