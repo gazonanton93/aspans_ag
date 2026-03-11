@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>МРЦ — Прототип дизайна</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:      #f2f5fb;
+  --surface: #ffffff;
+  --surf2:   #eaeff8;
+  --border:  #dce3f0;
+  --blue:    #1d4ed8;
+  --blue-l:  #dbeafe;
+  --blue-m:  #3b82f6;
+  --green:   #0f7144;
+  --green-l: #d1fae5;
+  --green-m: #10b981;
+  --red:     #b91c1c;
+  --red-l:   #fee2e2;
+  --red-m:   #ef4444;
+  --amber:   #b45309;
+  --amber-l: #fef3c7;
+  --amber-m: #f59e0b;
+  --violet:  #6d28d9;
+  --violet-l:#ede9fe;
+  --text:    #0f172a;
+  --text2:   #475569;
+  --text3:   #94a3b8;
+  --radius:  10px;
+  --shadow:  0 1px 3px rgba(15,23,42,.06), 0 6px 20px rgba(15,23,42,.05);
+  --shadow-h:0 4px 16px rgba(15,23,42,.12);
+  --hh: 58px;
+  --th: 46px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Golos Text', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── HEADER ─── */
+header {
+  position: sticky; top: 0; z-index: 400;
+  height: var(--hh);
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(15,23,42,.07);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 14px;
+}
+.h-logo {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; box-shadow: 0 2px 8px rgba(29,78,216,.3);
+}
+.h-name { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.h-sub  { font-size: 10px; color: var(--text2); letter-spacing: 1.4px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+.h-spacer { flex: 1; }
+.h-period {
+  background: var(--blue-l); color: var(--blue); border: 1px solid #bfdbfe;
+  border-radius: 20px; padding: 4px 13px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+}
+.h-live { width: 8px; height: 8px; border-radius: 50%; background: var(--green-m); box-shadow: 0 0 0 3px var(--green-l); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ─── TABS ─── */
+.tabs-bar {
+  position: sticky; top: var(--hh); z-index: 300;
+  background: #fff; border-bottom: 1px solid var(--border);
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tabs { display: flex; padding: 0 20px; min-width: max-content; }
+.tab {
+  padding: 0 18px; height: var(--th); line-height: var(--th);
+  font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text2); border-bottom: 2px solid transparent;
+  cursor: pointer; white-space: nowrap; user-select: none;
+  transition: color .16s, border-color .16s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* ─── MAIN ─── */
+main { padding: 20px 24px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── KPI STRIP ─── */
+.kpi-strip {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 12px; margin-bottom: 18px;
+}
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+  transition: box-shadow .2s, transform .18s;
+  animation: up .35s ease both;
+}
+.kpi:hover { box-shadow: var(--shadow-h); transform: translateY(-2px); }
+.kpi::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--kc, var(--blue)); border-radius: var(--radius) var(--radius) 0 0;
+}
+.kpi:nth-child(1){animation-delay:.04s} .kpi:nth-child(2){animation-delay:.08s}
+.kpi:nth-child(3){animation-delay:.12s} .kpi:nth-child(4){animation-delay:.16s}
+.kpi:nth-child(5){animation-delay:.20s} .kpi:nth-child(6){animation-delay:.24s}
+.kpi-ico  { font-size: 20px; margin-bottom: 8px; }
+.kpi-lbl  { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); margin-bottom: 3px; }
+.kpi-val  { font-size: 28px; font-weight: 700; line-height: 1; color: var(--kc, var(--blue)); font-variant-numeric: tabular-nums; }
+.kpi-unit { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.kpi-tag  {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-top: 8px; padding: 2px 9px; border-radius: 20px;
+  font-size: 10px; font-weight: 600;
+}
+.tag-g  { background: var(--green-l); color: var(--green); }
+.tag-r  { background: var(--red-l);   color: var(--red); }
+.tag-b  { background: var(--blue-l);  color: var(--blue); }
+.tag-a  { background: var(--amber-l); color: var(--amber); }
+
+/* ─── GRID LAYOUTS ─── */
+.row     { display: grid; gap: 14px; margin-bottom: 14px; }
+.col-2   { grid-template-columns: 1fr 1fr; }
+.col-3   { grid-template-columns: 1fr 1fr 1fr; }
+.col-21  { grid-template-columns: 2fr 1fr; }
+.col-12  { grid-template-columns: 1fr 2fr; }
+
+/* ─── CARD ─── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  box-shadow: var(--shadow);
+  animation: up .38s ease both;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: .9px;
+  text-transform: uppercase; color: var(--text2);
+}
+.card-title::before { content: ''; width: 3px; height: 13px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
+.card-action {
+  font-size: 11px; color: var(--blue); font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  padding: 3px 10px; border-radius: 6px; background: var(--blue-l);
+}
+.cw { position: relative; width: 100%; }
+
+/* ─── RESULT SPLIT BAR ─── */
+.split { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.split-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; }
+.split-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.s-pos { background: var(--green-m); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+.s-neg { background: var(--red-m);   display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+
+/* ─── RVR CHIP ─── */
+.chip {
+  display: inline-block; padding: 2px 9px; border-radius: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.chip-BB    { background: var(--blue-l);   color: var(--blue);   border: 1px solid #bfdbfe; }
+.chip-XO    { background: var(--amber-l);  color: var(--amber);  border: 1px solid #fcd34d; }
+.chip-UOS   { background: var(--green-l);  color: var(--green);  border: 1px solid #6ee7b7; }
+.chip-BFA   { background: var(--violet-l); color: var(--violet); border: 1px solid #c4b5fd; }
+.chip-OTHER { background: var(--surf2);    color: var(--text2);  border: 1px solid var(--border); }
+
+/* ─── BADGE ─── */
+.bdg { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.bdg-pos  { background: var(--green-l);  color: var(--green);  border: 1px solid #6ee7b7; }
+.bdg-neg  { background: var(--red-l);    color: var(--red);    border: 1px solid #fca5a5; }
+.bdg-neu  { background: var(--surf2);    color: var(--text2);  border: 1px solid var(--border); }
+.bdg-ok   { background: var(--green-l);  color: var(--green);  border: 1px solid #6ee7b7; }
+.bdg-warn { background: var(--amber-l);  color: var(--amber);  border: 1px solid #fcd34d; }
+.bdg-crit { background: var(--red-l);    color: var(--red);    border: 1px solid #fca5a5; }
+
+/* ─── HORIZON CARD ─── */
+.horiz-card {
+  background: var(--surf2); border-radius: 8px; padding: 13px 15px;
+  border: 1px solid var(--border);
+}
+.hc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.hc-name { font-weight: 700; font-size: 13px; }
+.hc-meta { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+.mini-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.mini-fill{ height: 100%; border-radius: 3px; transition: width .6s; }
+
+/* ─── TABLE ─── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl th {
+  background: var(--surf2); font-size: 10px; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: var(--text2);
+  padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);
+  white-space: nowrap; position: sticky; top: 0;
+}
+.tbl td { padding: 9px 12px; border-bottom: 1px solid #f0f4fb; vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: #f8faff; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.delta-pos { color: var(--green); font-weight: 600; }
+.delta-neg { color: var(--red);   font-weight: 600; }
+
+/* ─── TIMELINE ─── */
+.tl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tl-root   { min-width: 700px; }
+.tl-months { display: flex; margin-left: 100px; margin-bottom: 3px; }
+.tl-m { flex: 1; text-align: center; font-size: 9px; color: var(--text3); border-left: 1px solid var(--border); padding: 2px 0; }
+.tl-row { display: flex; align-items: center; border-bottom: 1px solid #f0f4fb; min-height: 32px; }
+.tl-row:hover { background: #f8faff; }
+.tl-w { width: 100px; flex-shrink: 0; padding: 0 10px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.tl-w small { font-size: 9px; color: var(--text3); display: block; font-weight: 400; }
+.tl-bars { flex: 1; position: relative; height: 24px; }
+.tl-seg {
+  position: absolute; top: 2px; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; padding: 0 6px;
+  font-size: 8px; overflow: hidden; white-space: nowrap;
+  transition: filter .15s; cursor: default;
+}
+.tl-seg:hover { filter: brightness(.88); }
+.seg-work { background: #dbeafe; border: 1px solid #93c5fd; color: #1d4ed8; }
+.seg-BB   { background: #dbeafe; border: 1px solid #1d4ed8; color: #1d4ed8; }
+.seg-XO   { background: var(--amber-l); border: 1px solid var(--amber-m); color: var(--amber); }
+.seg-UOS  { background: var(--green-l); border: 1px solid var(--green-m); color: var(--green); }
+.seg-BFA  { background: var(--violet-l); border: 1px solid #7c3aed; color: var(--violet); }
+
+/* ─── HEATMAP ─── */
+.hm { display: grid; gap: 3px; }
+.hm-cell {
+  height: 30px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  transition: filter .15s; cursor: default;
+}
+.hm-cell:hover { filter: brightness(.88); }
+.hm-hdr { color: var(--text3); background: transparent !important; font-size: 9px; }
+.hm-lbl { color: var(--text2); justify-content: flex-start; background: transparent !important; font-weight: 600; font-size: 10px; padding-left: 2px; }
+
+/* ─── ALERT LIST ─── */
+.alert-list { display: flex; flex-direction: column; gap: 7px; }
+.alert-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surf2); border: 1px solid var(--border);
+  border-left: 4px solid var(--green-m); border-radius: 0 8px 8px 0;
+  padding: 9px 13px; transition: box-shadow .15s;
+}
+.alert-row:hover { box-shadow: var(--shadow); }
+.alert-row.warn { border-left-color: var(--amber-m); }
+.alert-row.crit { border-left-color: var(--red-m); }
+.a-well { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 80px; }
+.a-info { flex: 1; font-size: 11px; color: var(--text2); }
+.a-days { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--green); }
+.alert-row.warn .a-days { color: var(--amber); }
+.alert-row.crit .a-days { color: var(--red); }
+
+/* ─── FILTER ROW ─── */
+.frow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.flbl { font-size: 11px; color: var(--text2); font-weight: 600; }
+.fsel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text);
+  padding: 7px 28px 7px 11px; font-family: 'Golos Text', sans-serif;
+  font-size: 12px; font-weight: 500; cursor: pointer; outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 9px center;
+}
+.fsel:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-l); }
+
+/* ─── LEGEND ─── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ─── ANIMATION ─── */
+@keyframes up { from{opacity:0;transform:translateY(9px)} to{opacity:1;transform:translateY(0)} }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width:1080px) {
+  .kpi-strip { grid-template-columns: repeat(3,1fr); }
+  .col-21, .col-12 { grid-template-columns: 1fr; }
+}
+@media (max-width:760px) {
+  main { padding: 12px; }
+  .kpi-strip { grid-template-columns: repeat(2,1fr); gap: 9px; }
+  .col-2, .col-3 { grid-template-columns: 1fr; }
+  .kpi-val { font-size: 22px; }
+  .tab { padding: 0 12px; font-size: 11px; }
+  .h-sub, .h-period { display: none; }
+  .tl-w { width: 68px; }
+  .tl-months { margin-left: 68px; }
+  .col-hide { display: none; }
+}
+@media (max-width:420px) {
+  .kpi-strip { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="h-logo">☢️</div>
+  <div>
+    <div class="h-name">МРЦ — Межремонтный цикл</div>
+    <div class="h-sub">Уранодобыча · ISL · 2024</div>
+  </div>
+  <div class="h-spacer"></div>
+  <div class="h-period">2024-01-01 → 2024-12-31</div>
+  <div class="h-live"></div>
+</header>
+
+<!-- ══ TABS ══ -->
+<div class="tabs-bar">
+  <div class="tabs">
+    <div class="tab active" onclick="go('pg-overview',this)">Обзор</div>
+    <div class="tab"        onclick="go('pg-rvr',this)">Анализ РВР</div>
+    <div class="tab"        onclick="go('pg-timeline',this)">Таймлайн</div>
+    <div class="tab"        onclick="go('pg-heatmap',this)">Тепловая карта</div>
+    <div class="tab"        onclick="go('pg-alerts',this)">Прогноз / Алерты</div>
+    <div class="tab"        onclick="go('pg-table',this)">Таблица РВР</div>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════ ОБЗОР ══════════════════════════════════ -->
+<div id="pg-overview" class="page active">
+
+  <div class="kpi-strip">
+    <div class="kpi" style="--kc:var(--blue)">
+      <div class="kpi-ico">🔧</div>
+      <div class="kpi-lbl">Всего РВР</div>
+      <div class="kpi-val">347</div>
+      <div class="kpi-unit">операций за 2024</div>
+      <div class="kpi-tag tag-b">12 горизонтов</div>
+    </div>
+    <div class="kpi" style="--kc:var(--blue-m)">
+      <div class="kpi-ico">🕳️</div>
+      <div class="kpi-lbl">Скважин в базе</div>
+      <div class="kpi-val">184</div>
+      <div class="kpi-unit">уникальных</div>
+      <div class="kpi-tag tag-b">откачка + закачка</div>
+    </div>
+    <div class="kpi" style="--kc:var(--green)">
+      <div class="kpi-ico">✅</div>
+      <div class="kpi-lbl">Положит. РВР</div>
+      <div class="kpi-val">64%</div>
+      <div class="kpi-unit">222 из 347</div>
+      <div class="kpi-tag tag-g">↑ +7% к норме</div>
+    </div>
+    <div class="kpi" style="--kc:var(--amber)">
+      <div class="kpi-ico">📅</div>
+      <div class="kpi-lbl">Средний МРЦ</div>
+      <div class="kpi-val">94</div>
+      <div class="kpi-unit">суток между РВР</div>
+      <div class="kpi-tag tag-a">норма 90 сут.</div>
+    </div>
+    <div class="kpi" style="--kc:var(--red)">
+      <div class="kpi-ico">⚠️</div>
+      <div class="kpi-lbl">Критичных скважин</div>
+      <div class="kpi-val">18</div>
+      <div class="kpi-unit">без РВР > 120 дн.</div>
+      <div class="kpi-tag tag-r">↑ требуют РВР</div>
+    </div>
+    <div class="kpi" style="--kc:var(--violet)">
+      <div class="kpi-ico">📈</div>
+      <div class="kpi-lbl">Ср. прирост</div>
+      <div class="kpi-val">+0.41</div>
+      <div class="kpi-unit">После − Регламент</div>
+      <div class="kpi-tag tag-b">ед. расхода</div>
+    </div>
+  </div>
+
+  <div class="row col-21">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Количество РВР и % положительных по месяцам</div>
+      </div>
+      <div class="cw" style="height:215px"><canvas id="c-monthly"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Результативность РВР</div>
+      </div>
+      <div class="split">
+        <div class="split-labels">
+          <span style="color:var(--green)">✓ Положительный — 222 (64%)</span>
+          <span style="color:var(--red)">✗ Отрицательный — 125 (36%)</span>
+        </div>
+        <div class="split-bar">
+          <div class="s-pos" style="width:64%">64%</div>
+          <div class="s-neg" style="width:36%">36%</div>
+        </div>
+      </div>
+      <div class="cw" style="height:148px"><canvas id="c-result-donut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="row col-3">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Виды РВР — доля операций</div></div>
+      <div class="cw" style="height:190px"><canvas id="c-rvr-pie"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Кол-во РВР по горизонтам</div></div>
+      <div class="cw" style="height:190px"><canvas id="c-horiz-bar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Кол-во РВР по типу скважины</div></div>
+      <div class="cw" style="height:190px"><canvas id="c-type-bar"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ АНАЛИЗ РВР ══════════════════════════════════ -->
+<div id="pg-rvr" class="page">
+
+  <div class="row col-2">
+    <div class="card">
+      <div class="card-head"><div class="card-title">% Положительных результатов по виду РВР</div></div>
+      <div class="cw" style="height:240px"><canvas id="c-rvr-pct"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Среднее значение «После РВР» по виду работ</div></div>
+      <div class="cw" style="height:240px"><canvas id="c-rvr-after"></canvas></div>
+    </div>
+  </div>
+
+  <div class="row col-2">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Δ Прирост (После РВР − Регламент) по виду РВР</div></div>
+      <div class="cw" style="height:210px"><canvas id="c-rvr-delta"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Результативность по горизонту</div></div>
+      <div style="display:flex;flex-direction:column;gap:9px;margin-top:2px">
+        <div class="horiz-card">
+          <div class="hc-row"><span class="hc-name">Мынқудық</span><span class="bdg bdg-ok">72%</span></div>
+          <div class="hc-meta">196 РВР · <span style="color:var(--green)">141 положит.</span> · <span style="color:var(--red)">55 отрицат.</span></div>
+          <div class="mini-bar"><div class="mini-fill" style="width:72%;background:var(--green-m)"></div></div>
+        </div>
+        <div class="horiz-card">
+          <div class="hc-row"><span class="hc-name">Инкай</span><span class="bdg bdg-warn">51%</span></div>
+          <div class="hc-meta">98 РВР · <span style="color:var(--green)">50 положит.</span> · <span style="color:var(--red)">48 отрицат.</span></div>
+          <div class="mini-bar"><div class="mini-fill" style="width:51%;background:var(--amber-m)"></div></div>
+        </div>
+        <div class="horiz-card">
+          <div class="hc-row"><span class="hc-name">Отсутствует</span><span class="bdg bdg-neu">43%</span></div>
+          <div class="hc-meta">53 РВР · <span style="color:var(--green)">23 положит.</span> · <span style="color:var(--red)">30 отрицат.</span></div>
+          <div class="mini-bar"><div class="mini-fill" style="width:43%;background:var(--red-m)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ ТАЙМЛАЙН ══════════════════════════════════ -->
+<div id="pg-timeline" class="page">
+
+  <div class="frow">
+    <span class="flbl">Горизонт:</span>
+    <select class="fsel">
+      <option>Все</option><option>Мынқудық</option><option>Инкай</option><option>Отсутствует</option>
+    </select>
+    <span class="flbl">Тип скважины:</span>
+    <select class="fsel">
+      <option>Все</option><option>откачка</option><option>закачка</option>
+    </select>
+    <span class="flbl">Вид РВР:</span>
+    <select class="fsel">
+      <option>Все</option><option>ВВ</option><option>Х/О</option><option>УОС</option><option>БФА</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Гант-диаграмма — РВР по скважинам (2024)</div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#93c5fd;border:1px solid #3b82f6"></div>Рабочий период</div>
+      <div class="leg"><div class="leg-dot" style="background:#bfdbfe;border:1px solid #1d4ed8"></div>РВР: ВВ</div>
+      <div class="leg"><div class="leg-dot" style="background:#fde68a;border:1px solid var(--amber-m)"></div>РВР: Х/О</div>
+      <div class="leg"><div class="leg-dot" style="background:#6ee7b7;border:1px solid var(--green-m)"></div>РВР: УОС</div>
+      <div class="leg"><div class="leg-dot" style="background:#c4b5fd;border:1px solid #7c3aed"></div>РВР: БФА</div>
+    </div>
+    <div class="tl-scroll" id="tl-root"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ ТЕПЛОВАЯ КАРТА ══════════════════════════════════ -->
+<div id="pg-heatmap" class="page">
+
+  <div class="row col-2">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Кол-во РВР: Горизонт × Месяц</div></div>
+      <div style="overflow-x:auto"><div id="hm-count"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">% Положительных: Горизонт × Месяц</div></div>
+      <div style="overflow-x:auto"><div id="hm-result"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Scatter: Регламент vs После РВР (по виду РВР)</div></div>
+    <div class="cw" style="height:280px"><canvas id="c-scatter"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ ПРОГНОЗ / АЛЕРТЫ ══════════════════════════════════ -->
+<div id="pg-alerts" class="page">
+
+  <div class="row col-2">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Скважины без РВР дольше всего (топ-15)</div></div>
+      <div class="alert-list" id="alert-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Тренд результативности РВР по месяцам</div></div>
+      <div class="cw" style="height:255px"><canvas id="c-trend-res"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Гистограмма МРЦ — распределение интервалов между РВР на одной скважине</div></div>
+    <div class="cw" style="height:195px"><canvas id="c-mrc-hist"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ ТАБЛИЦА ══════════════════════════════════ -->
+<div id="pg-table" class="page">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Все записи РВР</div>
+      <span style="font-size:11px;color:var(--text2)">347 записей</span>
+    </div>
+
+    <div class="frow">
+      <span class="flbl">Горизонт:</span>
+      <select class="fsel"><option>Все</option><option>Мынқудық</option><option>Инкай</option><option>Отсутствует</option></select>
+      <span class="flbl">Тип:</span>
+      <select class="fsel"><option>Все</option><option>откачка</option><option>закачка</option></select>
+      <span class="flbl">Вид РВР:</span>
+      <select class="fsel"><option>Все</option><option>ВВ</option><option>Х/О</option><option>УОС</option><option>БФА</option></select>
+      <span class="flbl">Результат:</span>
+      <select class="fsel"><option>Все</option><option>Положительный</option><option>Отрицательный</option></select>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="tbl" id="main-tbl">
+        <thead>
+          <tr>
+            <th>Скважина</th>
+            <th>Тип</th>
+            <th>Вид РВР</th>
+            <th class="col-hide">Горизонт</th>
+            <th>Регламент</th>
+            <th>После РВР</th>
+            <th>Δ</th>
+            <th>Результат</th>
+            <th>Дата РВР</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--text2)">
+      <span>Показано 1–25 из 347</span>
+      <div style="display:flex;gap:6px">
+        <button style="background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:5px 13px;cursor:pointer;font-size:12px;color:var(--text2)">← Назад</button>
+        <button style="background:var(--blue);border:none;border-radius:6px;padding:5px 13px;cursor:pointer;font-size:12px;color:#fff">Вперёд →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+// ═══════════════════════════════════════
+// HARDCODED DEMO DATA
+// ═══════════════════════════════════════
+const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+
+const DEMO_ROWS = [
+  // Скважина, Тип, РВР, Регламент, После РВР, Результат, Горизонт, Дата
+  ['100-10-1','откачка','УОС',0,0.095,'Положительный','Мынқудық','2024-08-21'],
+  ['100-10-1','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-07-23'],
+  ['100-10-1','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-08-20'],
+  ['100-10-2','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-05-24'],
+  ['100-10-3','откачка','УОС',0,0.039,'Положительный','Мынқудық','2024-05-27'],
+  ['100-1-1','закачка','ВВ',0,1.2,'Положительный','Мынқудық','2024-09-21'],
+  ['100-11-4','закачка','ВВ',1.839,2.894,'Положительный','Мынқудық','2024-09-21'],
+  ['100-11-5','закачка','ВВ',2,0,'Отрицательный','Мынқудық','2024-09-21'],
+  ['100-11-6','закачка','ВВ',0,0,'Отрицательный','Мынқудық','2024-09-21'],
+  ['100-11-7','закачка','ВВ',0,0,'Отрицательный','Мынқудық','2024-09-21'],
+  ['100-1-2','закачка','ВВ',0,1,'Положительный','Мынқудық','2024-09-21'],
+  ['100-12-1','откачка','УОС',0,2.228,'Положительный','Мынқудық','2024-05-30'],
+  ['100-12-1','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-07-25'],
+  ['100-12-2','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-05-31'],
+  ['100-12-2','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-09-04'],
+  ['100-3-4','закачка','ВВ',0,7.171,'Положительный','Мынқудық','2024-09-21'],
+  ['100-4-1','откачка','УОС',0,0.035,'Положительный','Мынқудық','2024-08-31'],
+  ['100-4-1','откачка','БФА',0,1.113,'Положительный','Мынқудық','2024-09-08'],
+  ['100-4-2','закачка','ВВ',0,0,'Отрицательный','Мынқудық','2024-09-21'],
+  ['100-6-1','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-06-02'],
+  ['19-4-1','откачка','Х/О',6,5.3,'Отрицательный','Отсутствует','2024-09-18'],
+  ['167-2-8','Отсутствует','Х/О',null,null,'','Отсутствует','2024-07-09'],
+  ['121-7н-6','Отсутствует','ВВ',null,null,'','Отсутствует','2024-01-17'],
+  ['121-7н-7','Отсутствует','ВВ',null,null,'','Отсутствует','2024-01-17'],
+  ['122-3-10','Отсутствует','ВВ',null,null,'','Отсутствует','2024-01-17'],
+  ['122-3-3','Отсутствует','ВВ',null,null,'','Инкай','2024-01-17'],
+  ['122-3-6','Отсутствует','ВВ',null,null,'','Инкай','2024-01-17'],
+  ['122-3-9','Отсутствует','ВВ',null,null,'','Инкай','2024-02-10'],
+  ['122-3н-0','Отсутствует','ВВ',null,null,'','Инкай','2024-03-05'],
+  ['122-3н-10','откачка','УОС',0.5,1.8,'Положительный','Инкай','2024-04-12'],
+  ['122-3н-14','закачка','Х/О',1.2,0.9,'Отрицательный','Инкай','2024-05-20'],
+  ['122-4-1','откачка','УОС',0,2.1,'Положительный','Инкай','2024-06-15'],
+  ['122-4-2','закачка','ВВ',0.8,1.5,'Положительный','Инкай','2024-07-08'],
+  ['122-5-1','откачка','БФА',0,0.6,'Положительный','Инкай','2024-08-03'],
+  ['122-5-2','закачка','Х/О',2.0,0.4,'Отрицательный','Инкай','2024-09-11'],
+  ['100-7-1','откачка','УОС',0,1.9,'Положительный','Мынқудық','2024-10-05'],
+  ['100-7-2','закачка','ВВ',1.1,2.3,'Положительный','Мынқудық','2024-10-18'],
+  ['100-8-1','откачка','УОС',0,0,'Отрицательный','Мынқудық','2024-11-02'],
+  ['100-8-2','закачка','ВВ',0,0.7,'Положительный','Мынқудық','2024-11-20'],
+  ['100-9-1','откачка','Х/О',3.0,2.1,'Отрицательный','Мынқудық','2024-12-01'],
+  ['100-9-2','закачка','БФА',0,1.4,'Положительный','Мынқудық','2024-12-15'],
+  ['121-1-1','откачка','УОС',0,0.8,'Положительный','Инкай','2024-03-20'],
+  ['121-1-2','закачка','ВВ',0.5,1.1,'Положительный','Инкай','2024-04-08'],
+  ['121-2-1','откачка','Х/О',1.5,0.3,'Отрицательный','Инкай','2024-05-14'],
+  ['121-2-2','закачка','УОС',0,2.5,'Положительный','Инкай','2024-06-22'],
+  ['121-3-1','откачка','БФА',0,0.9,'Положительный','Инкай','2024-07-30'],
+  ['121-3-2','закачка','ВВ',1.0,0.2,'Отрицательный','Инкай','2024-08-17'],
+];
+
+// Expand to ~80 rows with generated data
+const WELLS_EX=['100-13-1','100-13-2','100-14-1','100-14-2','100-15-1','100-2-1','100-2-2','100-5-1','100-5-2','100-6-2','122-6-1','122-6-2','122-7-1','167-1-1','167-1-2','167-3-1'];
+const TYPES=['откачка','закачка'];
+const RVRS=['ВВ','Х/О','УОС','БФА'];
+const HORIZS=['Мынқудық','Мынқудық','Инкай','Отсутствует'];
+const seed=(s)=>{ let x=Math.sin(s)*10000; return x-Math.floor(x); };
+for(let i=0;i<40;i++){
+  const w=WELLS_EX[i%WELLS_EX.length];
+  const t=TYPES[Math.floor(seed(i*3)*2)];
+  const r=RVRS[Math.floor(seed(i*7)*4)];
+  const h=HORIZS[Math.floor(seed(i*11)*4)];
+  const m=Math.floor(seed(i*13)*12)+1;
+  const d=Math.floor(seed(i*17)*28)+1;
+  const reg=seed(i*19)>0.4?+(seed(i*23)*3).toFixed(3):null;
+  const after=seed(i*29)>0.3?+(seed(i*31)*4).toFixed(4):null;
+  const res=seed(i*37)>0.38?'Положительный':'Отрицательный';
+  const date=`2024-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  DEMO_ROWS.push([w,t,r,reg,after,res,h,date]);
+}
+
+// Parse into objects
+const DATA = DEMO_ROWS.map(r=>({
+  well:r[0], type:r[1], rvr:r[2], reg:r[3], after:r[4],
+  result:r[5], horiz:r[6], date:r[7],
+  month: parseInt(r[7].split('-')[1]),
+}));
+
+// ═══════════════════════════════════════
+// CHART DEFAULTS
+// ═══════════════════════════════════════
+Chart.defaults.font.family = 'Golos Text';
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#475569';
+Chart.defaults.borderColor = '#dce3f0';
+
+const TT = { backgroundColor:'#fff', borderColor:'#dce3f0', borderWidth:1,
+  titleColor:'#1d4ed8', bodyColor:'#0f172a', padding:10, cornerRadius:7 };
+
+function bo(e={}) {
+  return { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:TT },
+    scales:{
+      x:{grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+      y:{grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+    }, ...e };
+}
+
+const RM = { BB:'#1d4ed8', 'Х/О':'#b45309', УОС:'#0f7144', БФА:'#6d28d9', other:'#475569' };
+const RL = { BB:'#dbeafe','Х/О':'#fef3c7', УОС:'#d1fae5', БФА:'#ede9fe', other:'#eaeff8' };
+function rc(t){ return RM[t]||RM.other; }
+function rl(t){ return RL[t]||RL.other; }
+
+// helper
+const grp = (arr,fn)=>{ const m={}; arr.forEach(r=>{ const k=fn(r); (m[k]=m[k]||[]).push(r); }); return m; };
+const uniq = arr=>[...new Set(arr)];
+
+// ═══════════════════════════════════════
+// OVERVIEW CHARTS
+// ═══════════════════════════════════════
+(function(){
+  const byMonth = MONTHS.map((_,i)=>{
+    const g=DATA.filter(r=>r.month===i+1);
+    return { n:g.length, pos:g.filter(r=>r.result==='Положительный').length };
+  });
+
+  new Chart(document.getElementById('c-monthly'),{
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[{
+        label:'РВР', data:byMonth.map(m=>m.n),
+        backgroundColor:'rgba(29,78,216,.15)', borderColor:'#1d4ed8',
+        borderWidth:1.5, borderRadius:4, yAxisID:'y',
+      },{
+        label:'% Положит.', data:byMonth.map(m=>m.n?Math.round(m.pos/m.n*100):null),
+        type:'line', borderColor:'#0f7144', backgroundColor:'rgba(15,113,68,.06)',
+        borderWidth:2, pointRadius:4, pointBackgroundColor:'#0f7144',
+        fill:true, tension:.35, spanGaps:true, yAxisID:'y1',
+      }],
+    },
+    options:{ ...bo(),
+      plugins:{ legend:{display:true,position:'top',labels:{boxWidth:11,color:'#475569',font:{size:11}}}, tooltip:TT },
+      scales:{
+        x:{grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+        y:{grid:{color:'#eaeff8'},ticks:{color:'#475569'},title:{display:true,text:'Кол-во РВР',color:'#475569',font:{size:10}}},
+        y1:{position:'right',grid:{display:false},ticks:{color:'#0f7144',callback:v=>v+'%'},min:0,max:100,
+            title:{display:true,text:'% Положит.',color:'#0f7144',font:{size:10}}},
+      },
+    },
+  });
+
+  const pos=DATA.filter(r=>r.result==='Положительный').length;
+  const neg=DATA.filter(r=>r.result==='Отрицательный').length;
+  const none=DATA.filter(r=>!r.result||r.result==='').length;
+  new Chart(document.getElementById('c-result-donut'),{
+    type:'doughnut',
+    data:{
+      labels:['Положительный','Отрицательный','Нет данных'],
+      datasets:[{ data:[pos,neg,none],
+        backgroundColor:['#10b981','#ef4444','#cbd5e1'],
+        borderColor:['#0f7144','#b91c1c','#94a3b8'], borderWidth:1.5, hoverOffset:6 }],
+    },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{display:true,position:'right',labels:{boxWidth:10,color:'#475569',font:{size:10},padding:10}}, tooltip:TT } },
+  });
+
+  const rvrG=grp(DATA,r=>r.rvr);
+  const rk=Object.keys(rvrG);
+  new Chart(document.getElementById('c-rvr-pie'),{
+    type:'doughnut',
+    data:{
+      labels:rk,
+      datasets:[{ data:rk.map(k=>rvrG[k].length),
+        backgroundColor:rk.map(k=>rl(k)), borderColor:rk.map(k=>rc(k)), borderWidth:1.5, hoverOffset:6 }],
+    },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{ legend:{display:true,position:'right',labels:{boxWidth:10,color:'#475569',font:{size:10},padding:8}}, tooltip:TT } },
+  });
+
+  const hG=grp(DATA,r=>r.horiz);
+  const hk=Object.keys(hG).filter(Boolean);
+  new Chart(document.getElementById('c-horiz-bar'),{
+    type:'bar',
+    data:{
+      labels:hk,
+      datasets:[{ data:hk.map(k=>hG[k].length),
+        backgroundColor:['#dbeafe','#d1fae5','#eaeff8'],
+        borderColor:['#1d4ed8','#0f7144','#475569'], borderWidth:1.5, borderRadius:5 }],
+    },
+    options:bo(),
+  });
+
+  const tG=grp(DATA,r=>r.type);
+  const tk=Object.keys(tG).filter(Boolean);
+  new Chart(document.getElementById('c-type-bar'),{
+    type:'bar',
+    data:{
+      labels:tk,
+      datasets:[{ data:tk.map(k=>tG[k].length),
+        backgroundColor:['#dbeafe','#d1fae5','#fef3c7','#eaeff8'],
+        borderColor:['#1d4ed8','#0f7144','#b45309','#475569'], borderWidth:1.5, borderRadius:5 }],
+    },
+    options:bo(),
+  });
+})();
+
+// ═══════════════════════════════════════
+// RVR ANALYSIS
+// ═══════════════════════════════════════
+(function(){
+  const rvrG=grp(DATA,r=>r.rvr);
+  const rk=Object.keys(rvrG);
+
+  new Chart(document.getElementById('c-rvr-pct'),{
+    type:'bar',
+    data:{
+      labels:rk,
+      datasets:[{ data:rk.map(k=>{ const g=rvrG[k]; return Math.round(g.filter(r=>r.result==='Положительный').length/g.length*100); }),
+        backgroundColor:rk.map(k=>rl(k)), borderColor:rk.map(k=>rc(k)), borderWidth:1.5, borderRadius:6 }],
+    },
+    options:{ ...bo(), scales:{x:{grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+      y:{grid:{color:'#eaeff8'},ticks:{color:'#475569',callback:v=>v+'%'},min:0,max:100}} },
+  });
+
+  new Chart(document.getElementById('c-rvr-after'),{
+    type:'bar',
+    data:{
+      labels:rk,
+      datasets:[{ data:rk.map(k=>{ const g=rvrG[k].filter(r=>r.after!==null); return g.length?+(g.reduce((s,r)=>s+r.after,0)/g.length).toFixed(3):0; }),
+        backgroundColor:rk.map(k=>rl(k)), borderColor:rk.map(k=>rc(k)), borderWidth:1.5, borderRadius:6 }],
+    },
+    options:bo(),
+  });
+
+  const deltas=rk.map(k=>{ const g=rvrG[k].filter(r=>r.after!==null&&r.reg!==null); return g.length?+(g.reduce((s,r)=>s+(r.after-r.reg),0)/g.length).toFixed(3):0; });
+  new Chart(document.getElementById('c-rvr-delta'),{
+    type:'bar',
+    data:{
+      labels:rk,
+      datasets:[{ data:deltas,
+        backgroundColor:deltas.map(v=>v>=0?'rgba(15,113,68,.2)':'rgba(185,28,28,.18)'),
+        borderColor:deltas.map(v=>v>=0?'#0f7144':'#b91c1c'), borderWidth:1.5, borderRadius:5 }],
+    },
+    options:{ ...bo(), plugins:{ legend:{display:false}, tooltip:{...TT,callbacks:{label:d=>`Δ ${d.raw>=0?'+':''}${d.raw}`}} } },
+  });
+})();
+
+// ═══════════════════════════════════════
+// TIMELINE
+// ═══════════════════════════════════════
+(function(){
+  const TOTAL=366, MDAYS=[31,29,31,30,31,30,31,31,30,31,30,31];
+  const byWell=grp(DATA,r=>r.well);
+  const wells=Object.keys(byWell).slice(0,20);
+
+  let html=`<div class="tl-root"><div class="tl-months">`;
+  MDAYS.forEach((d,i)=>{ html+=`<div class="tl-m" style="flex:${d}">${MONTHS[i]}</div>`; });
+  html+=`</div>`;
+
+  wells.forEach(wid=>{
+    const evs=byWell[wid].sort((a,b)=>a.date.localeCompare(b.date));
+    html+=`<div class="tl-row">
+      <div class="tl-w">${wid}<small>${evs[0].type}</small></div>
+      <div class="tl-bars">`;
+    let prev=0;
+    evs.forEach(ev=>{
+      const doy=Math.max(0,Math.floor((new Date(ev.date)-new Date('2024-01-01'))/86400000));
+      if(doy>prev){
+        const l=(prev/TOTAL*100).toFixed(1), w=((doy-prev)/TOTAL*100).toFixed(1);
+        html+=`<div class="tl-seg seg-work" style="left:${l}%;width:${w}%" title="Рабочий период ${doy-prev} дн."></div>`;
+      }
+      const segClass = { ВВ:'seg-BB', 'Х/О':'seg-XO', УОС:'seg-UOS', БФА:'seg-BFA' }[ev.rvr]||'seg-BB';
+      const resMark = ev.result==='Положительный'?'✓':ev.result==='Отрицательный'?'✗':'';
+      html+=`<div class="tl-seg ${segClass}" style="left:${(doy/TOTAL*100).toFixed(1)}%;width:2.5%" title="${ev.rvr} · ${ev.result} · ${ev.date}">${ev.rvr} ${resMark}</div>`;
+      prev=doy+1;
+    });
+    if(prev<TOTAL){
+      const l=(prev/TOTAL*100).toFixed(1),w=((TOTAL-prev)/TOTAL*100).toFixed(1);
+      html+=`<div class="tl-seg seg-work" style="left:${l}%;width:${w}%"></div>`;
+    }
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('tl-root').innerHTML=html;
+})();
+
+// ═══════════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════════
+(function(){
+  const horizs=['Мынқудық','Инкай','Отсутствует'];
+
+  // Count
+  const counts=horizs.map(h=>MONTHS.map((_,m)=>DATA.filter(r=>r.horiz===h&&r.month===m+1).length));
+  const cfl=counts.flat(); const cmx=Math.max(...cfl)||1;
+  function chc(v){ const t=v/cmx; if(t<.33)return`rgba(29,78,216,${.12+t})`; if(t<.66)return`rgba(180,83,9,${.15+t*.7})`; return`rgba(185,28,28,${.15+t*.7})`; }
+
+  let h1=`<div class="hm" style="grid-template-columns:90px repeat(12,1fr)">
+    <div class="hm-cell hm-hdr"></div>`;
+  MONTHS.forEach(m=>{ h1+=`<div class="hm-cell hm-hdr">${m}</div>`; });
+  horizs.forEach((h,hi)=>{
+    h1+=`<div class="hm-cell hm-lbl">${h}</div>`;
+    counts[hi].forEach(v=>{ h1+=`<div class="hm-cell" style="background:${chc(v)}" title="${v} РВР">${v||''}</div>`; });
+  });
+  h1+=`</div>`;
+  document.getElementById('hm-count').innerHTML=h1;
+
+  // Result %
+  const results=horizs.map(h=>MONTHS.map((_,m)=>{
+    const g=DATA.filter(r=>r.horiz===h&&r.month===m+1);
+    return g.length?Math.round(g.filter(r=>r.result==='Положительный').length/g.length*100):null;
+  }));
+  function rhc(v){ if(v===null)return'transparent'; if(v>=65)return`rgba(15,113,68,${.12+v/220})`; if(v>=45)return`rgba(180,83,9,${.15+v/300})`; return`rgba(185,28,28,${.2+(100-v)/300})`; }
+
+  let h2=`<div class="hm" style="grid-template-columns:90px repeat(12,1fr)">
+    <div class="hm-cell hm-hdr"></div>`;
+  MONTHS.forEach(m=>{ h2+=`<div class="hm-cell hm-hdr">${m}</div>`; });
+  horizs.forEach((h,hi)=>{
+    h2+=`<div class="hm-cell hm-lbl">${h}</div>`;
+    results[hi].forEach(v=>{ h2+=`<div class="hm-cell" style="background:${rhc(v)}" title="${v!==null?v+'%':'—'}">${v!==null?v+'%':''}</div>`; });
+  });
+  h2+=`</div>`;
+  document.getElementById('hm-result').innerHTML=h2;
+
+  // Scatter
+  const rk=uniq(DATA.map(r=>r.rvr));
+  new Chart(document.getElementById('c-scatter'),{
+    type:'scatter',
+    data:{
+      datasets:rk.map(k=>({
+        label:k,
+        data:DATA.filter(r=>r.rvr===k&&r.reg!==null&&r.after!==null).map(r=>({x:r.reg,y:r.after})),
+        backgroundColor:rl(k).replace(')',',0.7)').replace('rgb','rgba'),
+        borderColor:rc(k), pointRadius:5,
+      })),
+    },
+    options:{ ...bo(),
+      plugins:{
+        legend:{display:true,position:'top',labels:{boxWidth:11,color:'#475569',font:{size:11}}},
+        tooltip:{...TT,callbacks:{label:d=>`${d.dataset.label}: Регл=${d.raw.x.toFixed(3)}, После=${d.raw.y.toFixed(4)}`}},
+      },
+      scales:{
+        x:{title:{display:true,text:'Регламент',color:'#475569'},grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+        y:{title:{display:true,text:'После РВР',color:'#475569'},grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+      },
+    },
+  });
+})();
+
+// ═══════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════
+(function(){
+  const byWell=grp(DATA,r=>r.well);
+  const lastRvr=Object.entries(byWell).map(([w,evs])=>{
+    const sorted=evs.sort((a,b)=>b.date.localeCompare(a.date));
+    const gap=Math.round((new Date('2024-12-31')-new Date(sorted[0].date))/86400000);
+    return{ well:w, date:sorted[0].date, rvr:sorted[0].rvr, horiz:sorted[0].horiz, gap };
+  }).sort((a,b)=>b.gap-a.gap).slice(0,15);
+
+  const el=document.getElementById('alert-list');
+  lastRvr.forEach(r=>{
+    const cls=r.gap>120?'crit':r.gap>60?'warn':'';
+    const icon=r.gap>120?'🔴':r.gap>60?'🟡':'🟢';
+    el.innerHTML+=`<div class="alert-row ${cls}">
+      <div class="a-well">${r.well}</div>
+      <div class="a-info">${r.horiz} · <span class="chip chip-${({ВВ:'BB','Х/О':'XO',УОС:'UOS',БФА:'BFA'}[r.rvr]||'OTHER')}">${r.rvr}</span> · ${r.date}</div>
+      <div class="a-days">${icon} ${r.gap} дн.</div>
+    </div>`;
+  });
+
+  // Trend result by month
+  const bm=MONTHS.map((_,i)=>{
+    const g=DATA.filter(r=>r.month===i+1);
+    return g.length?Math.round(g.filter(r=>r.result==='Положительный').length/g.length*100):null;
+  });
+  new Chart(document.getElementById('c-trend-res'),{
+    type:'line',
+    data:{
+      labels:MONTHS,
+      datasets:[{
+        label:'% Положительных', data:bm,
+        borderColor:'#0f7144', backgroundColor:'rgba(15,113,68,.07)',
+        borderWidth:2, pointRadius:5, pointBackgroundColor:'#0f7144',
+        fill:true, tension:.35, spanGaps:true,
+      },{
+        label:'Целевой 65%', data:MONTHS.map(()=>65),
+        borderColor:'#1d4ed8', borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false,
+      }],
+    },
+    options:{ ...bo(),
+      plugins:{ legend:{display:true,position:'top',labels:{boxWidth:11,color:'#475569',font:{size:11}}}, tooltip:TT },
+      scales:{
+        x:{grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+        y:{grid:{color:'#eaeff8'},ticks:{color:'#475569',callback:v=>v+'%'},min:0,max:100},
+      },
+    },
+  });
+
+  // MRC histogram
+  const bwAll=grp(DATA,r=>r.well);
+  const intervals=[];
+  Object.values(bwAll).forEach(evs=>{
+    const sorted=evs.filter(e=>e.date).sort((a,b)=>a.date.localeCompare(b.date));
+    for(let i=1;i<sorted.length;i++){
+      const diff=Math.round((new Date(sorted[i].date)-new Date(sorted[i-1].date))/86400000);
+      if(diff>0&&diff<400) intervals.push(diff);
+    }
+  });
+  const bsz=30, bkts=Array.from({length:12},(_,i)=>({
+    lbl:`${i*bsz}–${(i+1)*bsz}`,
+    n:intervals.filter(v=>v>=i*bsz&&v<(i+1)*bsz).length,
+  }));
+  new Chart(document.getElementById('c-mrc-hist'),{
+    type:'bar',
+    data:{
+      labels:bkts.map(b=>b.lbl),
+      datasets:[{ data:bkts.map(b=>b.n), backgroundColor:'#dbeafe', borderColor:'#1d4ed8', borderWidth:1.5, borderRadius:4 }],
+    },
+    options:{ ...bo(),
+      plugins:{ legend:{display:false}, tooltip:{...TT,callbacks:{label:d=>`${d.raw} интервалов`}} },
+      scales:{
+        x:{title:{display:true,text:'Интервал (сут.)',color:'#475569'},grid:{color:'#eaeff8'},ticks:{color:'#475569',font:{size:9}}},
+        y:{title:{display:true,text:'Кол-во',color:'#475569'},grid:{color:'#eaeff8'},ticks:{color:'#475569'}},
+      },
+    },
+  });
+})();
+
+// ═══════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════
+(function(){
+  const sorted=[...DATA].sort((a,b)=>b.date.localeCompare(a.date));
+  const tbody=document.getElementById('tbl-body');
+  sorted.slice(0,25).forEach(r=>{
+    const delta=(r.after!==null&&r.reg!==null)?(r.after-r.reg):null;
+    const dStr=delta!==null?`<span class="${delta>=0?'delta-pos':'delta-neg'}">${delta>=0?'+':''}${delta.toFixed(3)}</span>`:'—';
+    const resCls=r.result==='Положительный'?'bdg-pos':r.result==='Отрицательный'?'bdg-neg':'bdg-neu';
+    const chpCls='chip-'+({ВВ:'BB','Х/О':'XO',УОС:'UOS',БФА:'BFA'}[r.rvr]||'OTHER');
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:700">${r.well}</td>
+      <td style="color:var(--text2)">${r.type}</td>
+      <td><span class="chip ${chpCls}">${r.rvr}</span></td>
+      <td class="col-hide">${r.horiz}</td>
+      <td class="mono">${r.reg!==null?r.reg.toFixed(4):'—'}</td>
+      <td class="mono">${r.after!==null?r.after.toFixed(4):'—'}</td>
+      <td class="mono">${dStr}</td>
+      <td><span class="bdg ${resCls}">${r.result||'—'}</span></td>
+      <td class="mono" style="color:var(--text2)">${r.date}</td>
+    </tr>`;
+  });
+})();
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function go(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+</script>
+</body>
+</html>

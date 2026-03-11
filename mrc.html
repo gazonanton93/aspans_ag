@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>МРЦ — Межремонтный цикл</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #f2f5fb;
+      --surface: #ffffff;
+      --surf2: #eaeff8;
+      --border: #dce3f0;
+      --blue: #1d4ed8;
+      --blue-l: #dbeafe;
+      --blue-m: #3b82f6;
+      --green: #0f7144;
+      --green-l: #d1fae5;
+      --green-m: #10b981;
+      --red: #b91c1c;
+      --red-l: #fee2e2;
+      --red-m: #ef4444;
+      --amber: #b45309;
+      --amber-l: #fef3c7;
+      --amber-m: #f59e0b;
+      --violet: #6d28d9;
+      --violet-l: #ede9fe;
+      --text: #0f172a;
+      --text2: #475569;
+      --text3: #94a3b8;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 6px 20px rgba(15, 23, 42, .05);
+      --shadow-h: 0 4px 16px rgba(15, 23, 42, .12);
+      --hh: 58px;
+      --th: 46px;
+    }
+
+    /* ── Принудительная ширина: сброс ограничений iframe/блока платформы ── */
+    html,
+    body,
+    main,
+    .page,
+    .page.active,
+    .kpi-strip,
+    .row,
+    .card,
+    .alert-list,
+    .alert-row,
+    .horiz-card,
+    #hm-count,
+    #hm-result,
+    #alert-list,
+    #horiz-res-list,
+    #tl-root,
+    .tl-scroll {
+      max-width: none !important;
+      box-sizing: border-box !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Сброс ограничений родительского контейнера платформы */
+    html,
+    body {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Golos Text', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 400;
+      height: auto;
+      min-height: var(--hh);
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .07);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 8px 20px;
+      gap: 10px;
+    }
+
+    .h-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .h-logo {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(29, 78, 216, .3);
+    }
+
+    .h-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.2px;
+    }
+
+    .h-sub {
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .h-spacer {
+      flex: 1;
+      min-width: 12px;
+    }
+
+    /* Фильтры в хедере — отдельная строка на маленьких экранах */
+    .h-filters {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .h-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .h-period {
+      background: var(--blue-l);
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 4px 13px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .h-live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green-m);
+      box-shadow: 0 0 0 3px var(--green-l);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    /* ─── TABS ─── */
+    .tabs-bar {
+      position: sticky;
+      top: var(--hh);
+      z-index: 300;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .tabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tabs {
+      display: flex;
+      padding: 0 20px;
+      min-width: max-content;
+    }
+
+    .tab {
+      padding: 0 18px;
+      height: var(--th);
+      line-height: var(--th);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text2);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: color .16s, border-color .16s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+    }
+
+    .tab.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    /* ─── MAIN ─── */
+    main {
+      padding: 20px 24px;
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+    }
+
+    .page {
+      display: none;
+      width: 100%;
+    }
+
+    .page.active {
+      display: block;
+      width: 100%;
+    }
+
+    /* ─── KPI STRIP ─── */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .2s, transform .18s;
+      animation: up .35s ease both;
+    }
+
+    .kpi:hover {
+      box-shadow: var(--shadow-h);
+      transform: translateY(-2px);
+    }
+
+    .kpi::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--kc, var(--blue));
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .kpi:nth-child(1) {
+      animation-delay: .04s
+    }
+
+    .kpi:nth-child(2) {
+      animation-delay: .08s
+    }
+
+    .kpi:nth-child(3) {
+      animation-delay: .12s
+    }
+
+    .kpi:nth-child(4) {
+      animation-delay: .16s
+    }
+
+    .kpi:nth-child(5) {
+      animation-delay: .20s
+    }
+
+    .kpi:nth-child(6) {
+      animation-delay: .24s
+    }
+
+    .kpi-ico {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .kpi-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 3px;
+    }
+
+    .kpi-val {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--kc, var(--blue));
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-unit {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .kpi-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 8px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tag-g {
+      background: var(--green-l);
+      color: var(--green);
+    }
+
+    .tag-r {
+      background: var(--red-l);
+      color: var(--red);
+    }
+
+    .tag-b {
+      background: var(--blue-l);
+      color: var(--blue);
+    }
+
+    .tag-a {
+      background: var(--amber-l);
+      color: var(--amber);
+    }
+
+    /* ─── GRID LAYOUTS ─── */
+    .row {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .row>* {
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    .col-1 {
+      grid-template-columns: 1fr;
+    }
+
+    .col-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .col-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .col-21 {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    .col-12 {
+      grid-template-columns: 1fr 2fr;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      animation: up .38s ease both;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      color: var(--text2);
+    }
+
+    .card-title::before {
+      content: '';
+      width: 3px;
+      height: 13px;
+      background: var(--blue);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .cw {
+      position: relative;
+      width: 100%;
+    }
+
+    /* ─── RESULT SPLIT BAR ─── */
+    .split {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .split-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .split-bar {
+      display: flex;
+      height: 22px;
+      border-radius: 6px;
+      overflow: hidden;
+      gap: 2px;
+    }
+
+    .s-pos {
+      background: var(--green-m);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 28px;
+    }
+
+    .s-neg {
+      background: var(--red-m);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 28px;
+    }
+
+    /* ─── RVR CHIP ─── */
+    .chip {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .chip-BB {
+      background: var(--blue-l);
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+    }
+
+    .chip-XO {
+      background: var(--amber-l);
+      color: var(--amber);
+      border: 1px solid #fcd34d;
+    }
+
+    .chip-UOS {
+      background: var(--green-l);
+      color: var(--green);
+      border: 1px solid #6ee7b7;
+    }
+
+    .chip-BFA {
+      background: var(--violet-l);
+      color: var(--violet);
+      border: 1px solid #c4b5fd;
+    }
+
+    .chip-OTHER {
+      background: var(--surf2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    /* ─── BADGE ─── */
+    .bdg {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .bdg-pos {
+      background: var(--green-l);
+      color: var(--green);
+      border: 1px solid #6ee7b7;
+    }
+
+    .bdg-neg {
+      background: var(--red-l);
+      color: var(--red);
+      border: 1px solid #fca5a5;
+    }
+
+    .bdg-neu {
+      background: var(--surf2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .bdg-ok {
+      background: var(--green-l);
+      color: var(--green);
+      border: 1px solid #6ee7b7;
+    }
+
+    .bdg-warn {
+      background: var(--amber-l);
+      color: var(--amber);
+      border: 1px solid #fcd34d;
+    }
+
+    .bdg-crit {
+      background: var(--red-l);
+      color: var(--red);
+      border: 1px solid #fca5a5;
+    }
+
+    /* ─── HORIZON CARD ─── */
+    .horiz-card {
+      background: var(--surf2);
+      border-radius: 8px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .hc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .hc-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .hc-meta {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .mini-bar {
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mini-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .6s;
+    }
+
+    /* ─── TABLE ─── */
+    .tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .tbl th {
+      background: var(--surf2);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      color: var(--text2);
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .tbl td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #f0f4fb;
+      vertical-align: middle;
+    }
+
+    .tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tbl tr:hover td {
+      background: #f8faff;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .delta-pos {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .delta-neg {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    /* ─── TIMELINE ─── */
+    .tl-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 5px;
+    }
+
+    .tl-scroll::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .tl-scroll::-webkit-scrollbar-track {
+      background: var(--surf2);
+      border-radius: 5px;
+    }
+
+    .tl-scroll::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 5px;
+      border: 2px solid var(--surf2);
+    }
+
+    .tl-scroll::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    .tl-root {
+      min-width: 900px;
+    }
+
+    .tl-hdr {
+      display: flex;
+      flex-direction: column;
+      margin-left: 110px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tl-year {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #eaeff8;
+      background: #f8faff;
+    }
+
+    .tl-months-row {
+      display: flex;
+    }
+
+    .tl-m {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+    }
+
+    .tl-m:first-child {
+      border-left: none;
+    }
+
+    .tl-m-name {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text2);
+      padding: 3px 0;
+      border-bottom: 1px solid #eaeff8;
+    }
+
+    .tl-days-row {
+      display: flex;
+      height: 16px;
+    }
+
+    .tl-d {
+      flex: 1;
+      text-align: center;
+      font-size: 8px;
+      color: var(--text3);
+      border-left: 1px solid #eaeff8;
+      line-height: 16px;
+      /* Default hidden to prevent mush */
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tl-d:first-child {
+      border-left: none;
+    }
+
+    /* When scaled up, .tl-root will get .show-days class */
+    .tl-root.show-days .tl-d {
+      opacity: 1;
+    }
+
+    .tl-root.show-some-days .tl-d:nth-child(5n),
+    .tl-root.show-some-days .tl-d:first-child {
+      opacity: 1;
+    }
+
+    .tl-row {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #f0f4fb;
+      min-height: 34px;
+    }
+
+    .tl-row:hover {
+      background: #f8faff;
+    }
+
+    .tl-w {
+      width: 110px;
+      flex-shrink: 0;
+      padding: 0 10px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tl-w small {
+      font-size: 9px;
+      color: var(--text3);
+      display: block;
+      font-weight: 400;
+    }
+
+    .tl-bars {
+      flex: 1;
+      position: relative;
+      height: 26px;
+    }
+
+    .tl-seg {
+      position: absolute;
+      top: 3px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 5px;
+      font-size: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: filter .15s;
+      cursor: default;
+    }
+
+    .tl-seg:hover {
+      filter: brightness(.88);
+    }
+
+    .seg-work {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #60a5fa;
+    }
+
+    .seg-BB {
+      background: #1d4ed8;
+      border: 1px solid #1e3a8a;
+      color: #fff;
+    }
+
+    .seg-XO {
+      background: var(--amber);
+      border: 1px solid #92400e;
+      color: #fff;
+    }
+
+    .seg-UOS {
+      background: var(--green);
+      border: 1px solid #064e3b;
+      color: #fff;
+    }
+
+    .seg-BFA {
+      background: var(--violet);
+      border: 1px solid #4c1d95;
+      color: #fff;
+    }
+
+    .seg-OTHER {
+      background: var(--text2);
+      border: 1px solid #334155;
+      color: #fff;
+    }
+
+    /* ─── TIMELINE LEGEND ─── */
+    .tl-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .leg-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ─── HEATMAP ─── */
+    .hm {
+      display: grid;
+      gap: 3px;
+      width: 100%;
+    }
+
+    .hm-cell {
+      height: 30px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: filter .15s;
+      cursor: default;
+    }
+
+    .hm-cell:hover {
+      filter: brightness(.88);
+    }
+
+    .hm-hdr {
+      color: var(--text3);
+      background: transparent !important;
+      font-size: 9px;
+    }
+
+    .hm-lbl {
+      color: var(--text2);
+      justify-content: flex-start;
+      background: transparent !important;
+      font-weight: 600;
+      font-size: 10px;
+      padding-left: 2px;
+    }
+
+    /* ─── ALERT LIST ─── */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .alert-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surf2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--green-m);
+      border-radius: 0 8px 8px 0;
+      padding: 9px 13px;
+      transition: box-shadow .15s;
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    .alert-row:hover {
+      box-shadow: var(--shadow);
+    }
+
+    .alert-row.warn {
+      border-left-color: var(--amber-m);
+    }
+
+    .alert-row.crit {
+      border-left-color: var(--red-m);
+    }
+
+    .a-well {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 80px;
+    }
+
+    .a-info {
+      flex: 1;
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .a-days {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--green);
+    }
+
+    .alert-row.warn .a-days {
+      color: var(--amber);
+    }
+
+    .alert-row.crit .a-days {
+      color: var(--red);
+    }
+
+    /* ─── FILTER ROW ─── */
+    .frow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .flbl {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .fsel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 7px 28px 7px 11px;
+      font-family: 'Golos Text', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+    }
+
+    .fsel:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-l);
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text3);
+    }
+
+    /* ─── ANIMATION ─── */
+    @keyframes up {
+      from {
+        opacity: 0;
+        transform: translateY(9px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width:1200px) {
+      .kpi-strip {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width:900px) {
+
+      .col-21,
+      .col-12 {
+        grid-template-columns: 1fr;
+      }
+
+      .col-3 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width:680px) {
+      main {
+        padding: 12px;
+      }
+
+      .kpi-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 9px;
+      }
+
+      .col-2,
+      .col-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-val {
+        font-size: 22px;
+      }
+
+      .tab {
+        padding: 0 12px;
+        font-size: 11px;
+      }
+
+      .h-sub,
+      .h-period {
+        display: none;
+      }
+
+      .tl-w {
+        width: 72px;
+      }
+
+      .tl-months {
+        margin-left: 72px;
+      }
+
+      .col-hide {
+        display: none;
+      }
+
+      .h-filters .fsel {
+        font-size: 11px;
+        padding: 5px 24px 5px 8px;
+      }
+    }
+
+    @media (max-width:420px) {
+      .kpi-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ HEADER ══ -->
+  <header>
+    <div class="h-brand">
+      <div class="h-logo">☢️</div>
+      <div>
+        <div class="h-name">МРЦ — Межремонтный цикл</div>
+        <div class="h-sub">Уранодобыча · ISL</div>
+      </div>
+    </div>
+
+    <div class="h-spacer"></div>
+
+    <!-- Глобальные фильтры -->
+    <div class="h-filters">
+      <select id="global-year" class="fsel">
+        <option value="all">Все годы</option>
+      </select>
+      <select id="global-type" class="fsel">
+        <option value="all">Все типы скв.</option>
+      </select>
+      <select id="global-horiz" class="fsel">
+        <option value="all">Все горизонты</option>
+      </select>
+      <select id="global-rvr" class="fsel">
+        <option value="all">Все виды РВР</option>
+      </select>
+      <select id="global-well" class="fsel">
+        <option value="">Все скважины</option>
+      </select>
+    </div>
+
+    <div class="h-right">
+      <div class="h-period">Live Data</div>
+      <div class="h-live"></div>
+    </div>
+  </header>
+
+  <!-- ══ TABS ══ -->
+  <div class="tabs-bar">
+    <div class="tabs">
+      <div class="tab active" onclick="go('pg-overview',this)">Обзор</div>
+      <div class="tab" onclick="go('pg-rvr',this)">Анализ РВР</div>
+      <div class="tab" onclick="go('pg-timeline',this)">Таймлайн</div>
+      <div class="tab" onclick="go('pg-heatmap',this)">Тепловая карта</div>
+      <div class="tab" onclick="go('pg-alerts',this)">Прогноз / Алерты</div>
+      <div class="tab" onclick="go('pg-table',this)">Таблица РВР</div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ══ ОБЗОР ══ -->
+    <div id="pg-overview" class="page active">
+
+      <div class="kpi-strip">
+        <div class="kpi" style="--kc:var(--blue)">
+          <div class="kpi-ico">🔧</div>
+          <div class="kpi-lbl">Всего РВР</div>
+          <div class="kpi-val">—</div>
+          <div class="kpi-unit">операций</div>
+          <div class="kpi-tag tag-b">горизонтов</div>
+        </div>
+        <div class="kpi" style="--kc:var(--blue-m)">
+          <div class="kpi-ico">🕳️</div>
+          <div class="kpi-lbl">Скважин в базе</div>
+          <div class="kpi-val">—</div>
+          <div class="kpi-unit">уникальных</div>
+          <div class="kpi-tag tag-b">откачка + закачка</div>
+        </div>
+        <div class="kpi" style="--kc:var(--green)">
+          <div class="kpi-ico">✅</div>
+          <div class="kpi-lbl">Положит. РВР</div>
+          <div class="kpi-val">—%</div>
+          <div class="kpi-unit">из всех</div>
+          <div class="kpi-tag tag-g">результат</div>
+        </div>
+        <div class="kpi" style="--kc:var(--amber)">
+          <div class="kpi-ico">📅</div>
+          <div class="kpi-lbl">Средний МРЦ</div>
+          <div class="kpi-val">—</div>
+          <div class="kpi-unit">суток между РВР</div>
+          <div class="kpi-tag tag-a">норма 90 сут.</div>
+        </div>
+        <div class="kpi" style="--kc:var(--red)">
+          <div class="kpi-ico">⚠️</div>
+          <div class="kpi-lbl">Критичных скважин</div>
+          <div class="kpi-val">—</div>
+          <div class="kpi-unit">без РВР > 120 дн.</div>
+          <div class="kpi-tag tag-r">требуют РВР</div>
+        </div>
+        <div class="kpi" style="--kc:var(--violet)">
+          <div class="kpi-ico">📈</div>
+          <div class="kpi-lbl">Ср. прирост</div>
+          <div class="kpi-val">—</div>
+          <div class="kpi-unit">После − Регламент</div>
+          <div class="kpi-tag tag-b">ед. расхода</div>
+        </div>
+      </div>
+
+      <div class="row col-21">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Количество РВР и % положительных по месяцам</div>
+          </div>
+          <div class="cw" data-canvas-id="c-monthly" style="height:215px"><canvas id="c-monthly"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Результативность РВР</div>
+          </div>
+          <div class="split">
+            <div class="split-labels">
+              <span style="color:var(--green)">✓ Положительный</span>
+              <span style="color:var(--red)">✗ Отрицательный</span>
+            </div>
+            <div class="split-bar">
+              <div class="s-pos" style="width:50%">—</div>
+              <div class="s-neg" style="width:50%">—</div>
+            </div>
+          </div>
+          <div class="cw" data-canvas-id="c-result-donut" style="height:148px"><canvas id="c-result-donut"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="row col-3">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Виды РВР — доля операций</div>
+          </div>
+          <div class="cw" data-canvas-id="c-rvr-pie" style="height:190px"><canvas id="c-rvr-pie"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Кол-во РВР по горизонтам</div>
+          </div>
+          <div class="cw" data-canvas-id="c-horiz-bar" style="height:190px"><canvas id="c-horiz-bar"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Кол-во РВР по типу скважины</div>
+          </div>
+          <div class="cw" data-canvas-id="c-type-bar" style="height:190px"><canvas id="c-type-bar"></canvas></div>
+        </div>
+      </div>
+
+    </div><!-- /pg-overview -->
+
+    <!-- ══ АНАЛИЗ РВР ══ -->
+    <div id="pg-rvr" class="page">
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">% Положительных результатов по виду РВР</div>
+          </div>
+          <div class="cw" data-canvas-id="c-rvr-pct" style="height:240px"><canvas id="c-rvr-pct"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Среднее значение «После РВР» по виду работ</div>
+          </div>
+          <div class="cw" data-canvas-id="c-rvr-after" style="height:240px"><canvas id="c-rvr-after"></canvas></div>
+        </div>
+      </div>
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Δ Прирост (После РВР − Регламент) по виду РВР</div>
+          </div>
+          <div class="cw" data-canvas-id="c-rvr-delta" style="height:210px"><canvas id="c-rvr-delta"></canvas></div>
+        </div>
+        <!-- ИСПРАВЛЕНО: horiz-res-list вынесен из card-head, теперь он контент карточки -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Результативность по горизонту</div>
+          </div>
+          <div id="horiz-res-list" style="display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
+      </div>
+
+    </div><!-- /pg-rvr -->
+
+    <!-- ══ ТАЙМЛАЙН ══ -->
+    <!-- ИСПРАВЛЕНО: правильная структура — всё внутри одной карточки внутри page -->
+    <div id="pg-timeline" class="page">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Гант-диаграмма — РВР по скважинам</div>
+        </div>
+        <div class="tl-legend">
+          <div class="leg">
+            <div class="leg-dot" style="background:#eff6ff;border:1px solid #93c5fd"></div>Рабочий период
+          </div>
+          <div class="leg">
+            <div class="leg-dot" style="background:#1d4ed8"></div>ВВ
+          </div>
+          <div class="leg">
+            <div class="leg-dot" style="background:var(--amber)"></div>Х/О
+          </div>
+          <div class="leg">
+            <div class="leg-dot" style="background:var(--green)"></div>УОС
+          </div>
+          <div class="leg">
+            <div class="leg-dot" style="background:var(--violet)"></div>БФА
+          </div>
+          <div class="leg">
+            <div class="leg-dot" style="background:var(--text2)"></div>Прочее
+          </div>
+          <div class="leg" style="margin-left:auto;color:var(--text2)">✓ = положит. &nbsp; ✗ = отрицат.</div>
+        </div>
+        <div class="tl-scroll">
+          <div id="tl-root"></div>
+        </div>
+        <div class="tl-zoom-ctrl"
+          style="display:flex; align-items:center; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid var(--border);">
+          <span style="font-size:11px; color:var(--text2); font-weight:600;">Масштаб:</span>
+          <input type="range" id="tl-zoom" min="100" max="500" value="100" style="flex:1; cursor:pointer;">
+          <span id="tl-zoom-val" style="font-size:11px; color:var(--text2); min-width:35px;">100%</span>
+        </div>
+      </div>
+    </div><!-- /pg-timeline -->
+
+    <!-- ══ ТЕПЛОВАЯ КАРТА ══ -->
+    <div id="pg-heatmap" class="page">
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Кол-во РВР: Горизонт × Месяц</div>
+          </div>
+          <div style="overflow-x:auto">
+            <div id="hm-count"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">% Положительных: Горизонт × Месяц</div>
+          </div>
+          <div style="overflow-x:auto">
+            <div id="hm-result"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Scatter: Регламент vs После РВР (по виду РВР)</div>
+        </div>
+        <div class="cw" data-canvas-id="c-scatter" style="height:320px"><canvas id="c-scatter"></canvas></div>
+      </div>
+
+    </div><!-- /pg-heatmap -->
+
+    <!-- ══ ПРОГНОЗ / АЛЕРТЫ ══ -->
+    <div id="pg-alerts" class="page">
+
+      <div class="row col-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Скважины без РВР дольше всего (топ-15)</div>
+          </div>
+          <div class="alert-list" id="alert-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Тренд результативности РВР по месяцам</div>
+          </div>
+          <div class="cw" data-canvas-id="c-trend" style="height:250px"><canvas id="c-trend"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Гистограмма МРЦ — распределение интервалов между РВР</div>
+        </div>
+        <div class="cw" data-canvas-id="c-hist" style="height:220px"><canvas id="c-hist"></canvas></div>
+      </div>
+
+    </div><!-- /pg-alerts -->
+
+    <!-- ══ ТАБЛИЦА ══ -->
+    <div id="pg-table" class="page">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Все записи РВР</div>
+          <span style="font-size:11px;color:var(--text2)">... записей</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl" id="main-tbl">
+            <thead>
+              <tr>
+                <th>Скважина</th>
+                <th>Тип</th>
+                <th>Вид РВР</th>
+                <th class="col-hide">Горизонт</th>
+                <th>Регламент</th>
+                <th>После РВР</th>
+                <th>Δ</th>
+                <th>Результат</th>
+                <th>Дата РВР</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-body"></tbody>
+          </table>
+        </div>
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--text2)">
+          <span>Показано 1–25 из ...</span>
+          <div style="display:flex;gap:6px">
+            <button
+              style="background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:5px 13px;cursor:pointer;font-size:12px;color:var(--text2)">←
+              Назад</button>
+            <button
+              style="background:var(--blue);border:none;border-radius:6px;padding:5px 13px;cursor:pointer;font-size:12px;color:#fff">Вперёд
+              →</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /pg-table -->
+
+  </main>
+
+  <script>
+    // ═══════════════════════════════════════
+    // DATA LOADING
+    // ═══════════════════════════════════════
+    const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    let DATA = [];
+    let RAW_DATA = [];
+
+    const API_BASE = window.location.origin + '/api/v1';
+
+    function getAuthHeaders() {
+      const user = localStorage.getItem('personCode') || 'anonymous';
+      const str = user + ':19451945';
+      const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        (_, p1) => String.fromCharCode('0x' + p1));
+      return {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Authorization': 'Basic ' + btoa(utf8Bytes)
+      };
+    }
+
+    async function fetchJSON(url) {
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.items || []);
+    }
+
+    async function initData() {
+      try {
+        const queryObj = {
+          "limit": 10000,
+          "columns": "ilc_skv,ilt_skv,ilc_rvr,i00_reg,i00_posle,ilc_rez_rvr,ilc_gorizont,i0d_caldate"
+        };
+        const url = `${API_BASE}/doc_daily_rvr?_format=json&query=${encodeURIComponent(JSON.stringify(queryObj))}`;
+        const rawData = await fetchJSON(url);
+
+        RAW_DATA = rawData.map(r => {
+          const dateStr = r.i0d_caldate ? r.i0d_caldate.split(' ')[0] : '2024-01-01';
+          const mParts = dateStr.split('-');
+          const monthNum = mParts.length === 3 ? parseInt(mParts[1], 10) : 1;
+          return {
+            well: r.ilc_skv || 'Отсутствует',
+            type: r.ilt_skv || 'Отсутствует',
+            rvr: r.ilc_rvr || 'Отсутствует',
+            reg: (r.i00_reg !== null && r.i00_reg !== undefined && r.i00_reg !== '') ? parseFloat(r.i00_reg) : null,
+            after: (r.i00_posle !== null && r.i00_posle !== undefined && r.i00_posle !== '') ? parseFloat(r.i00_posle) : null,
+            result: r.ilc_rez_rvr || '',
+            horiz: r.ilc_gorizont || 'Отсутствует',
+            date: dateStr,
+            month: monthNum
+          };
+        });
+
+        RAW_DATA = RAW_DATA.filter(d => d.well !== 'Отсутствует' || d.result !== '');
+        populateGlobalFilters();
+        applyGlobalFilters();
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка загрузки данных: " + err.message);
+      }
+    }
+
+    function updateKpis() {
+      if (!DATA.length) return;
+      const kpis = document.querySelectorAll('.kpi');
+      const uniqueVals = (arr, key) => new Set(arr.map(d => (d[key] || '')).filter(Boolean)).size;
+
+      if (kpis.length >= 6) {
+        kpis[0].querySelector('.kpi-val').textContent = DATA.length;
+        const horizs = uniqueVals(DATA, 'horiz');
+        kpis[0].querySelector('.kpi-tag').textContent = `${horizs} горизонтов`;
+
+        const wells = uniqueVals(DATA, 'well');
+        kpis[1].querySelector('.kpi-val').textContent = wells;
+
+        const pos = DATA.filter(d => d.result === 'Положительный').length;
+        const posPct = Math.round(pos / DATA.length * 100) || 0;
+        kpis[2].querySelector('.kpi-val').textContent = posPct + '%';
+        kpis[2].querySelector('.kpi-unit').textContent = `${pos} из ${DATA.length}`;
+
+        let intervals = [];
+        const bwAll = grp(DATA, r => r.well);
+        Object.values(bwAll).forEach(evs => {
+          const sorted = evs.filter(e => e.date).sort((a, b) => a.date.localeCompare(b.date));
+          for (let i = 1; i < sorted.length; i++) {
+            const diff = Math.round((new Date(sorted[i].date) - new Date(sorted[i - 1].date)) / 86400000);
+            if (diff > 0 && diff < 400) intervals.push(diff);
+          }
+        });
+        const avgGap = intervals.length ? Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length) : 0;
+        kpis[3].querySelector('.kpi-val').textContent = avgGap;
+
+        const maxDateRaw = Math.max(...DATA.map(d => new Date(d.date)));
+        const maxDate = new Date(maxDateRaw);
+        const lastRvr = Object.entries(bwAll).map(([w, evs]) => {
+          const sorted = evs.sort((a, b) => b.date.localeCompare(a.date));
+          return Math.round((maxDate - new Date(sorted[0].date)) / 86400000);
+        });
+        kpis[4].querySelector('.kpi-val').textContent = lastRvr.filter(g => g > 120).length;
+
+        const withDeltas = DATA.filter(d => d.after !== null && d.reg !== null);
+        const avgDelta = withDeltas.length
+          ? parseFloat((withDeltas.reduce((acc, d) => acc + (d.after - d.reg), 0) / withDeltas.length).toFixed(2))
+          : 0;
+        kpis[5].querySelector('.kpi-val').textContent = (avgDelta > 0 ? '+' : '') + avgDelta;
+      }
+
+      const pos = DATA.filter(d => d.result === 'Положительный').length;
+      const neg = DATA.filter(d => d.result === 'Отрицательный').length;
+      const tot = pos + neg || 1;
+      const pp = Math.round(pos / tot * 100);
+      const np = 100 - pp;
+      const splitLab = document.querySelector('.split-labels');
+      if (splitLab) {
+        splitLab.innerHTML = `<span style="color:var(--green)">✓ Положительный — ${pos} (${pp}%)</span>
+        <span style="color:var(--red)">✗ Отрицательный — ${neg} (${np}%)</span>`;
+      }
+      const sPos = document.querySelector('.s-pos');
+      if (sPos) { sPos.style.width = pp + '%'; sPos.textContent = pp + '%'; }
+      const sNeg = document.querySelector('.s-neg');
+      if (sNeg) { sNeg.style.width = np + '%'; sNeg.textContent = np + '%'; }
+
+      const tableSpan = document.querySelector('#pg-table .card-head span');
+      if (tableSpan) tableSpan.textContent = DATA.length + ' записей';
+    }
+
+    let _charts = {};
+    function setChart(id, config) {
+      if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+      const el = document.getElementById(id);
+      if (el) _charts[id] = new Chart(el, config);
+    }
+
+    function destroyAllCharts() {
+      Object.keys(_charts).forEach(id => { if (_charts[id]) _charts[id].destroy(); });
+      _charts = {};
+    }
+
+    function _mrcRenderAll() {
+      if (!DATA || DATA.length === 0) {
+        destroyAllCharts();
+        document.querySelectorAll('.cw').forEach(cw => {
+          cw.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:12px;">Нет данных</div>';
+        });
+        updateKpis();
+        return;
+      }
+      document.querySelectorAll('.cw').forEach(cw => {
+        if (!cw.querySelector('canvas')) {
+          const id = cw.getAttribute('data-canvas-id');
+          if (id) cw.innerHTML = `<canvas id="${id}"></canvas>`;
+        }
+      });
+      _mrcRenderOverview();
+      _mrcRenderAnalysis();
+      _mrcRenderTimeline();
+      _mrcRenderHeatmap();
+      _mrcRenderAlerts();
+      _mrcRenderTable();
+      updateKpis();
+    }
+
+    function populateGlobalFilters() {
+      const years = [...new Set(RAW_DATA.map(d => d.date.substring(0, 4)))].sort((a, b) => b - a);
+      const types = [...new Set(RAW_DATA.map(d => d.type))].filter(Boolean).sort();
+      const horizs = [...new Set(RAW_DATA.map(d => d.horiz))].filter(Boolean).sort();
+      const rvrs = [...new Set(RAW_DATA.map(d => d.rvr))].filter(Boolean).sort();
+      const wells = [...new Set(RAW_DATA.map(d => d.well))].filter(Boolean).sort();
+
+      const fill = (id, opts, defaultOpt, selectedVal) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = `<option value="${defaultVal(defaultOpt)}">${defaultOpt}</option>`
+          + opts.map(o => `<option value="${o}"${o === selectedVal ? ' selected' : ''}>${o}</option>`).join('');
+        el.addEventListener('change', applyGlobalFilters);
+      };
+      const defaultVal = s => s.startsWith('Все') ? 'all' : '';
+
+      const ySel = document.getElementById('global-year');
+      if (ySel) {
+        ySel.innerHTML = '<option value="all">Все годы</option>'
+          + years.map(y => `<option value="${y}"${y === '2024' ? ' selected' : ''}>${y}</option>`).join('');
+        ySel.addEventListener('change', applyGlobalFilters);
+      }
+      const tSel = document.getElementById('global-type');
+      if (tSel) {
+        tSel.innerHTML = '<option value="all">Все типы скв.</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+        tSel.addEventListener('change', applyGlobalFilters);
+      }
+      const hSel = document.getElementById('global-horiz');
+      if (hSel) {
+        hSel.innerHTML = '<option value="all">Все горизонты</option>' + horizs.map(h => `<option value="${h}">${h}</option>`).join('');
+        hSel.addEventListener('change', applyGlobalFilters);
+      }
+      const rSel = document.getElementById('global-rvr');
+      if (rSel) {
+        rSel.innerHTML = '<option value="all">Все виды РВР</option>' + rvrs.map(r => `<option value="${r}">${r}</option>`).join('');
+        rSel.addEventListener('change', applyGlobalFilters);
+      }
+      const wSel = document.getElementById('global-well');
+      if (wSel) {
+        wSel.innerHTML = '<option value="">Все скважины</option>' + wells.map(w => `<option value="${w}">${w}</option>`).join('');
+        wSel.addEventListener('change', applyGlobalFilters);
+      }
+    }
+
+    function applyGlobalFilters() {
+      const y = document.getElementById('global-year')?.value || 'all';
+      const w = document.getElementById('global-well')?.value || '';
+      const t = document.getElementById('global-type')?.value || 'all';
+      const h = document.getElementById('global-horiz')?.value || 'all';
+      const r = document.getElementById('global-rvr')?.value || 'all';
+
+      DATA = RAW_DATA.filter(d => {
+        if (y !== 'all' && !d.date.startsWith(y)) return false;
+        if (t !== 'all' && d.type !== t) return false;
+        if (h !== 'all' && d.horiz !== h) return false;
+        if (r !== 'all' && d.rvr !== r) return false;
+        if (w && d.well !== w) return false;
+        return true;
+      });
+      _mrcRenderAll();
+    }
+
+    // ═══════════════════════════════════════
+    // CHART DEFAULTS
+    // ═══════════════════════════════════════
+    Chart.defaults.font.family = 'Golos Text';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#475569';
+    Chart.defaults.borderColor = '#dce3f0';
+
+    const TT = {
+      backgroundColor: '#fff', borderColor: '#dce3f0', borderWidth: 1,
+      titleColor: '#1d4ed8', bodyColor: '#0f172a', padding: 10, cornerRadius: 7
+    };
+
+    function bo(e = {}) {
+      return {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: TT },
+        scales: {
+          x: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+          y: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+        }, ...e
+      };
+    }
+
+    const RM = { BB: '#1d4ed8', 'Х/О': '#b45309', УОС: '#0f7144', БФА: '#6d28d9', other: '#475569' };
+    const RL = { BB: '#dbeafe', 'Х/О': '#fef3c7', УОС: '#d1fae5', БФА: '#ede9fe', other: '#eaeff8' };
+    function rc(t) { return RM[t] || RM.other; }
+    function rl(t) { return RL[t] || RL.other; }
+
+    const grp = (arr, fn) => { const m = {}; arr.forEach(r => { const k = fn(r); (m[k] = m[k] || []).push(r); }); return m; };
+    const uniq = arr => [...new Set(arr)];
+
+    // ═══════════════════════════════════════
+    // OVERVIEW
+    // ═══════════════════════════════════════
+    function _mrcRenderOverview() {
+      if (!DATA.length) return;
+      const byMonth = MONTHS.map((_, i) => {
+        const g = DATA.filter(r => r.month === i + 1);
+        return { n: g.length, pos: g.filter(r => r.result === 'Положительный').length };
+      });
+
+      setChart('c-monthly', {
+        type: 'bar',
+        data: {
+          labels: MONTHS,
+          datasets: [{
+            label: 'РВР', data: byMonth.map(m => m.n),
+            backgroundColor: 'rgba(29,78,216,.15)', borderColor: '#1d4ed8',
+            borderWidth: 1.5, borderRadius: 4, yAxisID: 'y',
+          }, {
+            label: '% Положит.', data: byMonth.map(m => m.n ? Math.round(m.pos / m.n * 100) : null),
+            type: 'line', borderColor: '#0f7144', backgroundColor: 'rgba(15,113,68,.06)',
+            borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#0f7144',
+            fill: true, tension: .35, spanGaps: true, yAxisID: 'y1',
+          }],
+        },
+        options: {
+          ...bo(),
+          plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 11, color: '#475569', font: { size: 11 } } }, tooltip: TT },
+          scales: {
+            x: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+            y: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' }, title: { display: true, text: 'Кол-во РВР', color: '#475569', font: { size: 10 } } },
+            y1: {
+              position: 'right', grid: { display: false }, ticks: { color: '#0f7144', callback: v => v + '%' }, min: 0, max: 100,
+              title: { display: true, text: '% Положит.', color: '#0f7144', font: { size: 10 } }
+            },
+          },
+        },
+      });
+
+      const pos = DATA.filter(r => r.result === 'Положительный').length;
+      const neg = DATA.filter(r => r.result === 'Отрицательный').length;
+      const none = DATA.filter(r => !r.result || r.result === '').length;
+      setChart('c-result-donut', {
+        type: 'doughnut',
+        data: {
+          labels: ['Положительный', 'Отрицательный', 'Нет данных'],
+          datasets: [{
+            data: [pos, neg, none],
+            backgroundColor: ['#10b981', '#ef4444', '#cbd5e1'],
+            borderColor: ['#0f7144', '#b91c1c', '#94a3b8'], borderWidth: 1.5, hoverOffset: 6
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 10, color: '#475569', font: { size: 10 }, padding: 10 } }, tooltip: TT }
+        },
+      });
+
+      const rvrG = grp(DATA, r => r.rvr); const rk = Object.keys(rvrG);
+      setChart('c-rvr-pie', {
+        type: 'doughnut',
+        data: {
+          labels: rk, datasets: [{
+            data: rk.map(k => rvrG[k].length),
+            backgroundColor: rk.map(k => rl(k)), borderColor: rk.map(k => rc(k)), borderWidth: 1.5, hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 10, color: '#475569', font: { size: 10 }, padding: 8 } }, tooltip: TT }
+        },
+      });
+
+      const hG = grp(DATA, r => r.horiz); const hk = Object.keys(hG).filter(Boolean);
+      setChart('c-horiz-bar', {
+        type: 'bar',
+        data: {
+          labels: hk, datasets: [{
+            data: hk.map(k => hG[k].length),
+            backgroundColor: ['#dbeafe', '#d1fae5', '#fef3c7', '#ede9fe', '#eaeff8'],
+            borderColor: ['#1d4ed8', '#0f7144', '#b45309', '#6d28d9', '#475569'], borderWidth: 1.5, borderRadius: 5
+          }]
+        },
+        options: bo()
+      });
+
+      const tG = grp(DATA, r => r.type); const tk = Object.keys(tG).filter(Boolean);
+      setChart('c-type-bar', {
+        type: 'bar',
+        data: {
+          labels: tk, datasets: [{
+            data: tk.map(k => tG[k].length),
+            backgroundColor: ['#dbeafe', '#d1fae5', '#fef3c7', '#eaeff8'],
+            borderColor: ['#1d4ed8', '#0f7144', '#b45309', '#475569'], borderWidth: 1.5, borderRadius: 5
+          }]
+        },
+        options: bo()
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // ANALYSIS
+    // ═══════════════════════════════════════
+    function _mrcRenderAnalysis() {
+      if (!DATA.length) return;
+      const rvrG = grp(DATA, r => r.rvr); const rk = Object.keys(rvrG);
+
+      setChart('c-rvr-pct', {
+        type: 'bar',
+        data: {
+          labels: rk, datasets: [{
+            data: rk.map(k => { const g = rvrG[k]; return Math.round(g.filter(r => r.result === 'Положительный').length / g.length * 100); }),
+            backgroundColor: rk.map(k => rl(k)), borderColor: rk.map(k => rc(k)), borderWidth: 1.5, borderRadius: 6
+          }]
+        },
+        options: {
+          ...bo(), scales: {
+            x: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+            y: { grid: { color: '#eaeff8' }, ticks: { color: '#475569', callback: v => v + '%' }, min: 0, max: 100 }
+          }
+        }
+      });
+
+      setChart('c-rvr-after', {
+        type: 'bar',
+        data: {
+          labels: rk, datasets: [{
+            data: rk.map(k => { const g = rvrG[k].filter(r => r.after !== null); return g.length ? +(g.reduce((s, r) => s + r.after, 0) / g.length).toFixed(3) : 0; }),
+            backgroundColor: rk.map(k => rl(k)), borderColor: rk.map(k => rc(k)), borderWidth: 1.5, borderRadius: 6
+          }]
+        },
+        options: bo()
+      });
+
+      const deltas = rk.map(k => { const g = rvrG[k].filter(r => r.after !== null && r.reg !== null); return g.length ? +(g.reduce((s, r) => s + (r.after - r.reg), 0) / g.length).toFixed(3) : 0; });
+      setChart('c-rvr-delta', {
+        type: 'bar',
+        data: {
+          labels: rk, datasets: [{
+            data: deltas,
+            backgroundColor: deltas.map(v => v >= 0 ? 'rgba(15,113,68,.2)' : 'rgba(185,28,28,.18)'),
+            borderColor: deltas.map(v => v >= 0 ? '#0f7144' : '#b91c1c'), borderWidth: 1.5, borderRadius: 5
+          }]
+        },
+        options: { ...bo(), plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: d => `Δ ${d.raw >= 0 ? '+' : ''}${d.raw}` } } } }
+      });
+
+      const hl = document.getElementById('horiz-res-list');
+      if (hl) {
+        hl.innerHTML = '';
+        const hG = grp(DATA, r => r.horiz);
+        Object.keys(hG).forEach(hName => {
+          const g = hG[hName];
+          const pos = g.filter(r => r.result === 'Положительный').length;
+          const neg = g.filter(r => r.result === 'Отрицательный').length;
+          const pct = Math.round(pos / g.length * 100) || 0;
+          const bdgCls = pct > 60 ? 'bdg-ok' : pct > 40 ? 'bdg-warn' : 'bdg-crit';
+          const barClr = pct > 60 ? 'var(--green-m)' : pct > 40 ? 'var(--amber-m)' : 'var(--red-m)';
+          hl.innerHTML += `<div class="horiz-card">
+          <div class="hc-row"><span class="hc-name">${hName}</span><span class="bdg ${bdgCls}">${pct}%</span></div>
+          <div class="hc-meta">${g.length} РВР · <span style="color:var(--green)">${pos} положит.</span> · <span style="color:var(--red)">${neg} отрицат.</span></div>
+          <div class="mini-bar"><div class="mini-fill" style="width:${pct}%;background:${barClr}"></div></div>
+        </div>`;
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // TIMELINE
+    // ═══════════════════════════════════════
+    function _mrcRenderTimeline() {
+      if (!DATA.length) return;
+      const TOTAL = 366, MDAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      const byWell = grp(DATA, r => r.well);
+      const wells = Object.keys(byWell).slice(0, 20);
+
+      let html = `<div class="tl-root"><div class="tl-hdr"><div class="tl-year">2024</div><div class="tl-months-row">`;
+      MDAYS.forEach((d, i) => {
+        html += `<div class="tl-m" style="flex:${d}">
+          <div class="tl-m-name">${MONTHS[i]}</div>
+          <div class="tl-days-row">`;
+        for (let j = 1; j <= d; j++) {
+          html += `<div class="tl-d">${j}</div>`;
+        }
+        html += `</div></div>`;
+      });
+      html += `</div></div>`;
+
+      wells.forEach(wid => {
+        const evs = byWell[wid].sort((a, b) => a.date.localeCompare(b.date));
+        html += `<div class="tl-row"><div class="tl-w">${wid}<small>${evs[0].type}</small></div><div class="tl-bars">`;
+        let prev = 0;
+        evs.forEach(ev => {
+          const doy = Math.max(0, Math.floor((new Date(ev.date) - new Date('2024-01-01')) / 86400000));
+          if (doy > prev) {
+            const l = (prev / TOTAL * 100).toFixed(1), w = ((doy - prev) / TOTAL * 100).toFixed(1);
+            html += `<div class="tl-seg seg-work" style="left:${l}%;width:${w}%" title="Рабочий период ${doy - prev} дн."></div>`;
+          }
+          const segClass = { ВВ: 'seg-BB', 'Х/О': 'seg-XO', УОС: 'seg-UOS', БФА: 'seg-BFA' }[ev.rvr] || 'seg-OTHER';
+          const resMark = ev.result === 'Положительный' ? '✓' : ev.result === 'Отрицательный' ? '✗' : '';
+          html += `<div class="tl-seg ${segClass}" style="left:${(doy / TOTAL * 100).toFixed(1)}%;width:2.5%" title="${ev.rvr} · ${ev.result} · ${ev.date}">${ev.rvr} ${resMark}</div>`;
+          prev = doy + 1;
+        });
+        if (prev < TOTAL) {
+          const l = (prev / TOTAL * 100).toFixed(1), w = ((TOTAL - prev) / TOTAL * 100).toFixed(1);
+          html += `<div class="tl-seg seg-work" style="left:${l}%;width:${w}%"></div>`;
+        }
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+      document.getElementById('tl-root').innerHTML = html;
+    }
+
+    // ═══════════════════════════════════════
+    // HEATMAP
+    // ═══════════════════════════════════════
+    function _mrcRenderHeatmap() {
+      if (!DATA.length) return;
+      const horizs = [...new Set(DATA.map(d => d.horiz))].filter(Boolean).sort();
+
+      const counts = horizs.map(h => MONTHS.map((_, m) => DATA.filter(r => r.horiz === h && r.month === m + 1).length));
+      const cfl = counts.flat(); const cmx = Math.max(...cfl) || 1;
+      function chc(v) { const t = v / cmx; if (t < .33) return `rgba(29,78,216,${.12 + t})`; if (t < .66) return `rgba(180,83,9,${.15 + t * .7})`; return `rgba(185,28,28,${.15 + t * .7})`; }
+
+      let h1 = `<div class="hm" style="grid-template-columns:90px repeat(12,1fr)"><div class="hm-cell hm-hdr"></div>`;
+      MONTHS.forEach(m => { h1 += `<div class="hm-cell hm-hdr">${m}</div>`; });
+      horizs.forEach((h, hi) => {
+        h1 += `<div class="hm-cell hm-lbl">${h}</div>`;
+        counts[hi].forEach(v => { h1 += `<div class="hm-cell" style="background:${chc(v)}" title="${v} РВР">${v || ''}</div>`; });
+      });
+      h1 += `</div>`;
+      document.getElementById('hm-count').innerHTML = h1;
+
+      const results = horizs.map(h => MONTHS.map((_, m) => {
+        const g = DATA.filter(r => r.horiz === h && r.month === m + 1);
+        return g.length ? Math.round(g.filter(r => r.result === 'Положительный').length / g.length * 100) : null;
+      }));
+      function rhc(v) { if (v === null) return 'transparent'; if (v >= 65) return `rgba(15,113,68,${.12 + v / 220})`; if (v >= 45) return `rgba(180,83,9,${.15 + v / 300})`; return `rgba(185,28,28,${.2 + (100 - v) / 300})`; }
+
+      let h2 = `<div class="hm" style="grid-template-columns:90px repeat(12,1fr)"><div class="hm-cell hm-hdr"></div>`;
+      MONTHS.forEach(m => { h2 += `<div class="hm-cell hm-hdr">${m}</div>`; });
+      horizs.forEach((h, hi) => {
+        h2 += `<div class="hm-cell hm-lbl">${h}</div>`;
+        results[hi].forEach(v => { h2 += `<div class="hm-cell" style="background:${rhc(v)}" title="${v !== null ? v + '%' : '—'}">${v !== null ? v + '%' : ''}</div>`; });
+      });
+      h2 += `</div>`;
+      document.getElementById('hm-result').innerHTML = h2;
+
+      const rk = uniq(DATA.map(r => r.rvr));
+      setChart('c-scatter', {
+        type: 'scatter',
+        data: {
+          datasets: rk.map(k => ({
+            label: k,
+            data: DATA.filter(r => r.rvr === k && r.reg !== null && r.after !== null).map(r => ({ x: r.reg, y: r.after })),
+            backgroundColor: rl(k).replace(')', ',0.7)').replace('rgb', 'rgba'),
+            borderColor: rc(k), pointRadius: 5,
+          }))
+        },
+        options: {
+          ...bo(),
+          plugins: {
+            legend: { display: true, position: 'top', labels: { boxWidth: 11, color: '#475569', font: { size: 11 } } },
+            tooltip: { ...TT, callbacks: { label: d => `${d.dataset.label}: Регл=${d.raw.x.toFixed(3)}, После=${d.raw.y.toFixed(4)}` } }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Регламент', color: '#475569' }, grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+            y: { title: { display: true, text: 'После РВР', color: '#475569' }, grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+          }
+        },
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // ALERTS
+    // ═══════════════════════════════════════
+    function _mrcRenderAlerts() {
+      if (!DATA.length) return;
+      const byWell = grp(DATA, r => r.well);
+      const lastRvr = Object.entries(byWell).map(([w, evs]) => {
+        const sorted = evs.sort((a, b) => b.date.localeCompare(a.date));
+        const gap = Math.round((new Date('2024-12-31') - new Date(sorted[0].date)) / 86400000);
+        return { well: w, date: sorted[0].date, rvr: sorted[0].rvr, horiz: sorted[0].horiz, gap };
+      }).sort((a, b) => b.gap - a.gap).slice(0, 15);
+
+      const el = document.getElementById('alert-list');
+      if (el) {
+        el.innerHTML = '';
+        lastRvr.forEach(r => {
+          const cls = r.gap > 120 ? 'crit' : r.gap > 60 ? 'warn' : '';
+          const icon = r.gap > 120 ? '🔴' : r.gap > 60 ? '🟡' : '🟢';
+          const chpCls = 'chip-' + ({ ВВ: 'BB', 'Х/О': 'XO', УОС: 'UOS', БФА: 'BFA' }[r.rvr] || 'OTHER');
+          el.innerHTML += `<div class="alert-row ${cls}">
+          <div class="a-well">${r.well}</div>
+          <div class="a-info">${r.horiz} · <span class="chip ${chpCls}">${r.rvr}</span> · ${r.date}</div>
+          <div class="a-days">${icon} ${r.gap} дн.</div>
+        </div>`;
+        });
+      }
+
+      const bm = MONTHS.map((_, i) => {
+        const g = DATA.filter(r => r.month === i + 1);
+        return g.length ? Math.round(g.filter(r => r.result === 'Положительный').length / g.length * 100) : null;
+      });
+      setChart('c-trend', {
+        type: 'line',
+        data: {
+          labels: MONTHS, datasets: [
+            {
+              label: '% Положительных', data: bm, borderColor: '#0f7144', backgroundColor: 'rgba(15,113,68,.07)',
+              borderWidth: 2, pointRadius: 5, pointBackgroundColor: '#0f7144', fill: true, tension: .35, spanGaps: true
+            },
+            { label: 'Целевой 65%', data: MONTHS.map(() => 65), borderColor: '#1d4ed8', borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, fill: false },
+          ]
+        },
+        options: {
+          ...bo(),
+          plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 11, color: '#475569', font: { size: 11 } } }, tooltip: TT },
+          scales: {
+            x: { grid: { color: '#eaeff8' }, ticks: { color: '#475569' } },
+            y: { grid: { color: '#eaeff8' }, ticks: { color: '#475569', callback: v => v + '%' }, min: 0, max: 100 }
+          }
+        },
+      });
+
+      const bwAll = grp(DATA, r => r.well); const intervals = [];
+      Object.values(bwAll).forEach(evs => {
+        const sorted = evs.filter(e => e.date).sort((a, b) => a.date.localeCompare(b.date));
+        for (let i = 1; i < sorted.length; i++) {
+          const diff = Math.round((new Date(sorted[i].date) - new Date(sorted[i - 1].date)) / 86400000);
+          if (diff > 0 && diff < 400) intervals.push(diff);
+        }
+      });
+      const bsz = 30, bkts = Array.from({ length: 12 }, (_, i) => ({ lbl: `${i * bsz}–${(i + 1) * bsz}`, n: intervals.filter(v => v >= i * bsz && v < (i + 1) * bsz).length }));
+      setChart('c-hist', {
+        type: 'bar',
+        data: { labels: bkts.map(b => b.lbl), datasets: [{ data: bkts.map(b => b.n), backgroundColor: '#dbeafe', borderColor: '#1d4ed8', borderWidth: 1.5, borderRadius: 4 }] },
+        options: {
+          ...bo(), plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: d => `${d.raw} интервалов` } } },
+          scales: {
+            x: { title: { display: true, text: 'Интервал (сут.)', color: '#475569' }, grid: { color: '#eaeff8' }, ticks: { color: '#475569', font: { size: 9 } } },
+            y: { title: { display: true, text: 'Кол-во', color: '#475569' }, grid: { color: '#eaeff8' }, ticks: { color: '#475569' } }
+          }
+        },
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // TABLE
+    // ═══════════════════════════════════════
+    function _mrcRenderTable() {
+      if (!DATA.length) return;
+      const tbody = document.getElementById('tbl-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const sorted = [...DATA].sort((a, b) => b.date.localeCompare(a.date));
+      sorted.slice(0, 25).forEach(r => {
+        const delta = (r.after !== null && r.reg !== null) ? (r.after - r.reg) : null;
+        const dStr = delta !== null ? `<span class="${delta >= 0 ? 'delta-pos' : 'delta-neg'}">${delta >= 0 ? '+' : ''}${delta.toFixed(3)}</span>` : '—';
+        const resCls = r.result === 'Положительный' ? 'bdg-pos' : r.result === 'Отрицательный' ? 'bdg-neg' : 'bdg-neu';
+        const chpCls = 'chip-' + ({ ВВ: 'BB', 'Х/О': 'XO', УОС: 'UOS', БФА: 'BFA' }[r.rvr] || 'OTHER');
+        tbody.innerHTML += `<tr>
+        <td style="font-weight:700">${r.well}</td>
+        <td style="color:var(--text2)">${r.type}</td>
+        <td><span class="chip ${chpCls}">${r.rvr}</span></td>
+        <td class="col-hide">${r.horiz}</td>
+        <td class="mono">${r.reg !== null ? r.reg.toFixed(4) : '—'}</td>
+        <td class="mono">${r.after !== null ? r.after.toFixed(4) : '—'}</td>
+        <td class="mono">${dStr}</td>
+        <td><span class="bdg ${resCls}">${r.result || '—'}</span></td>
+        <td class="mono" style="color:var(--text2)">${r.date}</td>
+      </tr>`;
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════
+    function go(id, el) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      el.classList.add('active');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initData();
+
+      const zoomSlider = document.getElementById('tl-zoom');
+      const zoomVal = document.getElementById('tl-zoom-val');
+      const tlRoot = document.getElementById('tl-root');
+      if (zoomSlider && zoomVal && tlRoot) {
+        zoomSlider.addEventListener('input', (e) => {
+          const v = parseInt(e.target.value, 10);
+          zoomVal.textContent = v + '%';
+          tlRoot.style.minWidth = (900 * v / 100) + 'px';
+
+          if (v >= 350) {
+            tlRoot.classList.add('show-days');
+            tlRoot.classList.remove('show-some-days');
+          } else if (v >= 180) {
+            tlRoot.classList.add('show-some-days');
+            tlRoot.classList.remove('show-days');
+          } else {
+            tlRoot.classList.remove('show-days', 'show-some-days');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

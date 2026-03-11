@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>МРЦ — Сводные дашборды</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #f2f5fb;
+            --surface: #ffffff;
+            --surf2: #eaeff8;
+            --border: #dce3f0;
+            --blue: #1d4ed8;
+            --blue-l: #dbeafe;
+            --blue-m: #3b82f6;
+            --green: #0f7144;
+            --green-l: #d1fae5;
+            --green-m: #10b981;
+            --red: #b91c1c;
+            --red-l: #fee2e2;
+            --red-m: #ef4444;
+            --amber: #b45309;
+            --amber-l: #fef3c7;
+            --amber-m: #f59e0b;
+            --violet: #6d28d9;
+            --violet-l: #ede9fe;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #94a3b8;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 6px 20px rgba(15, 23, 42, .05);
+            --shadow-h: 0 4px 16px rgba(15, 23, 42, .12);
+            --hh: 58px;
+            --th: 46px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        html,
+        body {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Golos Text', sans-serif;
+            font-size: 14px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── HEADER ─── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 400;
+            height: auto;
+            min-height: var(--hh);
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(15, 23, 42, .07);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 8px 20px;
+            gap: 10px;
+        }
+
+        .h-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .h-logo {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(29, 78, 216, .3);
+        }
+
+        .h-name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -.2px;
+        }
+
+        .h-sub {
+            font-size: 10px;
+            color: var(--text2);
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .h-spacer {
+            flex: 1;
+            min-width: 12px;
+        }
+
+        .h-filters {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .h-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .h-period {
+            background: var(--blue-l);
+            color: var(--blue);
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            padding: 4px 13px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .h-live {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green-m);
+            box-shadow: 0 0 0 3px var(--green-l);
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        /* ─── FILTER SELECT ─── */
+        .fsel {
+            font-family: 'Golos Text', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--surf2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 6px 28px 6px 10px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23475569'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 9px center;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .fsel:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-l);
+            outline: none;
+        }
+
+        .fsel-date {
+            font-family: 'JetBrains Mono', monospace;
+            width: 130px;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .fsel-date-sep {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            margin: 0 -2px;
+        }
+
+        /* ─── TABS ─── */
+        .tabs-bar {
+            position: sticky;
+            top: var(--hh);
+            z-index: 300;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .tabs-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            padding: 0 20px;
+            min-width: max-content;
+        }
+
+        .tab {
+            padding: 0 18px;
+            height: var(--th);
+            line-height: var(--th);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: var(--text2);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+            transition: color .16s, border-color .16s;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+        }
+
+        /* ─── MAIN ─── */
+        main {
+            padding: 20px 24px;
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+        }
+
+        .page.active {
+            display: block;
+            width: 100%;
+        }
+
+        /* ─── CARD ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            animation: up .38s ease both;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 14px;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .9px;
+            text-transform: uppercase;
+            color: var(--text2);
+        }
+
+        .card-title::before {
+            content: '';
+            width: 3px;
+            height: 13px;
+            background: var(--blue);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* ─── PIVOT TABLE ─── */
+        .ptbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .ptbl th {
+            background: var(--surf2);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            color: var(--text2);
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .ptbl th.group-header {
+            background: linear-gradient(135deg, var(--blue-l) 0%, #e8f0fe 100%);
+            color: var(--blue);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .ptbl td {
+            padding: 9px 12px;
+            border: 1px solid #f0f4fb;
+            vertical-align: middle;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .ptbl tr:hover td {
+            background: #f8faff;
+        }
+
+        .ptbl .row-label {
+            text-align: left;
+            font-weight: 700;
+            font-family: 'Golos Text', sans-serif;
+            font-size: 12px;
+            background: var(--surf2);
+            color: var(--text);
+        }
+
+        .ptbl .row-sub {
+            text-align: left;
+            font-family: 'Golos Text', sans-serif;
+            font-size: 11px;
+            color: var(--text2);
+            padding-left: 20px;
+        }
+
+        .ptbl .total-row td {
+            background: linear-gradient(135deg, var(--blue-l) 0%, #f0f5ff 100%);
+            font-weight: 700;
+            color: var(--blue);
+            font-size: 13px;
+        }
+
+        .ptbl .total-row .row-label {
+            background: linear-gradient(135deg, var(--blue-l) 0%, #f0f5ff 100%);
+            color: var(--blue);
+        }
+
+        /* Color coding for values */
+        .val-err {
+            color: var(--red);
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .val-zero {
+            color: var(--text3);
+        }
+
+        .val-good {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .val-warn {
+            color: var(--amber);
+            font-weight: 600;
+        }
+
+        .val-bad {
+            color: var(--red);
+            font-weight: 600;
+        }
+
+        /* ─── KPI STRIP ─── */
+        .kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .kpi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow .2s, transform .18s;
+            animation: up .35s ease both;
+        }
+
+        .kpi:hover {
+            box-shadow: var(--shadow-h);
+            transform: translateY(-2px);
+        }
+
+        .kpi::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--kc, var(--blue));
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .kpi-ico {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-lbl {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text2);
+            margin-bottom: 3px;
+        }
+
+        .kpi-val {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--kc, var(--blue));
+            font-variant-numeric: tabular-nums;
+        }
+
+        .kpi-unit {
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        /* ─── CHIP ─── */
+        .chip {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chip-BB {
+            background: var(--blue-l);
+            color: var(--blue);
+            border: 1px solid #bfdbfe;
+        }
+
+        .chip-XO {
+            background: var(--amber-l);
+            color: var(--amber);
+            border: 1px solid #fcd34d;
+        }
+
+        .chip-UOS {
+            background: var(--green-l);
+            color: var(--green);
+            border: 1px solid #6ee7b7;
+        }
+
+        .chip-BFA {
+            background: var(--violet-l);
+            color: var(--violet);
+            border: 1px solid #c4b5fd;
+        }
+
+        /* ─── DAILY TABLE ─── */
+        .dtbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .dtbl th {
+            background: var(--surf2);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: var(--text2);
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .dtbl td {
+            padding: 6px 6px;
+            border: 1px solid #f0f4fb;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        .dtbl tr:hover td {
+            background: #f8faff;
+        }
+
+        .dtbl .date-cell {
+            text-align: left;
+            font-weight: 600;
+            background: var(--surf2);
+            color: var(--text2);
+            white-space: nowrap;
+            position: sticky;
+            left: 0;
+            z-index: 1;
+        }
+
+        .dtbl td.nonzero {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        /* ─── NO DATA ─── */
+        .no-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text3);
+            font-size: 13px;
+        }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text3);
+        }
+
+        /* ─── ANIMATION ─── */
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(9px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width:1200px) {
+            .kpi-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width:680px) {
+            main {
+                padding: 12px;
+            }
+
+            .kpi-strip {
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+            }
+
+            .h-filters .fsel {
+                font-size: 11px;
+                padding: 5px 24px 5px 8px;
+            }
+        }
+
+        .pto-scroll {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══ HEADER ══ -->
+    <header>
+        <div class="h-brand">
+            <div class="h-logo">☢️</div>
+            <div>
+                <div class="h-name">МРЦ — Сводные дашборды</div>
+                <div class="h-sub">Уранодобыча · ISL</div>
+            </div>
+        </div>
+
+        <div class="h-spacer"></div>
+
+        <div class="h-filters">
+            <select id="global-year" class="fsel">
+                <option value="all">Все годы</option>
+            </select>
+            <select id="global-horiz" class="fsel">
+                <option value="all">Все горизонты</option>
+            </select>
+            <span class="fsel-date-sep">с</span>
+            <input type="date" id="global-date-from" class="fsel fsel-date" title="Дата от">
+            <span class="fsel-date-sep">по</span>
+            <input type="date" id="global-date-to" class="fsel fsel-date" title="Дата до">
+        </div>
+
+        <div class="h-right">
+            <div class="h-period">Live Data</div>
+            <div class="h-live"></div>
+        </div>
+    </header>
+
+    <!-- ══ TABS ══ -->
+    <div class="tabs-bar">
+        <div class="tabs">
+            <div class="tab active" onclick="go('pg-mrc',this)">МРЦ</div>
+            <div class="tab" onclick="go('pg-pto',this)">ПТО</div>
+        </div>
+    </div>
+
+    <main>
+        <!-- ══ МРЦ TAB ══ -->
+        <div id="pg-mrc" class="page active">
+            <div class="kpi-strip" id="mrc-kpis"></div>
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">МРЦ — Межремонтный цикл по виду РВР и типу скважины</div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="ptbl" id="mrc-pivot"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ ПТО TAB ══ -->
+        <div id="pg-pto" class="page">
+            <div class="kpi-strip" id="pto-kpis"></div>
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Сводная таблица — результаты РВР</div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="ptbl" id="pto-summary"></table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Ежедневный разрез</div>
+                </div>
+                <div class="pto-scroll">
+                    <table class="dtbl" id="pto-daily"></table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ═══════════════════════════════════════
+        // DATA LOADING
+        // ═══════════════════════════════════════
+        let RAW_DATA = [];
+        let DATA = [];
+
+        const API_BASE = window.location.origin + '/api/v1';
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        async function initData() {
+            try {
+                const queryObj = {
+                    "limit": 10000,
+                    "columns": "ilc_skv,ilt_skv,ilc_rvr,i00_reg,i00_posle,ilc_rez_rvr,ilc_gorizont,i0d_caldate"
+                };
+                const url = `${API_BASE}/doc_daily_rvr?_format=json&query=${encodeURIComponent(JSON.stringify(queryObj))}`;
+                const rawData = await fetchJSON(url);
+
+                RAW_DATA = rawData.map(r => {
+                    const dateStr = r.i0d_caldate ? r.i0d_caldate.split(' ')[0] : '2024-01-01';
+                    const mParts = dateStr.split('-');
+                    const monthNum = mParts.length === 3 ? parseInt(mParts[1], 10) : 1;
+                    return {
+                        well: r.ilc_skv || 'Отсутствует',
+                        type: (r.ilt_skv || 'Отсутствует').trim(),
+                        rvr: (r.ilc_rvr || 'Отсутствует').trim(),
+                        reg: (r.i00_reg !== null && r.i00_reg !== undefined && r.i00_reg !== '') ? parseFloat(r.i00_reg) : null,
+                        after: (r.i00_posle !== null && r.i00_posle !== undefined && r.i00_posle !== '') ? parseFloat(r.i00_posle) : null,
+                        result: (r.ilc_rez_rvr || '').trim(),
+                        horiz: (r.ilc_gorizont || 'Отсутствует').trim(),
+                        date: dateStr,
+                        month: monthNum
+                    };
+                }).filter(d => d.well !== 'Отсутствует' || d.result !== '');
+
+                // Debug: log unique values to console
+                console.log('Уникальные типы скв:', [...new Set(RAW_DATA.map(d => d.type))]);
+                console.log('Уникальные виды РВР:', [...new Set(RAW_DATA.map(d => d.rvr))]);
+                console.log('Уникальные результаты:', [...new Set(RAW_DATA.map(d => d.result))]);
+                console.log('Уникальные горизонты:', [...new Set(RAW_DATA.map(d => d.horiz))]);
+
+                populateFilters();
+                applyFilters();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('mrc-pivot').innerHTML = '<tr><td class="no-data">Ошибка загрузки: ' + err.message + '</td></tr>';
+            }
+        }
+
+        function populateFilters() {
+            const horizs = [...new Set(RAW_DATA.map(d => d.horiz))].filter(h => h && h !== 'Отсутствует').sort();
+            const years = [...new Set(RAW_DATA.map(d => d.date.substring(0, 4)))].sort((a, b) => b - a);
+
+            const ySel = document.getElementById('global-year');
+            if (ySel) {
+                ySel.innerHTML = '<option value="all">Все годы</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+                ySel.addEventListener('change', applyFilters);
+            }
+
+            const hSel = document.getElementById('global-horiz');
+            if (hSel) {
+                hSel.innerHTML = '<option value="all">Все горизонты</option>' + horizs.map(h => `<option value="${h}">${h}</option>`).join('');
+                hSel.addEventListener('change', applyFilters);
+            }
+            document.getElementById('global-date-from')?.addEventListener('change', applyFilters);
+            document.getElementById('global-date-to')?.addEventListener('change', applyFilters);
+        }
+
+        function applyFilters() {
+            const y = document.getElementById('global-year')?.value || 'all';
+            const h = document.getElementById('global-horiz')?.value || 'all';
+            const dateFrom = document.getElementById('global-date-from')?.value || '';
+            const dateTo = document.getElementById('global-date-to')?.value || '';
+
+            DATA = RAW_DATA.filter(d => {
+                if (y !== 'all' && !d.date.startsWith(y)) return false;
+                if (h !== 'all' && d.horiz !== h) return false;
+                if (dateFrom && d.date < dateFrom) return false;
+                if (dateTo && d.date > dateTo) return false;
+                return true;
+            });
+
+            renderMRC();
+            renderPTO();
+        }
+
+        // Detect actual RVR types and well types from data
+        function getActualRvrTypes() {
+            const known = ['ВВ', 'УОС', 'Х/О', 'БФА'];
+            const actual = [...new Set(DATA.map(d => d.rvr))].filter(r => r && r !== 'Отсутствует');
+            // Return known ones first (in order), then any unknown ones
+            const ordered = known.filter(k => actual.includes(k));
+            const extra = actual.filter(a => !known.includes(a)).sort();
+            return [...ordered, ...extra];
+        }
+
+        function getActualWellTypes() {
+            const actual = [...new Set(DATA.map(d => d.type))].filter(t => t && t !== 'Отсутствует').sort();
+            return actual;
+        }
+
+        // ═══════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════
+        const grp = (arr, fn) => { const m = {}; arr.forEach(r => { const k = fn(r); (m[k] = m[k] || []).push(r); }); return m; };
+
+        function computeMRC(records) {
+            // МРЦ = average interval between consecutive RVR events per well (in days)
+            const byWell = grp(records, r => r.well);
+            const intervals = [];
+            Object.values(byWell).forEach(evs => {
+                const sorted = evs.filter(e => e.date).sort((a, b) => a.date.localeCompare(b.date));
+                for (let i = 1; i < sorted.length; i++) {
+                    const diff = Math.round((new Date(sorted[i].date) - new Date(sorted[i - 1].date)) / 86400000);
+                    if (diff > 0 && diff < 1200) intervals.push(diff);
+                }
+            });
+            if (!intervals.length) return { avg: null, max: null, min: null };
+            return {
+                avg: Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length),
+                max: Math.max(...intervals),
+                min: Math.min(...intervals)
+            };
+        }
+
+        function fmtVal(v) {
+            if (v === null || v === undefined || isNaN(v)) return '<span class="val-err">#Н/Д</span>';
+            if (v === 0) return '<span class="val-zero">0</span>';
+            return String(v);
+        }
+
+        function pctFmt(v) {
+            if (v === null || v === undefined || isNaN(v)) return '<span class="val-err">#Н/Д</span>';
+            return `<span class="${v >= 60 ? 'val-good' : v >= 40 ? 'val-warn' : 'val-bad'}">${v}%</span>`;
+        }
+
+        // ═══════════════════════════════════════
+        // TAB 1: МРЦ PIVOT
+        // ═══════════════════════════════════════
+        function renderMRC() {
+            const RVR_TYPES = getActualRvrTypes();
+            const WELL_TYPES = getActualWellTypes();
+            const horizFilter = document.getElementById('global-horiz')?.value || 'all';
+
+            if (!DATA.length || !RVR_TYPES.length || !WELL_TYPES.length) {
+                document.getElementById('mrc-pivot').innerHTML = '<tr><td class="no-data" colspan="5">Нет данных</td></tr>';
+                renderMRCKpis();
+                return;
+            }
+
+            // Determine horizons to show
+            let horizons;
+            if (horizFilter !== 'all') {
+                horizons = [horizFilter];
+            } else {
+                horizons = [...new Set(DATA.map(d => d.horiz))].filter(h => h && h !== 'Отсутствует').sort();
+            }
+            const showTotal = horizFilter === 'all' && horizons.length > 1;
+
+            // Chip class mapping
+            const chipMap = { 'ВВ': 'chip-BB', 'Х/О': 'chip-XO', 'УОС': 'chip-UOS', 'БФА': 'chip-BFA' };
+
+            const tbl = document.getElementById('mrc-pivot');
+            let html = '<thead>';
+
+            // Header row 1: horizons
+            html += `<tr><th rowspan="2" style="min-width:60px">Вид РВР</th><th rowspan="2" style="min-width:80px">Тип скв.</th>`;
+            horizons.forEach(h => {
+                html += `<th class="group-header" colspan="3">${h}</th>`;
+            });
+            if (showTotal) html += '<th class="group-header" colspan="3">Общее</th>';
+            html += '</tr>';
+
+            // Header row 2: Среднее/Макс/Мин
+            html += '<tr>';
+            const cols = showTotal ? horizons.length + 1 : horizons.length;
+            for (let i = 0; i < cols; i++) {
+                html += '<th>Среднее</th><th>Макс</th><th>Мин</th>';
+            }
+            html += '</tr></thead><tbody>';
+
+            // Data rows
+            RVR_TYPES.forEach(rvr => {
+                const chipCls = chipMap[rvr] || '';
+
+                WELL_TYPES.forEach((wt, wi) => {
+                    html += '<tr>';
+                    if (wi === 0) {
+                        html += `<td class="row-label" rowspan="${WELL_TYPES.length}"><span class="chip ${chipCls}">${rvr}</span></td>`;
+                    }
+                    html += `<td class="row-sub">${wt}</td>`;
+
+                    horizons.forEach(h => {
+                        const subset = DATA.filter(d => d.rvr === rvr && d.type === wt && d.horiz === h);
+                        const mrc = computeMRC(subset);
+                        html += `<td>${fmtVal(mrc.avg)}</td><td>${fmtVal(mrc.max)}</td><td>${fmtVal(mrc.min)}</td>`;
+                    });
+
+                    if (showTotal) {
+                        const subset = DATA.filter(d => d.rvr === rvr && d.type === wt);
+                        const mrc = computeMRC(subset);
+                        html += `<td>${fmtVal(mrc.avg)}</td><td>${fmtVal(mrc.max)}</td><td>${fmtVal(mrc.min)}</td>`;
+                    }
+
+                    html += '</tr>';
+                });
+            });
+
+            // Total row
+            html += '<tr class="total-row">';
+            html += `<td class="row-label" colspan="2">Общее</td>`;
+            horizons.forEach(h => {
+                const subset = DATA.filter(d => d.horiz === h);
+                const mrc = computeMRC(subset);
+                html += `<td>${fmtVal(mrc.avg)}</td><td colspan="2"></td>`;
+            });
+            if (showTotal) {
+                const mrc = computeMRC(DATA);
+                html += `<td>${fmtVal(mrc.avg)}</td><td colspan="2"></td>`;
+            }
+            html += '</tr></tbody>';
+
+            tbl.innerHTML = html;
+            renderMRCKpis();
+        }
+
+        function renderMRCKpis() {
+            const container = document.getElementById('mrc-kpis');
+            const mrc = computeMRC(DATA);
+            const totalRecords = DATA.length;
+            const uniqueWells = new Set(DATA.map(d => d.well)).size;
+            const posCount = DATA.filter(d => d.result === 'Положительный').length;
+            const posPct = totalRecords ? Math.round(posCount / totalRecords * 100) : 0;
+
+            container.innerHTML = `
+                <div class="kpi" style="--kc:var(--blue)">
+                    <div class="kpi-ico">📊</div>
+                    <div class="kpi-lbl">Всего РВР</div>
+                    <div class="kpi-val">${totalRecords}</div>
+                    <div class="kpi-unit">${uniqueWells} скважин</div>
+                </div>
+                <div class="kpi" style="--kc:var(--green)">
+                    <div class="kpi-ico">✅</div>
+                    <div class="kpi-lbl">Эффективность</div>
+                    <div class="kpi-val">${posPct}%</div>
+                    <div class="kpi-unit">${posCount} положит.</div>
+                </div>
+                <div class="kpi" style="--kc:var(--amber)">
+                    <div class="kpi-ico">⏱️</div>
+                    <div class="kpi-lbl">Средний МРЦ</div>
+                    <div class="kpi-val">${mrc.avg !== null ? mrc.avg : '—'}</div>
+                    <div class="kpi-unit">сут.</div>
+                </div>
+                <div class="kpi" style="--kc:var(--violet)">
+                    <div class="kpi-ico">📈</div>
+                    <div class="kpi-lbl">Макс МРЦ</div>
+                    <div class="kpi-val">${mrc.max !== null ? mrc.max : '—'}</div>
+                    <div class="kpi-unit">мин: ${mrc.min !== null ? mrc.min : '—'} сут.</div>
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════
+        // TAB 2: ПТО
+        // ═══════════════════════════════════════
+        function renderPTO() {
+            const RVR_TYPES = getActualRvrTypes();
+            const WELL_TYPES = getActualWellTypes();
+
+            if (!DATA.length || !RVR_TYPES.length || !WELL_TYPES.length) {
+                document.getElementById('pto-summary').innerHTML = '<tr><td class="no-data" colspan="5">Нет данных</td></tr>';
+                document.getElementById('pto-daily').innerHTML = '';
+                renderPTOKpis({ neg: 0, pos: 0, total: 0 }, 0);
+                return;
+            }
+
+            // ── Summary table
+            const stbl = document.getElementById('pto-summary');
+            let html = '<thead><tr><th rowspan="2" style="min-width:120px">Показатель</th>';
+            RVR_TYPES.forEach(rvr => {
+                html += `<th class="group-header" colspan="${WELL_TYPES.length}">${rvr}</th>`;
+            });
+            html += '<th class="group-header" rowspan="2">Итого</th></tr><tr>';
+            RVR_TYPES.forEach(() => {
+                WELL_TYPES.forEach(wt => {
+                    html += `<th>${wt}</th>`;
+                });
+            });
+            html += '</tr></thead><tbody>';
+
+            // Rows: Отрицательный, Положительный, Итого, МРЦ, Эффективность
+            const ROWS = [
+                { key: 'neg', label: 'Отрицательный', fn: (d) => d.result === 'Отрицательный' },
+                { key: 'pos', label: 'Положительный', fn: (d) => d.result === 'Положительный' },
+                { key: 'total', label: 'Итого', fn: () => true },
+            ];
+
+            let grandTotal = { neg: 0, pos: 0, total: 0 };
+
+            ROWS.forEach(row => {
+                html += `<tr><td class="row-label">${row.label}</td>`;
+                let rowTotal = 0;
+                RVR_TYPES.forEach(rvr => {
+                    WELL_TYPES.forEach(wt => {
+                        const count = DATA.filter(d => d.rvr === rvr && d.type === wt && row.fn(d)).length;
+                        rowTotal += count;
+                        html += `<td>${count || '<span class="val-zero">0</span>'}</td>`;
+                    });
+                });
+                html += `<td style="font-weight:700;color:var(--blue)">${rowTotal}</td></tr>`;
+                grandTotal[row.key] = rowTotal;
+            });
+
+            // МРЦ row
+            html += '<tr><td class="row-label">МРЦ</td>';
+            RVR_TYPES.forEach(rvr => {
+                WELL_TYPES.forEach(wt => {
+                    const subset = DATA.filter(d => d.rvr === rvr && d.type === wt);
+                    const mrc = computeMRC(subset);
+                    html += `<td>${fmtVal(mrc.avg)}</td>`;
+                });
+            });
+            const totalMrc = computeMRC(DATA);
+            html += `<td style="font-weight:700;color:var(--blue)">${fmtVal(totalMrc.avg)}</td></tr>`;
+
+            // Эффективность row
+            html += '<tr><td class="row-label">Эффективность</td>';
+            let totalEff = grandTotal.total ? Math.round(grandTotal.pos / grandTotal.total * 100) : 0;
+            RVR_TYPES.forEach(rvr => {
+                WELL_TYPES.forEach(wt => {
+                    const subset = DATA.filter(d => d.rvr === rvr && d.type === wt);
+                    const pos = subset.filter(d => d.result === 'Положительный').length;
+                    const tot = subset.length;
+                    const eff = tot ? Math.round(pos / tot * 100) : null;
+                    html += `<td>${eff !== null ? pctFmt(eff) : '<span class="val-zero">0%</span>'}</td>`;
+                });
+            });
+            html += `<td style="font-weight:700">${pctFmt(totalEff)}</td></tr>`;
+
+            html += '</tbody>';
+            stbl.innerHTML = html;
+
+            // ── KPIs
+            renderPTOKpis(grandTotal, totalEff);
+
+            // ── Daily breakdown
+            renderPTODaily(RVR_TYPES, WELL_TYPES);
+        }
+
+        function renderPTOKpis(totals, eff) {
+            const container = document.getElementById('pto-kpis');
+            container.innerHTML = `
+                <div class="kpi" style="--kc:var(--blue)">
+                    <div class="kpi-ico">📋</div>
+                    <div class="kpi-lbl">Всего РВР</div>
+                    <div class="kpi-val">${totals.total}</div>
+                </div>
+                <div class="kpi" style="--kc:var(--green)">
+                    <div class="kpi-ico">✅</div>
+                    <div class="kpi-lbl">Положительные</div>
+                    <div class="kpi-val">${totals.pos}</div>
+                </div>
+                <div class="kpi" style="--kc:var(--red)">
+                    <div class="kpi-ico">❌</div>
+                    <div class="kpi-lbl">Отрицательные</div>
+                    <div class="kpi-val">${totals.neg}</div>
+                </div>
+                <div class="kpi" style="--kc:${eff >= 60 ? 'var(--green)' : eff >= 40 ? 'var(--amber)' : 'var(--red)'}">
+                    <div class="kpi-ico">📈</div>
+                    <div class="kpi-lbl">Эффективность</div>
+                    <div class="kpi-val">${eff}%</div>
+                </div>
+            `;
+        }
+
+        function renderPTODaily(RVR_TYPES, WELL_TYPES) {
+            const dtbl = document.getElementById('pto-daily');
+            if (!DATA.length) {
+                dtbl.innerHTML = '<tr><td class="no-data" colspan="10">Нет данных</td></tr>';
+                return;
+            }
+
+            const dates = [...new Set(DATA.map(d => d.date))].sort();
+
+            let html = '<thead><tr><th rowspan="2" style="min-width:80px">Дата</th><th rowspan="2">МРЦ</th>';
+            RVR_TYPES.forEach(rvr => {
+                html += `<th class="group-header" colspan="${WELL_TYPES.length}">${rvr}</th>`;
+            });
+            html += '</tr><tr>';
+            RVR_TYPES.forEach(() => {
+                WELL_TYPES.forEach(wt => {
+                    // Short label
+                    const short = wt.length > 5 ? wt.substring(0, 3) + '.' : wt;
+                    html += `<th>${short}</th>`;
+                });
+            });
+            html += '</tr></thead><tbody>';
+
+            dates.forEach(date => {
+                const dayData = DATA.filter(d => d.date === date);
+                const parts = date.split('-');
+                const fmtDate = parts.length === 3 ? `${parts[2]}.${parts[1]}` : date;
+                const uniqueWellsToday = new Set(dayData.map(d => d.well)).size;
+
+                html += `<tr><td class="date-cell">${fmtDate}</td>`;
+                html += `<td>${uniqueWellsToday}</td>`;
+
+                RVR_TYPES.forEach(rvr => {
+                    WELL_TYPES.forEach(wt => {
+                        const count = dayData.filter(d => d.rvr === rvr && d.type === wt).length;
+                        html += `<td class="${count > 0 ? 'nonzero' : ''}">${count}</td>`;
+                    });
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody>';
+            dtbl.innerHTML = html;
+        }
+
+        // ═══════════════════════════════════════
+        // TABS
+        // ═══════════════════════════════════════
+        function go(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', initData);
+    </script>
+</body>
+
+</html>
