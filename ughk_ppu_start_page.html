@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Предложения по улучшениям — УГХК</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #3D8F85;
+            --primary-light: #4fa89e;
+            --primary-dark: #2d6b63;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 1.25rem;
+            --radius-md: 0.75rem;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .page-wrapper {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            width: 100%;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            background: #fcfdfe;
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ── Hero Section ── */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 3.5rem;
+            border-radius: var(--radius-lg);
+            color: white;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(61, 143, 133, 0.3);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title .highlight {
+            color: #aff5ee;
+        }
+
+        .hero-description {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: white;
+            color: var(--primary);
+            padding: 1rem 2rem;
+            border-radius: 999px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.125rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            background: #f8fafc;
+        }
+
+        .cta-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* ── Dashboard (KPIs) ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .kpi-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            background: #f0fdfa;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text-main);
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* ── Detailed Analytics (Infographic) ── */
+        .analytics-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Object Bars */
+        .object-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .object-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .object-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .bar-bg {
+            height: 10px;
+            background: #f1f5f9;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 999px;
+            transition: width 1s ease-out;
+        }
+
+        /* ── Proposals Table ── */
+        .table-section {
+            background: var(--surface);
+            padding: 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9375rem;
+            min-width: 800px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fcfdfe;
+        }
+
+        .reg-number {
+            font-family: 'JetBrains Mono', monospace, sans-serif;
+            background: #ebfcf9;
+            color: var(--primary-dark);
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        .title-cell {
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .descr-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .analytics-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-wrapper {
+                padding: 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+                flex-direction: column;
+                text-align: center;
+                margin-bottom: 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 2.25rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .cta-button {
+                width: 100%;
+                justify-content: center;
+                padding: 0.875rem 1.5rem;
+            }
+
+            .dashboard-grid {
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .kpi-card {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+
+            .kpi-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 1.25rem;
+            }
+
+            .kpi-value {
+                font-size: 1.5rem;
+            }
+
+            .kpi-label {
+                font-size: 0.75rem;
+            }
+
+            .chart-card {
+                padding: 1.25rem;
+            }
+
+            .table-header {
+                padding: 1rem 1.25rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .table-title {
+                font-size: 1.125rem;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-title {
+                font-size: 1.85rem;
+            }
+        }
+
+        /* ── Loading Overlay ── */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; font-weight: 600; color: var(--text-muted);">Загрузка системы...</p>
+    </div>
+
+    <div class="page-wrapper">
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Преобразуйте свое<br>
+                    <span class="highlight">рабочее место</span>
+                </h1>
+                <p class="hero-description">
+                    Ваши идеи имеют значение. Помогите нам создать более эффективное и инновационное рабочее место,
+                    поделившись своими предложениями по улучшению.
+                </p>
+                <a href="/t/create?tbl=doc_proposals&version=reg&page_back=predlozheniya-po-uluchsheniyam"
+                    class="cta-button">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                    + Ұсыныс беру / Подать предложение
+                </a>
+            </div>
+        </header>
+
+        <!-- KPI Dashboard -->
+        <section class="dashboard-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">📝</div>
+                <div class="kpi-info">
+                    <div class="kpi-value" id="total-proposals">0</div>
+                    <div class="kpi-label">Подано всего</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#ecfdf5; color:#10b981;">✅</div>
+                <div class="kpi-info">
+                    <div class="kpi-value" id="done-proposals">0</div>
+                    <div class="kpi-label">Реализовано</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#eff6ff; color:#3b82f6;">🏭</div>
+                <div class="kpi-info">
+                    <div class="kpi-value" id="top-object" style="font-size: 1.25rem;">...</div>
+                    <div class="kpi-label">Лидер по участкам</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#fffbeb; color:#f59e0b;">⚡</div>
+                <div class="kpi-info">
+                    <div class="kpi-value" id="conversion-rate">0%</div>
+                    <div class="kpi-label">% Реализации</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Analytics -->
+        <section class="analytics-section">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">Активность по объектам</h3>
+                </div>
+                <div class="object-list" id="object-bars">
+                    <!-- Заполняется динамически -->
+                    <p style="color: var(--text-muted); text-align: center;">Загрузка данных...</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">Динамика подачи предложений</h3>
+                </div>
+                <div style="position: relative; height: 220px;">
+                    <canvas id="monthly-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Proposals Table -->
+        <section class="table-section">
+            <div class="table-header">
+                <h3 class="table-title">Реестр предложений</h3>
+                <div style="font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                    Зарегистрированные предложения
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Рег. №</th>
+                            <th>Автор</th>
+                            <th>Наименование и описание</th>
+                            <th>Текущее состояние</th>
+                            <th>Будущее состояние</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposals-tbody">
+                        <!-- Заполняется из API -->
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-muted);">
+                                Загрузка предложений...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Control -->
+            <div class="pagination-container" id="pagination-controls">
+                <div class="pagination-info" id="pagination-info">
+                    Показано 0-0 из 0
+                </div>
+                <div class="pagination-controls">
+                    <button class="page-btn" id="prev-page" disabled>Назад</button>
+                    <div id="page-numbers" style="display:flex; gap:0.25rem;"></div>
+                    <button class="page-btn" id="next-page" disabled>Вперед</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.items || []);
+        }
+
+        function escHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        const app = {
+            data: [], // Raw data from API
+            filteredData: [], // Registered proposals
+            currentPage: 1,
+            pageSize: 15,
+
+            async init() {
+                try {
+                    console.log('Initializing PPU Start Page...');
+
+                    const query = JSON.stringify({
+                        offset: '0',
+                        limit: '2000',
+                        columns: 'i00_reg_nom,ilc_person,i00_title,i00_descr,i00_bud_sost,ils_proposals,ilc_object,i0d_caldate',
+                        show_code: 'false',
+                        order: 'i00_reg_nom|desc'
+                    });
+
+                    this.data = await fetchJSON(`${API_BASE}/doc_proposals?_format=json&query=${encodeURIComponent(query)}`);
+
+                    // Filter for registered proposals on frontend
+                    this.filteredData = this.data.filter(i => i.i00_reg_nom && String(i.i00_reg_nom).trim() !== '');
+
+                    this.render();
+                    this.setupEventListeners();
+
+                    document.getElementById('loading').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+                } catch (err) {
+                    console.error('Failed to init PPU page:', err);
+                    const loadingText = document.querySelector('#loading p');
+                    if (loadingText) loadingText.textContent = 'Ошибка загрузки данных';
+                }
+            },
+
+            setupEventListeners() {
+                document.getElementById('prev-page').onclick = () => {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.renderTable();
+                    }
+                };
+                document.getElementById('next-page').onclick = () => {
+                    const totalPages = Math.ceil(this.filteredData.length / this.pageSize);
+                    if (this.currentPage < totalPages) {
+                        this.currentPage++;
+                        this.renderTable();
+                    }
+                };
+            },
+
+            render() {
+                this.renderKPIs();
+                this.renderObjectBars();
+                this.renderMonthlyChart();
+                this.renderTable();
+            },
+
+            renderKPIs() {
+                const total = this.data.length;
+                const done = this.data.filter(i => {
+                    // with show_code:'false', ils_proposals = sname text, _data.code = code
+                    const code = i.ils_proposals_data ? i.ils_proposals_data.code : null;
+                    return code === 'done';
+                }).length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                document.getElementById('total-proposals').textContent = total;
+                document.getElementById('done-proposals').textContent = done;
+                document.getElementById('conversion-rate').textContent = `${pct}%`;
+
+                // with show_code:'false', ilc_object already contains sname
+                const objects = {};
+                this.data.forEach(i => {
+                    const obj = i.ilc_object || 'Не указан';
+                    objects[obj] = (objects[obj] || 0) + 1;
+                });
+
+                let leader = '—';
+                let max = 0;
+                for (const [name, count] of Object.entries(objects)) {
+                    if (count > max) {
+                        max = count;
+                        leader = name;
+                    }
+                }
+                document.getElementById('top-object').textContent = leader;
+            },
+
+            renderObjectBars() {
+                const objects = {};
+                this.data.forEach(i => {
+                    const obj = i.ilc_object || 'Не указан';
+                    objects[obj] = (objects[obj] || 0) + 1;
+                });
+
+                const sorted = Object.entries(objects).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                const container = document.getElementById('object-bars');
+                container.innerHTML = '';
+
+                if (sorted.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Нет данных</p>';
+                    return;
+                }
+
+                const max = sorted[0][1];
+
+                sorted.forEach(([name, count]) => {
+                    const barW = Math.round((count / max) * 100);
+                    const row = document.createElement('div');
+                    row.className = 'object-row';
+                    row.innerHTML = `
+                        <div class="object-meta">
+                            <span>${escHtml(name)}</span>
+                            <span>${count}</span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: ${barW}%"></div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            },
+
+            monthlyChartInstance: null,
+
+            renderMonthlyChart() {
+                const MONTHS_RU = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+
+                // Group by YYYY-MM
+                const byMonth = {};
+                this.data.forEach(i => {
+                    const d = i.i0d_caldate;
+                    if (!d) return;
+                    const key = d.slice(0, 7); // "YYYY-MM"
+                    byMonth[key] = (byMonth[key] || 0) + 1;
+                });
+
+                // Sort keys and build labels / data
+                const keys = Object.keys(byMonth).sort();
+                const labels = keys.map(k => {
+                    const [y, m] = k.split('-');
+                    return `${MONTHS_RU[parseInt(m, 10) - 1]} ${y}`;
+                });
+                const counts = keys.map(k => byMonth[k]);
+
+                // Cumulative line
+                let cum = 0;
+                const cumulative = counts.map(c => cum += c);
+
+                if (this.monthlyChartInstance) this.monthlyChartInstance.destroy();
+
+                const ctx = document.getElementById('monthly-chart').getContext('2d');
+                this.monthlyChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Предложений за месяц',
+                                data: counts,
+                                backgroundColor: 'rgba(61,143,133,0.7)',
+                                borderRadius: 4,
+                                maxBarThickness: 36,
+                                order: 2
+                            },
+                            {
+                                label: 'Накопительный итог',
+                                data: cumulative,
+                                type: 'line',
+                                borderColor: '#2d6b63',
+                                backgroundColor: 'rgba(45,107,99,0.1)',
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointBackgroundColor: '#2d6b63',
+                                fill: true,
+                                tension: 0.3,
+                                yAxisID: 'y1',
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 12 }
+                            },
+                            tooltip: {
+                                backgroundColor: '#fff',
+                                titleColor: '#0f172a',
+                                bodyColor: '#64748b',
+                                borderColor: '#e2e8f0',
+                                borderWidth: 1,
+                                padding: 10
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { font: { family: 'Inter', size: 10 }, maxRotation: 45 },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { font: { family: 'Inter', size: 11 }, precision: 0 },
+                                grid: { color: 'rgba(226,232,240,0.6)' },
+                                title: { display: true, text: 'За месяц', font: { family: 'Inter', size: 11 } }
+                            },
+                            y1: {
+                                position: 'right',
+                                beginAtZero: true,
+                                ticks: { font: { family: 'Inter', size: 11 }, precision: 0 },
+                                grid: { drawOnChartArea: false },
+                                title: { display: true, text: 'Итого', font: { family: 'Inter', size: 11 } }
+                            }
+                        }
+                    }
+                });
+            },
+
+            renderTable() {
+                const tableBody = document.getElementById('proposals-tbody');
+                const total = this.filteredData.length;
+
+                if (total === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-muted);">Зарегистрированных предложений не найдено</td></tr>';
+                    document.getElementById('pagination-controls').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('pagination-controls').style.display = 'flex';
+
+                const totalPages = Math.ceil(total / this.pageSize);
+                if (this.currentPage > totalPages) this.currentPage = totalPages;
+
+                const start = (this.currentPage - 1) * this.pageSize;
+                const end = Math.min(start + this.pageSize, total);
+                const pageItems = this.filteredData.slice(start, end);
+
+                tableBody.innerHTML = '';
+                pageItems.forEach(item => {
+                    const tr = document.createElement('tr');
+
+                    const author = item.ilc_person || 'Автор не указан';
+                    const initials = author.split(' ').map(n => n[0]).filter(Boolean).join('').toUpperCase().substring(0, 2);
+
+                    tr.innerHTML = `
+                        <td><span class="reg-number">${escHtml(item.i00_reg_nom)}</span></td>
+                        <td>
+                            <div class="author-info">
+                                <div class="avatar">${escHtml(initials)}</div>
+                                <span>${escHtml(author)}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="title-cell">${escHtml(item.i00_title || 'Без названия')}</div>
+                        </td>
+                        <td><div class="descr-text">${escHtml(item.i00_descr || '—')}</div></td>
+                        <td><div class="descr-text">${escHtml(item.i00_bud_sost || '—')}</div></td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+
+                this.renderPagination(total, totalPages, start, end);
+            },
+
+            renderPagination(total, totalPages, start, end) {
+                document.getElementById('pagination-info').textContent = `Показано ${start + 1}-${end} из ${total}`;
+
+                const prevBtn = document.getElementById('prev-page');
+                const nextBtn = document.getElementById('next-page');
+
+                prevBtn.disabled = this.currentPage === 1;
+                nextBtn.disabled = this.currentPage === totalPages;
+
+                const numbersContainer = document.getElementById('page-numbers');
+                numbersContainer.innerHTML = '';
+
+                // Simple page numbering (showing up to 5 neighboring pages)
+                let startPage = Math.max(1, this.currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `page-btn ${i === this.currentPage ? 'active' : ''}`;
+                    btn.textContent = i;
+                    btn.onclick = () => {
+                        this.currentPage = i;
+                        this.renderTable();
+                    };
+                    numbersContainer.appendChild(btn);
+                }
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+
+</html>

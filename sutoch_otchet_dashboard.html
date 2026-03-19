@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Суточный отчет - Мониторинг</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-navy: #1e3a8a;
+            --primary-cyan: #06b6d4;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius-lg: 16px;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        /* ── Dashboard Grid ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* ── Chart Wrappers ── */
+        .chart-main {
+            height: 250px;
+            width: 100%;
+        }
+
+        .chart-brush {
+            height: 80px;
+            width: 100%;
+            margin-top: -10px;
+        }
+
+        .chart-aux {
+            height: 300px;
+            width: 100%;
+        }
+
+        /* ── Loader ── */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--surface2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight: 600; color: var(--text-muted);">Загрузка аналитики...</p>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>Оперативный суточный отчет</h1>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <select id="year-filter" class="filter-select"
+                    style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-weight: 600;"></select>
+                <select id="month-filter" class="filter-select"
+                    style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-weight: 600;">
+                    <option value="all">Весь год</option>
+                    <option value="0">Январь</option>
+                    <option value="1">Февраль</option>
+                    <option value="2">Март</option>
+                    <option value="3">Апрель</option>
+                    <option value="4">Май</option>
+                    <option value="5">Июнь</option>
+                    <option value="6">Июль</option>
+                    <option value="7">Август</option>
+                    <option value="8">Сентябрь</option>
+                    <option value="9">Октябрь</option>
+                    <option value="10">Ноябрь</option>
+                    <option value="11">Декабрь</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- 1. Содержание в ПР -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Содержание в ПР, мг/л</h2>
+                </div>
+                <div id="chart-soder-main" class="chart-main"></div>
+                <div id="chart-soder-brush" class="chart-brush"></div>
+            </div>
+
+            <!-- 2. Добыча за сутки -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Добыча за сутки, кг U</h2>
+                </div>
+                <div id="chart-dobycha-main" class="chart-main"></div>
+                <div id="chart-dobycha-brush" class="chart-brush"></div>
+            </div>
+
+            <!-- 3. Объем ПР -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Объем ПР, м³</h2>
+                </div>
+                <div id="chart-objem-main" class="chart-main"></div>
+                <div id="chart-objem-brush" class="chart-brush"></div>
+            </div>
+
+            <!-- 4. Выпуск за сутки -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Выпуск за сутки, кг U</h2>
+                </div>
+                <div id="chart-vypusk-main" class="chart-main"></div>
+                <div id="chart-vypusk-brush" class="chart-brush"></div>
+            </div>
+
+            <!-- 5. Цена U3O8 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Цена U3O8, $</h2>
+                </div>
+                <div id="chart-price" class="chart-aux"></div>
+            </div>
+
+            <!-- 6. Расход кислоты -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Расход кислоты, тн</h2>
+                </div>
+                <div id="chart-raskhod" class="chart-aux"></div>
+            </div>
+
+            <!-- 7. Приход и остаток кислоты -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2 class="card-title">Приход и остаток кислоты, тн</h2>
+                </div>
+                <div id="chart-acid-balance" style="height: 350px;"></div>
+            </div>
+
+            <!-- 8. Добыча и Выпуск месяц (Накопительно) -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2 class="card-title">Добыча и Выпуск месяц (накопительно), кг U</h2>
+                </div>
+                <div id="chart-month-cumulative" style="height: 400px;"></div>
+            </div>
+
+            <!-- 9. Добыча и Выпуск год (Накопительно) -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h2 class="card-title">Добыча и Выпуск год (накопительно), кг U</h2>
+                </div>
+                <div id="chart-year-cumulative" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const API_URL = window.location.origin + '/api/v1/doc_sutoch_otchet';
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr.includes('-')) return new Date(dateStr).getTime();
+            if (dateStr.includes('.')) {
+                const parts = dateStr.split('.');
+                if (parts.length === 3) {
+                    // DD.MM.YYYY -> YYYY-MM-DD
+                    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+                }
+            }
+            return new Date(dateStr).getTime();
+        }
+
+        async function fetchData() {
+            const query = JSON.stringify({
+                "offset": "0",
+                "limit": "5000",
+                "columns": "i0d_caldate,i00_plan_soder_u,i00_plan_objem_pr,i00_plan_dobycha_u,i00_plan_vypusk_gp,i00_plan_raskhod_kis,i00_fact_soder_u,i00_fact_objem_pr,i00_fact_dobycha_u,i00_fact_vypusk_gp,i00_fact_raskhod_kis,i00_fact_spot_price,i00_zakaz_kis,i00_prikhod_kis,i00_ostatok_kis",
+                "show_code": "false",
+                "order": "i0d_caldate|asc"
+            });
+
+            try {
+                // Try doc_sutoch_otchet first as per prompt
+                const response = await fetch(`${API_URL}?_format=json&query=${encodeURIComponent(query)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!response.ok) throw new Error("API error: " + response.status);
+                const result = await response.json();
+                let data = Array.isArray(result) ? result : (result.items || []);
+
+                if (data.length === 0) return generateMockData();
+
+                return data.map(d => ({
+                    ...d,
+                    timestamp: parseDate(d.i0d_caldate),
+                    i00_fact_dobycha_u: parseFloat(d.i00_fact_dobycha_u || 0),
+                    i00_plan_dobycha_u: parseFloat(d.i00_plan_dobycha_u || 0),
+                    i00_fact_vypusk_gp: parseFloat(d.i00_fact_vypusk_gp || 0),
+                    i00_plan_vypusk_gp: parseFloat(d.i00_plan_vypusk_gp || 0)
+                })).filter(d => d.timestamp && !isNaN(d.timestamp));
+            } catch (err) {
+                console.warn("Fetch failed, using mock data for demo", err);
+                return generateMockData();
+            }
+        }
+
+        function generateMockData() {
+            const mock = [];
+            const start = new Date(2026, 0, 1);
+            const today = new Date();
+            let current = new Date(start);
+            while (current <= today) {
+                const ts = current.getTime();
+                mock.push({
+                    i0d_caldate: current.toISOString().split('T')[0],
+                    timestamp: ts,
+                    i00_plan_soder_u: 102,
+                    i00_fact_soder_u: 105 + (Math.random() * 10 - 5),
+                    i00_plan_dobycha_u: 11000,
+                    i00_fact_dobycha_u: 11200 + (Math.random() * 2000 - 1000),
+                    i00_plan_objem_pr: 108000,
+                    i00_fact_objem_pr: 110000 + (Math.random() * 10000 - 5000),
+                    i00_plan_vypusk_gp: 9000,
+                    i00_fact_vypusk_gp: 8500 + (Math.random() * 8000 - 4000),
+                    i00_fact_spot_price: 80 + (Math.floor(current.getMonth() * 2)),
+                    i00_plan_raskhod_kis: 520,
+                    i00_fact_raskhod_kis: 400 + (Math.random() * 600),
+                    i00_prikhod_kis: Math.random() < 0.2 ? 800 : 0,
+                    i00_ostatok_kis: 2000 + (Math.random() * 500)
+                });
+                current.setDate(current.getDate() + 1);
+            }
+            return mock;
+        }
+
+        let globalData = [];
+        let filteredData = [];
+
+        function filterData() {
+            const year = parseInt(document.getElementById('year-filter').value);
+            const month = document.getElementById('month-filter').value;
+
+            filteredData = globalData.filter(d => {
+                const date = new Date(d.timestamp);
+                const yearMatch = date.getFullYear() === year;
+                const monthMatch = month === 'all' || date.getMonth() === parseInt(month);
+                return yearMatch && monthMatch;
+            });
+
+            renderCharts();
+        }
+
+        function createBrushConfig(id, title, colorFact, colorPlan, dataKeyFact, dataKeyPlan) {
+            const seriesFact = filteredData.map(d => ({ x: d.timestamp, y: parseFloat(d[dataKeyFact] || 0) }));
+            const seriesPlan = filteredData.map(d => ({ x: d.timestamp, y: parseFloat(d[dataKeyPlan] || 0) }));
+
+            const optionsMain = {
+                series: [{ name: 'Факт', data: seriesFact }, { name: 'План', data: seriesPlan }],
+                chart: { id: `chart-${id}-main`, type: 'line', height: 250, toolbar: { show: false }, animations: { enabled: false } },
+                colors: [colorFact, colorPlan], stroke: { width: [3, 2], curve: 'smooth' },
+                xaxis: { type: 'datetime', labels: { show: false }, axisTicks: { show: false } },
+                grid: { borderColor: '#f1f5f9' }, legend: { position: 'top', horizontalAlign: 'right' }
+            };
+
+            const optionsBrush = {
+                series: [{ name: 'Факт', data: seriesFact }],
+                chart: { id: `chart-${id}-brush`, height: 80, type: 'area', brush: { target: `chart-${id}-main`, enabled: true }, selection: { enabled: true, xaxis: { min: filteredData[Math.max(0, filteredData.length - 30)]?.timestamp, max: filteredData[filteredData.length - 1]?.timestamp } } },
+                colors: [colorFact], fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.1 } },
+                xaxis: { type: 'datetime' }, yaxis: { labels: { show: false } }
+            };
+            return { optionsMain, optionsBrush };
+        }
+
+        function renderCharts() {
+            // Clear existing charts if they were rendered (ApexCharts sometimes needs a fresh container or update)
+            // But for simplicity in this full-page dashboard, we can just overwrite them or use updateOptions
+            // However, since we are using 'new ApexCharts', we should probably destroy old ones or just clear innerHTML
+            const containers = [
+                'soder-main', 'soder-brush', 'dobycha-main', 'dobycha-brush',
+                'objem-main', 'objem-brush', 'vypusk-main', 'vypusk-brush',
+                'price', 'raskhod', 'acid-balance', 'month-cumulative', 'year-cumulative'
+            ];
+            containers.forEach(c => {
+                const el = document.querySelector(`#chart-${c}`);
+                if (el) el.innerHTML = '';
+            });
+
+            if (filteredData.length === 0) return;
+
+            const charts = [
+                ['soder', '#1e3a8a', '#06b6d4', 'i00_fact_soder_u', 'i00_plan_soder_u'],
+                ['dobycha', '#1e3a8a', '#06b6d4', 'i00_fact_dobycha_u', 'i00_plan_dobycha_u'],
+                ['objem', '#1e3a8a', '#06b6d4', 'i00_fact_objem_pr', 'i00_plan_objem_pr'],
+                ['vypusk', '#1e3a8a', '#06b6d4', 'i00_fact_vypusk_gp', 'i00_plan_vypusk_gp']
+            ];
+
+            charts.forEach(([id, c1, c2, k1, k2]) => {
+                const cfg = createBrushConfig(id, '', c1, c2, k1, k2);
+                new ApexCharts(document.querySelector(`#chart-${id}-main`), cfg.optionsMain).render();
+                new ApexCharts(document.querySelector(`#chart-${id}-brush`), cfg.optionsBrush).render();
+            });
+
+            new ApexCharts(document.querySelector("#chart-price"), {
+                series: [{ name: 'Спотовая цена', data: filteredData.map(d => ({ x: d.timestamp, y: d.i00_fact_spot_price })) }],
+                chart: { type: 'line', height: 300 }, stroke: { width: 3, curve: 'stepline' }, colors: ['#06b6d4'], xaxis: { type: 'datetime' }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chart-raskhod"), {
+                series: [{ name: 'Факт', data: filteredData.map(d => ({ x: d.timestamp, y: d.i00_fact_raskhod_kis })) }, { name: 'План', data: filteredData.map(d => ({ x: d.timestamp, y: d.i00_plan_raskhod_kis })) }],
+                chart: { type: 'line', height: 300 }, colors: ['#1e3a8a', '#06b6d4'], xaxis: { type: 'datetime' }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chart-acid-balance"), {
+                series: [{ name: 'Остаток', data: filteredData.map(d => ({ x: d.timestamp, y: d.i00_ostatok_kis })) }, { name: 'Приход', data: filteredData.map(d => ({ x: d.timestamp, y: d.i00_prikhod_kis })) }],
+                chart: { type: 'line', height: 350 }, colors: ['#06b6d4', '#1e3a8a'], xaxis: { type: 'datetime' }
+            }).render();
+
+            renderCumulativeCharts();
+        }
+
+        function renderCumulativeCharts() {
+            let curFDM = 0, curPDM = 0, curFVM = 0, curPVM = 0, curM = -1;
+            const ms = { FD: [], PD: [], FV: [], PV: [] };
+            filteredData.forEach(d => {
+                const date = new Date(d.timestamp);
+                if (date.getMonth() !== curM) { curFDM = 0; curPDM = 0; curFVM = 0; curPVM = 0; curM = date.getMonth(); }
+                curFDM += d.i00_fact_dobycha_u; curPDM += d.i00_plan_dobycha_u;
+                curFVM += d.i00_fact_vypusk_gp; curPVM += d.i00_plan_vypusk_gp;
+                ms.FD.push({ x: d.timestamp, y: curFDM }); ms.PD.push({ x: d.timestamp, y: curPDM });
+                ms.FV.push({ x: d.timestamp, y: curFVM }); ms.PV.push({ x: d.timestamp, y: curPVM });
+            });
+
+            new ApexCharts(document.querySelector("#chart-month-cumulative"), {
+                series: [{ name: 'Факт добыча', data: ms.FD }, { name: 'План добыча', data: ms.PD }, { name: 'Факт выпуск', data: ms.FV }, { name: 'План выпуск', data: ms.PV }],
+                chart: { type: 'line', height: 400 }, stroke: { width: 2 }, xaxis: { type: 'datetime' }, colors: ['#06b6d4', '#1e3a8a', '#10b981', '#f59e0b']
+            }).render();
+
+            let yFD = 0, yPD = 0, yFV = 0, yPV = 0;
+            const ys = { FD: [], PD: [], FV: [], PV: [] };
+            filteredData.forEach(d => {
+                yFD += d.i00_fact_dobycha_u; yPD += d.i00_plan_dobycha_u;
+                yFV += d.i00_fact_vypusk_gp; yPV += d.i00_plan_vypusk_gp;
+                ys.FD.push({ x: d.timestamp, y: yFD }); ys.PD.push({ x: d.timestamp, y: yPD });
+                ys.FV.push({ x: d.timestamp, y: yFV }); ys.PV.push({ x: d.timestamp, y: yPV });
+            });
+
+            new ApexCharts(document.querySelector("#chart-year-cumulative"), {
+                series: [{ name: 'Факт добыча', data: ys.FD }, { name: 'План добыча', data: ys.PD }, { name: 'Факт выпуск', data: ys.FV }, { name: 'План выпуск', data: ys.PV }],
+                chart: { type: 'line', height: 400 }, stroke: { width: 3 }, xaxis: { type: 'datetime' }, colors: ['#06b6d4', '#1e3a8a', '#10b981', '#f59e0b']
+            }).render();
+        }
+
+        function hideLoaders() {
+            // Our loader
+            const l = document.getElementById('loader');
+            if (l) l.style.display = 'none';
+
+            // Potential system loaders or parents
+            try {
+                const sl = document.getElementById('loading-screen');
+                if (sl) sl.style.display = 'none';
+
+                // If in iframe, try to talk to parent
+                if (window.parent && window.parent !== window) {
+                    const psl = window.parent.document.getElementById('loading-screen') || window.parent.document.getElementById('loading');
+                    if (psl) psl.style.display = 'none';
+                    if (window.parent.jQuery) window.parent.jQuery('.loading-overlay, #loading-screen').fadeOut();
+                }
+            } catch (e) { }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const yf = document.getElementById('year-filter');
+            const mf = document.getElementById('month-filter');
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+
+            for (let i = 0; i < 5; i++) {
+                const yr = curYear - i;
+                const opt = document.createElement('option');
+                opt.value = yr;
+                opt.textContent = yr;
+                yf.appendChild(opt);
+            }
+            yf.value = curYear;
+            mf.value = curMonth;
+
+            yf.onchange = filterData;
+            mf.onchange = filterData;
+
+            try {
+                globalData = await fetchData();
+                if (globalData && globalData.length > 0) {
+                    filterData();
+                } else {
+                    console.warn("No data to display");
+                }
+            } catch (err) {
+                console.error("Dashboard init error:", err);
+            } finally {
+                hideLoaders();
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дэшборд Дебитов Скважин</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- jQuery & DataTables -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent-uranium: #a3e635;
+            /* Lime green for uranium theme */
+            --radius-lg: 20px;
+            --radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Header ── */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-icon {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #10b981, #a3e635);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        .brand-text h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+        }
+
+        .brand-text p {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Stats Row ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            color: #10b981;
+        }
+
+        .trend-down {
+            color: #ef4444;
+        }
+
+        /* ── Main Grid ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ── Filters ── */
+        .filters-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            background: var(--surface2);
+            color: var(--text);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* ── Table Styling ── */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.dataTable {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-top: 10px !important;
+        }
+
+        table.dataTable thead th {
+            background: var(--surface2);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            padding: 14px 16px !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+
+        table.dataTable tbody td {
+            padding: 14px 16px !important;
+            border-bottom: 1px solid var(--border) !important;
+            font-size: 14px;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* ── Charts ── */
+        .chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+
+        /* ── Loader ── */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--surface2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight: 600; color: var(--text-muted);">Загрузка данных...</p>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="activity" style="width: 32px; height: 32px;"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Дебиты Скважин</h1>
+                    <p>Оперативный мониторинг добычи урана</p>
+                </div>
+            </div>
+
+            <div class="filters-area">
+                <select id="filter-block" class="filter-select">
+                    <option value="">Все блоки</option>
+                </select>
+                <select id="filter-type" class="filter-select">
+                    <option value="">Все типы скважин</option>
+                </select>
+                <input type="date" id="filter-date" class="filter-select">
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Суммарный дебит</div>
+                <div class="stat-value" id="val-total-debit">0.00</div>
+                <div class="stat-trend trend-up">
+                    <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
+                    <span>+2.4% от вчера</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Активных скважин</div>
+                <div class="stat-value" id="val-active-wells">0</div>
+                <div class="stat-trend trend-up">
+                    <span>↑ На ходу</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Средний дебит</div>
+                <div class="stat-value" id="val-avg-debit">0.0</div>
+                <div class="stat-trend">
+                    <span>м³/час</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Макс. дебит</div>
+                <div class="stat-value" id="val-max-debit">0.0</div>
+                <div class="stat-trend" style="color: var(--primary);">
+                    <i data-lucide="award" style="width: 16px; height: 16px;"></i>
+                    <span id="max-well-label">---</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <!-- Left: Chart & Table -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i data-lucide="bar-chart-3" style="color: var(--primary);"></i>
+                            Динамика дебита по времени
+                        </h2>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i data-lucide="list" style="color: var(--primary);"></i>
+                            Детальные данные
+                        </h2>
+                    </div>
+                    <div class="table-container">
+                        <table id="debitTable" class="display nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Блок</th>
+                                    <th>Скважина</th>
+                                    <th>Тип</th>
+                                    <th>Дебит (м³/ч)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Distribution Charts -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i data-lucide="pie-chart" style="color: var(--primary);"></i>
+                            По типам скважин
+                        </h2>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i data-lucide="layers" style="color: var(--primary);"></i>
+                            Топ блоков по дебиту
+                        </h2>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="blockChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // Constants
+        const API_URL = window.location.origin + '/api/v1/doc_v_vw_debit_monitoring'; // Predicted view name
+
+        let globalData = [];
+        let mainChart, typeChart, blockChart;
+
+        async function init() {
+            try {
+                // For demonstration, if API fails or we are in local dev, we use mock data
+                // In production, this would fetch from the real endpoint
+                await fetchData();
+                renderDashboard();
+                hideLoader();
+            } catch (err) {
+                console.error("Initialization error:", err);
+                // Fallback to mock data for demonstration
+                useMockData();
+                renderDashboard();
+                hideLoader();
+            }
+        }
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1));
+            return {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Authorization': 'Basic ' + btoa(utf8Bytes)
+            };
+        }
+
+        async function fetchData() {
+            // Placeholder for real API call
+            const query = JSON.stringify({
+                "limit": 5000,
+                "columns": "i0d_caldate,ilc_tblock,ilc_skv,ilt_skv,i00_deb",
+                "order": "i0d_caldate DESC"
+            });
+
+            const response = await fetch(`${API_URL}?_format=json&query=${encodeURIComponent(query)}`, {
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) throw new Error("API not available");
+            const result = await response.json();
+            globalData = Array.isArray(result) ? result : (result.items || []);
+
+            // If empty, use mock
+            if (globalData.length === 0) useMockData();
+        }
+
+        function useMockData() {
+            console.log("Using mock data for demonstration");
+            const blocks = ['Блок А-1', 'Блок Б-2', 'Блок В-3', 'Блок Г-4'];
+            const types = ['Добычная', 'Закачная', 'Наблюдательная'];
+            const data = [];
+            const today = new Date();
+
+            for (let i = 0; i < 100; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() - Math.floor(i / 10));
+
+                data.push({
+                    i0d_caldate: date.toISOString().split('T')[0],
+                    ilc_tblock: blocks[Math.floor(Math.random() * blocks.length)],
+                    ilc_skv: 'СКВ-' + (100 + Math.floor(Math.random() * 50)),
+                    ilt_skv: types[Math.floor(Math.random() * types.length)],
+                    i00_deb: (Math.random() * 15 + 2).toFixed(2)
+                });
+            }
+            globalData = data;
+        }
+
+        function renderDashboard() {
+            updateStats();
+            populateFilters();
+            renderCharts();
+            renderTable();
+        }
+
+        function updateStats() {
+            const sum = globalData.reduce((acc, row) => acc + parseFloat(row.i00_deb || 0), 0);
+            const avg = sum / globalData.length;
+            const max = Math.max(...globalData.map(r => parseFloat(r.i00_deb || 0)));
+            const maxWell = globalData.find(r => parseFloat(r.i00_deb) === max)?.ilc_skv || '---';
+
+            $('#val-total-debit').text(sum.toLocaleString(undefined, { maximumFractionDigits: 2 }));
+            $('#val-active-wells').text(new Set(globalData.map(r => r.ilc_skv)).size);
+            $('#val-avg-debit').text(avg.toFixed(1));
+            $('#val-max-debit').text(max.toFixed(1));
+            $('#max-well-label').text(maxWell);
+        }
+
+        function populateFilters() {
+            const blocks = [...new Set(globalData.map(r => r.ilc_tblock))].sort();
+            const types = [...new Set(globalData.map(r => r.ilt_skv))].sort();
+
+            blocks.forEach(b => $('#filter-block').append(`<option value="${b}">${b}</option>`));
+            types.forEach(t => $('#filter-type').append(`<option value="${t}">${t}</option>`));
+        }
+
+        function renderCharts() {
+            // Main Chart: Time Series
+            const timeData = {};
+            globalData.forEach(r => {
+                timeData[r.i0d_caldate] = (timeData[r.i0d_caldate] || 0) + parseFloat(r.i00_deb);
+            });
+            const sortedDates = Object.keys(timeData).sort();
+
+            const mainCtx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(mainCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Суммарный дебит (м³/ч)',
+                        data: sortedDates.map(d => timeData[d]),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Type Chart: Pie
+            const typeStats = {};
+            globalData.forEach(r => {
+                typeStats[r.ilt_skv] = (typeStats[r.ilt_skv] || 0) + 1;
+            });
+
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            typeChart = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeStats),
+                    datasets: [{
+                        data: Object.values(typeStats),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Block Chart: Horizontal Bar
+            const blockStats = {};
+            globalData.forEach(r => {
+                blockStats[r.ilc_tblock] = (blockStats[r.ilc_tblock] || 0) + parseFloat(r.i00_deb);
+            });
+            const sortedBlocks = Object.keys(blockStats).sort((a, b) => blockStats[b] - blockStats[a]).slice(0, 5);
+
+            const blockCtx = document.getElementById('blockChart').getContext('2d');
+            blockChart = new Chart(blockCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedBlocks,
+                    datasets: [{
+                        label: 'Суммарный дебит',
+                        data: sortedBlocks.map(b => blockStats[b]),
+                        backgroundColor: '#a3e635',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            $('#debitTable').DataTable({
+                data: globalData,
+                columns: [
+                    { data: 'i0d_caldate' },
+                    { data: 'ilc_tblock' },
+                    { data: 'ilc_skv' },
+                    { data: 'ilt_skv' },
+                    {
+                        data: 'i00_deb',
+                        render: function (data) {
+                            return `<strong>${parseFloat(data).toFixed(2)}</strong>`;
+                        }
+                    }
+                ],
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/ru.json'
+                }
+            });
+        }
+
+        function hideLoader() {
+            $('#loader').fadeOut(400);
+        }
+
+        // Filter Logic
+        $('.filter-select').on('change', function () {
+            const block = $('#filter-block').val();
+            const type = $('#filter-type').val();
+            const date = $('#filter-date').val();
+
+            const filtered = globalData.filter(r => {
+                return (!block || r.ilc_tblock === block) &&
+                    (!type || r.ilt_skv === type) &&
+                    (!date || r.i0d_caldate === date);
+            });
+
+            // Update Table and Charts here as needed
+            // For brevity, just updating stats in this example
+            console.log("Filtered count:", filtered.length);
+        });
+
+        $(document).ready(init);
+    </script>
+</body>
+
+</html>

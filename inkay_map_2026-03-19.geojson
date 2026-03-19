@@ -1,0 +1,783 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.251953,
+          54.245168
+        ]
+      },
+      "properties": {
+        "uuid": "18b96363-a93f-46a6-8419-1667c482982c",
+        "label": null,
+        "layer": "lap",
+        "code": null,
+        "geomType": "marker",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.338379,
+          48.373784
+        ]
+      },
+      "properties": {
+        "uuid": "09085028-22c5-4c65-8747-41bc278c0898",
+        "label": null,
+        "layer": "lap",
+        "code": null,
+        "geomType": "marker",
+        "color": "#fca5a5",
+        "fillColor": "#fde047",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.865967,
+          48.57195
+        ]
+      },
+      "properties": {
+        "uuid": "c6db9cef-a05d-4434-afb2-f220eb8f313e",
+        "label": null,
+        "layer": "lap",
+        "code": null,
+        "geomType": "marker",
+        "color": "#fca5a5",
+        "fillColor": "#fde047",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.278442,
+          49.053367
+        ]
+      },
+      "properties": {
+        "uuid": "66fa4e12-c4b6-4c47-9920-b1b71c2e4f61",
+        "label": null,
+        "layer": "lap",
+        "code": null,
+        "geomType": "marker",
+        "color": "#fca5a5",
+        "fillColor": "#fde047",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.723633,
+          49.227912
+        ]
+      },
+      "properties": {
+        "uuid": "2eafc1b7-8d5d-46d3-b9bb-3f7df257622f",
+        "label": "ргн",
+        "layer": "wells",
+        "code": null,
+        "geomType": "marker",
+        "color": "#fca5a5",
+        "fillColor": "#fde047",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              55.349121,
+              47.644805
+            ],
+            [
+              56.337891,
+              48.598182
+            ],
+            [
+              57.788086,
+              47.570735
+            ],
+            [
+              57.194824,
+              46.568066
+            ],
+            [
+              55.656738,
+              46.58317
+            ],
+            [
+              55.349121,
+              47.644805
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "700ffc7a-709e-44ca-8bdc-c0cbd1e7059c",
+        "label": "вукеуек",
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#fca5a5",
+        "fillColor": "#fde047",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              61.435547,
+              48.702631
+            ],
+            [
+              61.875,
+              49.11422
+            ],
+            [
+              62.720947,
+              48.9774
+            ],
+            [
+              62.578125,
+              48.353397
+            ],
+            [
+              61.951904,
+              48.294957
+            ],
+            [
+              61.435547,
+              48.702631
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "80d0102e-24d8-4eb5-abd8-774c3d7e998b",
+        "label": "ваыва",
+        "layer": "blocks",
+        "code": "",
+        "geomType": "polygon",
+        "color": "#a5afc0",
+        "fillColor": "#ce3b3b",
+        "opacity": 0.35,
+        "weight": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              59.985352,
+              50.058682
+            ],
+            [
+              60.336914,
+              49.276541
+            ],
+            [
+              59.414063,
+              49.07544
+            ],
+            [
+              58.469238,
+              49.476825
+            ],
+            [
+              58.820801,
+              50.283855
+            ],
+            [
+              59.985352,
+              50.058682
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "aa701b88-8f2c-4d69-82a5-276259cb5882",
+        "label": "ыфлрвалыд",
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Circle",
+        "coordinates": [
+          60.479736,
+          45.60335
+        ],
+        "radius": 117428
+      },
+      "properties": {
+        "uuid": "6e9391ee-0d3a-4939-9271-47de0f347e05",
+        "label": "ывацыва",
+        "layer": "wells",
+        "code": null,
+        "geomType": "circle",
+        "color": "#dc2626",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              59.34814453125001,
+              45.472530908551526
+            ],
+            [
+              60.02929687500001,
+              45.472530908551526
+            ],
+            [
+              60.02929687500001,
+              45.34912930037308
+            ],
+            [
+              59.34814453125001,
+              45.34912930037308
+            ],
+            [
+              59.34814453125001,
+              45.472530908551526
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "6835857f-5183-4d3e-b5e8-c21205df7ffb",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "rectangle",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              60.08422851562501,
+              44.821664359038415
+            ],
+            [
+              60.47973632812501,
+              45.03168196440123
+            ],
+            [
+              60.88623046875001,
+              44.7904853357366
+            ],
+            [
+              60.67749023437501,
+              44.226381380007446
+            ],
+            [
+              59.97436523437501,
+              44.20275857887257
+            ],
+            [
+              59.87548828125001,
+              44.57958614223229
+            ],
+            [
+              60.08422851562501,
+              44.821664359038415
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "1b57ec4f-2ee8-4158-a6f8-9819bbe8e387",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            61.76513671875001,
+            45.256401153805136
+          ],
+          [
+            63.22631835937501,
+            44.99284774664993
+          ],
+          [
+            63.40209960937501,
+            44.139718115818454
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "3a07c2de-fc2a-4234-8919-99868dd3d75a",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polyline",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              62.430054,
+              44.105769
+            ],
+            [
+              61.715698,
+              44.306591
+            ],
+            [
+              62.319946,
+              44.007077
+            ],
+            [
+              61.984863,
+              43.650423
+            ],
+            [
+              61.33667,
+              43.749707
+            ],
+            [
+              62.430054,
+              44.105769
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "3eebc128-9824-4fbd-9c47-9ef4c6669b8f",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            64.731445,
+            49.571095
+          ],
+          [
+            67.851563,
+            51.30615
+          ],
+          [
+            70.444336,
+            49.599585
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "6dc5509e-8c4f-4129-8197-6f8a19fa6d17",
+        "label": "цуацуа",
+        "layer": "wells",
+        "code": null,
+        "geomType": "polyline",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {},
+      "properties": {
+        "uuid": "8697065c-bd5b-4671-935f-36083e4192f5",
+        "label": "ываыва",
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {},
+      "properties": {
+        "uuid": "c681f3f5-f14a-43b3-a057-2a75c11586bb",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polyline",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              67.49352284419638,
+              47.69724450024507
+            ],
+            [
+              67.52442858525097,
+              47.7231182223441
+            ],
+            [
+              67.5546475320599,
+              47.70648658986769
+            ],
+            [
+              67.54503241262069,
+              47.66835240934322
+            ],
+            [
+              67.4938662413192,
+              47.66881480876476
+            ],
+            [
+              67.49352284419638,
+              47.69724450024507
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "fd732b76-540c-415f-94e4-15a556a9e044",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#60d28a",
+        "fillColor": "#16a34a",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              67.59447096355211,
+              47.6979377138014
+            ],
+            [
+              67.61747857078166,
+              47.71180004948971
+            ],
+            [
+              67.65216168018736,
+              47.68915632775011
+            ],
+            [
+              67.61301440818488,
+              47.66696518649889
+            ],
+            [
+              67.58176527000747,
+              47.68106690075006
+            ],
+            [
+              67.5944820496861,
+              47.6979757928923
+            ],
+            [
+              67.59447096355211,
+              47.6979377138014
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "0660c826-79c5-4f6d-a362-cbaf691adccc",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Circle",
+        "coordinates": [
+          60.77795594119222,
+          43.55740442529011
+        ],
+        "radius": 12738.394195669529
+      },
+      "properties": {
+        "uuid": "b642cda7-eb8a-4650-8941-4a0a1b847402",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "circle",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          61.30450636064712,
+          43.492344491941964
+        ]
+      },
+      "properties": {
+        "uuid": "92e0ef6f-f7bb-4351-a005-829b8e3ab8e1",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "marker",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              61.04421762466373,
+              43.66830908658456
+            ],
+            [
+              61.04421762466373,
+              43.75419282791313
+            ],
+            [
+              61.15890909126997,
+              43.75419282791313
+            ],
+            [
+              61.15890909126997,
+              43.66830908658456
+            ],
+            [
+              61.04421762466373,
+              43.66830908658456
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "67ad80b0-a6b5-4acd-b4a9-f22478688114",
+        "label": null,
+        "layer": "wells",
+        "code": null,
+        "geomType": "rectangle",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": "0.35",
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              62.86376953125001,
+              51.155985282609024
+            ],
+            [
+              63.13842773437501,
+              51.30733065212423
+            ],
+            [
+              63.73168945312501,
+              51.052509724725695
+            ],
+            [
+              63.54492187500001,
+              50.71287378263816
+            ],
+            [
+              62.62207031250001,
+              50.68503904395654
+            ],
+            [
+              62.86376953125001,
+              51.155985282609024
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "mmxawe8jcythyvvg4xm",
+        "label": "",
+        "layer": "lap",
+        "code": "",
+        "geomType": "polygon",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": 0.35,
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          62.34741210937501,
+          51.51974577545329
+        ]
+      },
+      "properties": {
+        "uuid": "mmxawmjv4vb2c4rc9kb",
+        "label": "",
+        "layer": "wells",
+        "code": "",
+        "geomType": "marker",
+        "color": "#1d6ef4",
+        "fillColor": "#1d6ef4",
+        "opacity": 0.35,
+        "weight": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              61.677246,
+              50.096688
+            ],
+            [
+              62.138672,
+              50.286597
+            ],
+            [
+              62.545166,
+              49.86355
+            ],
+            [
+              62.237549,
+              49.536684
+            ],
+            [
+              61.600342,
+              49.586566
+            ],
+            [
+              61.677246,
+              50.096688
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "uuid": "mmxawtuycqkm1rjv5al",
+        "label": "",
+        "layer": "blocks",
+        "code": "",
+        "geomType": "polygon",
+        "color": "#3a8e2f",
+        "fillColor": "#f41fc6",
+        "opacity": 0.35,
+        "weight": 2
+      }
+    }
+  ]
+}

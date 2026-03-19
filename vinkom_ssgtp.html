@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд ССГТП</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .badge {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .kpi-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 800px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        th {
+            background: var(--surface2);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr.total-row td {
+            font-weight: 800;
+            background: #f8fafc;
+            border-top: 2px solid var(--border);
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        .bar-wrap {
+            width: 100%;
+            max-width: 100px;
+            display: inline-block;
+            background: var(--surface2);
+            height: 6px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: auto;
+            margin-top: 6px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .bar-plan {
+            background: var(--primary);
+        }
+
+        .bar-fact {
+            background: var(--success);
+        }
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-weight: 600;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader" class="loader">Получение и расчет данных...</div>
+
+    <div class="container" style="display:none;" id="main">
+        <div class="header">
+            <h1>ССГТП — План/Факт сооружения скважин</h1>
+            <div id="month-badge" class="badge">Месяц: —</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="setTab('tech')">Технологические скважины</div>
+            <div class="tab" onclick="setTab('er')">Эксплоразведочные скважины</div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">План за месяц</div>
+                <div class="kpi-value" id="kpi-plan">—</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Факт за месяц</div>
+                <div class="kpi-value" id="kpi-fact">—</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Отклонение</div>
+                <div class="kpi-value" id="kpi-diff">—</div>
+                <div class="kpi-sub" id="kpi-diff-sub"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Выполнение БА</div>
+                <div class="kpi-value" id="kpi-perf">—</div>
+                <div class="kpi-sub">% от плана БА</div>
+                <div style="font-size:10px; color:var(--text-muted); opacity:0.7; margin-top:2px;">* План рассчитан
+                    пропорционально дням</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Участок</th>
+                        <th>План ПРГР</th>
+                        <th>План с начала года</th>
+                        <th>Факт с начала года</th>
+                        <th>План по месяцу</th>
+                        <th>Факт по месяцу</th>
+                        <th>Прогноз по месяцу</th>
+                        <th>Отклонение</th>
+                        <th>% исполнения (мес)</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mt" style="margin-top:24px;">
+            <div style="font-weight:600; font-size:16px; margin-bottom:16px; color:var(--text)">Буровые агрегаты и
+                Производительность (в месяц)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Участок</th>
+                        <th>БА План (ПРГР)</th>
+                        <th>Произв. План</th>
+                        <th>БА Прогноз</th>
+                        <th>Произв. Прогноз</th>
+                        <th>БА Факт</th>
+                        <th>Произв. Факт</th>
+                    </tr>
+                </thead>
+                <tbody id="ba-table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mt" style="margin-top:24px;">
+            <div style="font-weight:600; font-size:16px; margin-bottom:16px; color:var(--text)">Динамика сооружения
+                скважин (План/Факт по месяцам)</div>
+            <div style="height:400px; position:relative;">
+                <canvas id="drillChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card mt" style="margin-top:24px;">
+            <div style="font-weight:600; font-size:16px; margin-bottom:16px; color:var(--text)">Производительность
+                бурения (Объемы РП и Прогноз)</div>
+            <div style="height:400px; position:relative;">
+                <canvas id="perfChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const API = '/api/v1';
+        let parsedData = { tech: [], er: [] };
+        let currentTab = 'tech';
+        let drillChartInstance = null;
+        let perfChartInstance = null;
+
+        function getAuthHeaders() {
+            const user = localStorage.getItem('personCode') || 'anonymous';
+            const str = user + ':19451945';
+            const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1));
+            return { 'X-Requested-With': 'XMLHttpRequest', 'Authorization': 'Basic ' + btoa(utf8Bytes) };
+        }
+
+        async function fetchAPI(table, cols, params = {}) {
+            const queryObj = { limit: 10000, columns: cols, ...params };
+            const query = encodeURIComponent(JSON.stringify(queryObj));
+            const url = `${API}/${table}?_format=json&query=${query}`;
+
+            try {
+                const res = await fetch(url, { headers: getAuthHeaders() });
+                if (!res.ok) return [];
+                const data = await res.json();
+                return Array.isArray(data) ? data : (data.items || []);
+            } catch (e) {
+                console.error('Fetch error:', e);
+                return [];
+            }
+        }
+
+        function getProdMonth(date) {
+            let y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+            if (d > 25) {
+                if (m === 12) {
+                    // Dec 26 - Dec 31 stays in December
+                    m = 12;
+                } else {
+                    // Other months spill over to the next month
+                    m += 1;
+                }
+            }
+            return { year: y, month: m, monthStr: String(m) };
+        }
+
+        // Helper function to extract code safely
+        function getCode(row, field) {
+            if (row && row[field + '_data'] && row[field + '_data'].code !== undefined) {
+                return String(row[field + '_data'].code).toLowerCase();
+            }
+            if (row && row[field] !== undefined && row[field] !== null) {
+                return String(row[field]).toLowerCase();
+            }
+            return '';
+        }
+
+        function getDaysInProdMonth(year, month) {
+            const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            const map = {
+                1: 25, 2: 31, 3: isLeap ? 29 : 28, 4: 31, 5: 30, 6: 31,
+                7: 30, 8: 31, 9: 31, 10: 30, 11: 31, 12: 36
+            };
+            return map[month] || 31;
+        }
+
+        function getDaysElapsed(date) {
+            const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+            if (m === 1 && d <= 25) return d;
+
+            // Production month "m" starts on 26th of month "m-1"
+            const startMonth = d > 25 ? m : m - 1;
+            const startYear = startMonth === 0 ? y - 1 : y;
+            const actualStartMonth = startMonth === 0 ? 12 : startMonth;
+
+            const startDate = new Date(startYear, actualStartMonth - 1, 26);
+            return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+        }
+
+        async function init() {
+            try {
+                const now = new Date();
+                const prod = getProdMonth(now);
+                const currentY = String(prod.year);
+                document.getElementById('month-badge').textContent = `Отчетный месяц: ${prod.month} / ${prod.year} г.`;
+
+                // Fetch tables with year filter in the query
+                let [prgrRaw, rp, prognoz, ba, factRaw] = await Promise.all([
+                    fetchAPI('doc_prgr_graphic_bureniya', 'i00_god,ilc_orgstruct,ilc_tip_skv_bur,ilc_tblock,i00_jan,i00_feb,i00_mar,i00_apr,i00_may,i00_jun,i00_jul,i00_aug,i00_sep,i00_oct,i00_nov,i00_dec', { i00_god: currentY }),
+                    fetchAPI('doc_prgr_work_objem_rab_prog', 'i00_god,ilc_orgstruct,ilc_tip_skv_bur,i00_jan,i00_feb,i00_mar,i00_apr,i00_may,i00_jun,i00_jul,i00_aug,i00_sep,i00_oct,i00_nov,i00_dec', { i00_god: currentY }),
+                    fetchAPI('doc_prgr_work_objem_prognoz', 'i00_god,ilc_orgstruct,ilc_tip_skv_bur,i00_jan,i00_feb,i00_mar,i00_apr,i00_may,i00_jun,i00_jul,i00_aug,i00_sep,i00_oct,i00_nov,i00_dec', { i00_god: currentY }),
+                    fetchAPI('doc_ba_count', 'ilc_orgstruct,i00_ba_prgr_er,i00_ba_prgr_tech,i00_ba_fact_er,i00_ba_fact_tech,i00_ba_prognoz_er,i00_ba_prognoz_tech,i00_ba_rab_prog_er,i00_ba_rab_prog_tech'),
+                    fetchAPI('doc_skv_project_data', 'ilc_orgstruct,ilt_skv,i0d_prin_date')
+                ]);
+
+                // Filter PRGR by primary target block if it improves accuracy (test '1' or similar)
+                const uniqueTBlocks = [...new Set(prgrRaw.map(r => getCode(r, 'ilc_tblock')))];
+                console.log('Unique Target Blocks in PRGR:', uniqueTBlocks);
+
+                // Usually '1' is the main annual plan (ПРГР). 
+                // We'll filter by '1' if there are multiple blocks to avoid double counting.
+                let prgr = prgrRaw;
+                if (uniqueTBlocks.length > 1 && uniqueTBlocks.includes('1')) {
+                    console.log('Multiple tblocks found, filtering by block "1"');
+                    prgr = prgrRaw.filter(r => getCode(r, 'ilc_tblock') === '1');
+                }
+
+                // Debug log
+                console.log('Current Computed Year:', currentY);
+
+                const fact = factRaw.filter(r => {
+                    if (!r.i0d_prin_date) return false;
+                    const d = new Date(r.i0d_prin_date);
+                    return String(getProdMonth(d).year) === currentY || String(d.getFullYear()) === currentY;
+                });
+
+                // Filter types (LEGACY: Match Python script exactly)
+                const techSkv = ['nabl_280', 'nabl', 'zak', 'otk'].map(s => s.toLowerCase());
+                const erSkv = ['er_s_kernom', 'er_bez_kerna'].map(s => s.toLowerCase());
+
+                // FACT categories differ in script
+                const techFactSkv = ['nabl', 'zak', 'otk'].map(s => s.toLowerCase());
+                const erFactSkv = ['skv_type7', 'skv_type6', 'skv_type4'].map(s => s.toLowerCase());
+
+                const monthsNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+                const orgs = ['opz', 'sat1', 'sat2'];
+                const orgNames = { opz: 'ОПЗ', sat1: 'Сат-1', sat2: 'Сат-2' };
+
+                function calcSums(mode) {
+                    const isTech = mode === 'tech';
+                    const targetPlan = isTech ? techSkv : erSkv;
+                    const targetFact = isTech ? techFactSkv : erFactSkv;
+                    let result = [];
+                    let tPlanY = 0, tFactY = 0, tPlanM = 0, tFactM = 0, tProgM = 0, tBa = 0;
+
+                    // Arrays for monthly charts
+                    let monthlyPlan = Array(12).fill(0);
+                    let monthlyFact = Array(12).fill(0);
+                    let monthlyRp = Array(12).fill(0); // Work program volume
+                    let monthlyPrognoz = Array(12).fill(0); // Forecast volume
+
+                    orgs.forEach(org => {
+                        let pY = 0, fY = 0, pM = 0, fM = 0, pCum = 0, progM = 0, baC = 0;
+                        let baPrgr = 0, baProg = 0, baRp = 0, baFact = 0;
+                        const elapsed = getDaysElapsed(now);
+
+                        prgr.forEach(r => {
+                            const orgCode = getCode(r, 'ilc_orgstruct');
+                            const typeCode = getCode(r, 'ilc_tip_skv_bur');
+                            const tblock = getCode(r, 'ilc_tblock');
+
+                            // It seems the monthly plan is over-counted. 
+                            // Usually, the official plan has a specific tblock (e.g., '1' or 'prgr').
+                            // If we see tblocks but don't filter, we sum them.
+                            // Looking at the previous screenshots, summing all gives 904 for year but we need a specific one for month?
+                            // Actually, if year matches but month doesn't, maybe some rows are annual totals only? 
+                            // Let's assume for now we sum all but we add the cumulative logic.
+
+                            if (orgCode === org && targetPlan.includes(typeCode)) {
+                                let rowPY = 0, rowPM = 0;
+                                monthsNames.forEach((mx, idx) => {
+                                    const val = parseFloat(r['i00_' + mx] || 0);
+                                    const mNo = idx + 1;
+                                    rowPY += val;
+
+                                    // Chart data: full for past/future, pro-rated for current
+                                    let chartVal = val;
+                                    if (mNo === prod.month) {
+                                        const dim = getDaysInProdMonth(prod.year, prod.month);
+                                        chartVal = (val / dim) * (elapsed - 1);
+                                        rowPM = val; // Store full for table pro-rata calc below if needed
+                                    }
+                                    monthlyPlan[idx] += chartVal;
+
+                                    if (mNo < prod.month) pCum += val;
+                                });
+                                pY += rowPY;
+
+                                // Table monthly plan (matches chart's current month)
+                                const dim = getDaysInProdMonth(prod.year, prod.month);
+                                const proRataM = (rowPM / dim) * (elapsed - 1);
+                                pM += proRataM;
+                                pCum += proRataM;
+                            }
+                        });
+
+                        // RP (Рабочая программа объемы)
+                        rp.forEach(r => {
+                            const orgCode = getCode(r, 'ilc_orgstruct');
+                            const typeCode = getCode(r, 'ilc_tip_skv_bur');
+                            if (orgCode === org && targetPlan.includes(typeCode)) {
+                                let rowRPM = 0;
+                                monthsNames.forEach((mx, idx) => {
+                                    const val = parseFloat(r['i00_' + mx] || 0);
+                                    let chartVal = val;
+                                    if ((idx + 1) === prod.month) {
+                                        const dim = getDaysInProdMonth(prod.year, prod.month);
+                                        chartVal = (val / dim) * elapsed;
+                                        rowRPM = val;
+                                    }
+                                    monthlyRp[idx] += chartVal;
+                                });
+                                const dim = getDaysInProdMonth(prod.year, prod.month);
+                                baRp += (rowRPM / dim) * elapsed;
+                            }
+                        });
+
+                        // Prognoz Plan (Forecast объемы)
+                        prognoz.forEach(r => {
+                            const orgCode = getCode(r, 'ilc_orgstruct');
+                            const typeCode = getCode(r, 'ilc_tip_skv_bur');
+                            if (orgCode === org && targetPlan.includes(typeCode)) {
+                                let rowProgM = 0;
+                                monthsNames.forEach((mx, idx) => {
+                                    const val = parseFloat(r['i00_' + mx] || 0);
+                                    const mNo = idx + 1;
+                                    let chartVal = val;
+                                    if (mNo === prod.month) {
+                                        const dim = getDaysInProdMonth(prod.year, prod.month);
+                                        chartVal = (val / dim) * elapsed;
+                                        rowProgM = val;
+                                    }
+                                    monthlyPrognoz[idx] += chartVal;
+                                });
+                                const dim = getDaysInProdMonth(prod.year, prod.month);
+                                const proRataProg = (rowProgM / dim) * elapsed;
+                                progM += proRataProg;
+                                baProg += proRataProg;
+                            }
+                        });
+
+                        // BA
+                        let baPrgrVal = 0, baFactVal = 0;
+                        const baRow = ba.find(r => getCode(r, 'ilc_orgstruct') === org);
+                        if (baRow) {
+                            if (isTech) {
+                                baPrgrVal = parseFloat(baRow.i00_ba_prgr_tech || 0);
+                                baProg = (baProg || 0); // Already pro-rated above
+                                baRp = (baRp || 0); // Already pro-rated above
+                                baFactVal = parseFloat(baRow.i00_ba_fact_tech || 0);
+                            } else {
+                                baPrgrVal = parseFloat(baRow.i00_ba_prgr_er || 0);
+                                baProg = (baProg || 0);
+                                baRp = (baRp || 0);
+                                baFactVal = parseFloat(baRow.i00_ba_fact_er || 0);
+                            }
+                        }
+                        baPrgr = baPrgrVal;
+                        baFact = baFactVal;
+                        baC = baPrgr; // For legacy consistency
+
+                        // Fact (Count)
+                        fact.forEach(r => {
+                            const orgCode = getCode(r, 'ilc_orgstruct');
+                            const typeCode = getCode(r, 'ilt_skv');
+                            if (orgCode === org && targetFact.includes(typeCode)) {
+                                if (r.i0d_prin_date) {
+                                    fY++;
+                                    const pd = getProdMonth(new Date(r.i0d_prin_date));
+                                    if (pd.year === prod.year) {
+                                        monthlyFact[pd.month - 1]++;
+                                    }
+                                    if (pd.month === prod.month && pd.year === prod.year) fM++;
+                                }
+                            }
+                        });
+
+                        tPlanY += pY; tFactY += fY; tPlanM += pM; tFactM += fM; tProgM += progM; tBa += baC;
+
+                        result.push({ org: orgNames[org], pY, fY, pM, fM, pCum, progM, baC, baPrgr, baProg, baRp, baFact });
+                    });
+
+                    // We need to calculate totals for BA columns too
+                    const tBaPrgr = result.reduce((sum, r) => sum + (r.baPrgr || 0), 0);
+                    const tBaProg = result.reduce((sum, r) => sum + (r.baProg || 0), 0);
+                    const tBaFactObj = result.reduce((sum, r) => sum + (r.baFact || 0), 0);
+                    const tPCum = result.reduce((sum, r) => sum + (r.pCum || 0), 0);
+
+                    result.push({ org: 'Всего', pY: tPlanY, fY: tFactY, pM: tPlanM, fM: tFactM, pCum: tPCum, progM: tProgM, baC: tBa, baPrgr: tBaPrgr, baProg: tBaProg, baFact: tBaFactObj, isTotal: true });
+
+                    // Calculate cumulative series and round everything for the chart tooltips
+                    let cumulativePlan = [], cumulativeFact = [], cumulativeRp = [], cumulativePrognoz = [];
+                    let runP = 0, runF = 0, runRp = 0, runProg = 0;
+                    for (let i = 0; i < 12; i++) {
+                        runP += monthlyPlan[i];
+                        runF += monthlyFact[i];
+                        runRp += monthlyRp[i];
+                        runProg += monthlyPrognoz[i];
+                        cumulativePlan.push(Math.round(runP));
+                        cumulativeFact.push(Math.round(runF));
+                        cumulativeRp.push(Math.round(runRp));
+                        cumulativePrognoz.push(Math.round(runProg));
+
+                        monthlyPlan[i] = Math.round(monthlyPlan[i]);
+                        monthlyFact[i] = Math.round(monthlyFact[i]);
+                        monthlyRp[i] = Math.round(monthlyRp[i]);
+                        monthlyPrognoz[i] = Math.round(monthlyPrognoz[i]);
+                    }
+
+                    result.chartData = {
+                        labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+                        plan: monthlyPlan,
+                        fact: monthlyFact,
+                        rp: monthlyRp,
+                        prognoz: monthlyPrognoz,
+                        cumPlan: cumulativePlan,
+                        cumFact: cumulativeFact,
+                        cumRp: cumulativeRp,
+                        cumPrognoz: cumulativePrognoz
+                    };
+                    return result;
+                }
+
+                parsedData.tech = calcSums('tech');
+                parsedData.er = calcSums('er');
+
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('main').style.display = 'block';
+
+                setTab('tech');
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader').innerHTML = '<span style="color:red;">Ошибка загрузки данных</span>';
+            }
+        }
+
+        function setTab(mode) {
+            currentTab = mode;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event && event.currentTarget.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const data = parsedData[currentTab];
+            const t = data[data.length - 1]; // Total row
+
+            // KPIs
+            document.getElementById('kpi-plan').textContent = Math.round(t.pM);
+            document.getElementById('kpi-fact').textContent = Math.round(t.fM);
+            const diff = Math.round(t.fM - t.pM);
+            const diffEl = document.getElementById('kpi-diff');
+            diffEl.textContent = diff > 0 ? `+${diff}` : diff;
+            diffEl.className = 'kpi-value ' + (diff >= 0 ? 'positive' : 'negative');
+            document.getElementById('kpi-diff-sub').innerHTML = diff >= 0 ? 'выполнение плана ▲' : 'отставание от плана ▼';
+            document.getElementById('kpi-diff-sub').className = 'kpi-sub ' + (diff >= 0 ? 'positive' : 'negative');
+
+            const perf = t.baC ? Math.round((t.fM / t.baC) * 100) : 0;
+            document.getElementById('kpi-perf').textContent = `${perf}%`;
+
+            // Table
+            let html = '';
+            data.forEach(r => {
+                const dfM = Math.round(r.fM - r.pM);
+                const dfClass = dfM >= 0 ? 'positive' : 'negative';
+                const prf = Math.round(r.fM / (r.pM || 1) * 100);
+
+                html += `
+                <tr class="${r.isTotal ? 'total-row' : ''}">
+                    <td>${r.org}</td>
+                    <td>${Math.round(r.pY)}</td>
+                    <td>${Math.round(r.pCum)}</td>
+                    <td>${Math.round(r.fY)}</td>
+                    <td>${Math.round(r.pM)}</td>
+                    <td>${Math.round(r.fM)}</td>
+                    <td>${Math.round(r.progM)}</td>
+                    <td class="${dfClass}" style="font-weight:700">${dfM > 0 ? '+' + dfM : dfM}</td>
+                    <td style="font-weight:600">${r.isTotal ? '' : prf + '%'}</td>
+                </tr>`;
+            });
+            document.getElementById('table-body').innerHTML = html || '<tr><td colspan="8" style="text-align:center">Нет данных</td></tr>';
+
+            // BA Table
+            let baHtml = '';
+            data.forEach(r => {
+                const perfPrgr = r.baPrgr ? (r.pM / r.baPrgr).toFixed(2) : '0.00';
+                const perfProg = r.baProg ? (r.progM / r.baProg).toFixed(2) : '0.00';
+                const perfFact = r.baFact ? (r.fM / r.baFact).toFixed(2) : '0.00';
+
+                baHtml += `
+                <tr class="${r.isTotal ? 'total-row' : ''}">
+                    <td>${r.org}</td>
+                    <td style="color:#3b82f6; font-weight:600">${r.baPrgr || 0}</td>
+                    <td>${perfPrgr}</td>
+                    <td style="color:#f59e0b; font-weight:600">${r.baProg || 0}</td>
+                    <td>${perfProg}</td>
+                    <td style="color:#10b981; font-weight:600">${r.baFact || 0}</td>
+                    <td>${perfFact}</td>
+                </tr>`;
+            });
+            document.getElementById('ba-table-body').innerHTML = baHtml;
+
+            // Render Charts
+            const ctxDrill = document.getElementById('drillChart').getContext('2d');
+            const ctxPerf = document.getElementById('perfChart').getContext('2d');
+
+            if (drillChartInstance) drillChartInstance.destroy();
+            if (perfChartInstance) perfChartInstance.destroy();
+
+            drillChartInstance = new Chart(ctxDrill, {
+                type: 'bar',
+                data: {
+                    labels: data.chartData.labels,
+                    datasets: [
+                        {
+                            label: 'План (мес)',
+                            data: data.chartData.plan,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Факт (мес)',
+                            data: data.chartData.fact,
+                            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                            borderColor: '#10b981',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'План (накоп.)',
+                            data: data.chartData.cumPlan,
+                            type: 'line',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            pointRadius: 2,
+                            yAxisID: 'yCumulative'
+                        },
+                        {
+                            label: 'Факт (накоп.)',
+                            data: data.chartData.cumFact,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            pointRadius: 2,
+                            yAxisID: 'yCumulative'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'По месяцу (шт)' }
+                        },
+                        yCumulative: {
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Накопительный итог' }
+                        }
+                    }
+                }
+            });
+
+            perfChartInstance = new Chart(ctxPerf, {
+                type: 'bar',
+                data: {
+                    labels: data.chartData.labels,
+                    datasets: [
+                        {
+                            label: 'РП (мес)',
+                            data: data.chartData.rp,
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            borderColor: '#8b5cf6',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Прогноз (мес)',
+                            data: data.chartData.prognoz,
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            borderColor: '#f59e0b',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'РП (накоп.)',
+                            data: data.chartData.cumRp,
+                            type: 'line',
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            pointRadius: 2,
+                            yAxisID: 'yCumulative'
+                        },
+                        {
+                            label: 'Прогноз (накоп.)',
+                            data: data.chartData.cumPrognoz,
+                            type: 'line',
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'transparent',
+                            tension: 0.3,
+                            pointRadius: 2,
+                            yAxisID: 'yCumulative'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'По месяцу (объемы)' }
+                        },
+                        yCumulative: {
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Накопительный итог' }
+                        }
+                    }
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

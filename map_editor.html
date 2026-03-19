@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта рудника — АО «Инкай»</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ALL CLASSES PREFIXED gis- TO AVOID ASPANS CONFLICTS */
+    #gis-root {
+      --gis-bg: #f0f2f5;
+      --gis-sf: #ffffff;
+      --gis-sf2: #f7f8fa;
+      --gis-sf3: #eef0f3;
+      --gis-br: #dde1e8;
+      --gis-br2: #c8cdd6;
+      --gis-tx: #18202e;
+      --gis-tx2: #48556a;
+      --gis-tx3: #8a95a6;
+      --gis-ac: #1d6ef4;
+      --gis-ach: #1558cc;
+      --gis-acbg: rgba(29, 110, 244, .08);
+      --gis-acbr: rgba(29, 110, 244, .22);
+      --gis-dn: #dc2626;
+      --gis-wn: #d97706;
+      --gis-ok: #059669;
+      all: initial;
+      display: flex;
+      height: 700px;
+      width: 100%;
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: var(--gis-tx);
+      background: var(--gis-bg);
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #gis-root *,
+    #gis-root *::before,
+    #gis-root *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    /* SIDEBAR */
+    #gis-sb {
+      width: 272px;
+      min-width: 272px;
+      background: var(--gis-sf);
+      border-right: 1px solid var(--gis-br);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, .06);
+    }
+
+    .gis-sbhdr {
+      padding: 13px 15px 11px;
+      border-bottom: 1px solid var(--gis-br);
+      flex-shrink: 0;
+    }
+
+    .gis-logo {
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gis-ac);
+      margin-bottom: 1px;
+    }
+
+    .gis-sub {
+      font-size: 10px;
+      color: var(--gis-tx3);
+    }
+
+    .gis-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--gis-br);
+      flex-shrink: 0;
+      background: var(--gis-sf);
+    }
+
+    .gis-tab {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--gis-tx3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      user-select: none;
+    }
+
+    .gis-tab:hover {
+      color: var(--gis-tx2);
+      background: var(--gis-sf2);
+    }
+
+    .gis-tab.gis-on {
+      color: var(--gis-ac);
+      border-bottom-color: var(--gis-ac);
+    }
+
+    .gis-pnl {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .gis-pnl.gis-on {
+      display: flex;
+    }
+
+    /* TOOLS */
+    .gis-seclbl {
+      padding: 10px 12px 5px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--gis-tx3);
+    }
+
+    .gis-tgrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 0 10px 10px;
+    }
+
+    .gis-tbtn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 4px;
+      background: var(--gis-sf2);
+      border: 1px solid var(--gis-br);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all .15s;
+      font-size: 9px;
+      color: var(--gis-tx2);
+      font-weight: 600;
+      letter-spacing: .3px;
+      user-select: none;
+    }
+
+    .gis-tbtn svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .gis-tbtn:hover {
+      border-color: var(--gis-br2);
+      color: var(--gis-tx);
+      background: var(--gis-sf3);
+    }
+
+    .gis-tbtn.gis-on {
+      background: var(--gis-acbg);
+      border-color: var(--gis-ac);
+      color: var(--gis-ac);
+    }
+
+    .gis-stblk {
+      padding: 0 10px 10px;
+    }
+
+    .gis-sl {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gis-tx3);
+      margin-bottom: 5px;
+    }
+
+    .gis-sws {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-bottom: 5px;
+    }
+
+    .gis-sw {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform .1s, border-color .12s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+    }
+
+    .gis-sw:hover {
+      transform: scale(1.18);
+    }
+
+    .gis-sw.gis-sel {
+      border-color: var(--gis-tx);
+    }
+
+    .gis-crow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gis-crow input[type=color] {
+      width: 28px;
+      height: 24px;
+      border: 1px solid var(--gis-br2);
+      border-radius: 4px;
+      cursor: pointer;
+      background: none;
+      padding: 1px;
+    }
+
+    .gis-crow input[type=color]::-webkit-color-swatch-wrapper {
+      padding: 0;
+      border-radius: 3px;
+    }
+
+    .gis-crow input[type=color]::-webkit-color-swatch {
+      border: none;
+      border-radius: 2px;
+    }
+
+    .gis-hex {
+      font-size: 10px;
+      color: var(--gis-tx3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gis-rrow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .gis-rrow input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--gis-br2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .gis-rrow input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--gis-ac);
+      border: none;
+      box-shadow: 0 0 0 3px var(--gis-acbg);
+    }
+
+    .gis-rval {
+      font-size: 10px;
+      color: var(--gis-tx3);
+      min-width: 28px;
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gis-sel2 {
+      width: 100%;
+      background: var(--gis-sf2);
+      border: 1px solid var(--gis-br);
+      color: var(--gis-tx);
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .gis-sel2:focus {
+      border-color: var(--gis-ac);
+      box-shadow: 0 0 0 3px var(--gis-acbg);
+    }
+
+    /* LAYERS */
+    .gis-llst {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .gis-litm {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background .1s;
+      border-bottom: 1px solid rgba(220, 225, 232, .6);
+    }
+
+    .gis-litm:hover {
+      background: var(--gis-sf2);
+    }
+
+    .gis-litm.gis-al {
+      background: var(--gis-acbg);
+    }
+
+    .gis-ldot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+    }
+
+    .gis-lnm {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gis-tx);
+    }
+
+    .gis-lcnt {
+      font-size: 10px;
+      color: var(--gis-tx3);
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 20px;
+      text-align: right;
+    }
+
+    .gis-lic {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      color: var(--gis-tx3);
+      flex-shrink: 0;
+      transition: color .12s;
+      opacity: .6;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .gis-lic:hover {
+      color: var(--gis-tx);
+      opacity: 1;
+    }
+
+    .gis-lic.gis-hid {
+      opacity: .25;
+    }
+
+    .gis-ladd {
+      margin: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      background: var(--gis-sf2);
+      border: 1px dashed var(--gis-br2);
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--gis-tx3);
+      font-size: 11px;
+      font-weight: 600;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+
+    .gis-ladd:hover {
+      border-color: var(--gis-ac);
+      color: var(--gis-ac);
+      background: var(--gis-acbg);
+    }
+
+    .gis-ladd svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    /* OBJECTS */
+    .gis-osrch {
+      padding: 8px 10px;
+    }
+
+    .gis-osrch input {
+      width: 100%;
+      background: var(--gis-sf2);
+      border: 1px solid var(--gis-br);
+      color: var(--gis-tx);
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .gis-osrch input:focus {
+      border-color: var(--gis-ac);
+      box-shadow: 0 0 0 3px var(--gis-acbg);
+    }
+
+    .gis-osrch input::placeholder {
+      color: var(--gis-tx3);
+    }
+
+    .gis-olst {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .gis-oitm {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-bottom: 1px solid rgba(220, 225, 232, .5);
+      cursor: pointer;
+      transition: background .1s;
+    }
+
+    .gis-oitm:hover {
+      background: var(--gis-sf2);
+    }
+
+    .gis-oitm.gis-sel {
+      background: var(--gis-acbg);
+    }
+
+    .gis-oico {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .gis-onm {
+      flex: 1;
+      font-size: 11px;
+      color: var(--gis-tx);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .gis-otag {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .gis-ous {
+      font-size: 9px;
+      color: var(--gis-wn);
+      margin-left: 1px;
+    }
+
+    .gis-odel {
+      width: 14px;
+      height: 14px;
+      color: var(--gis-tx3);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .15s;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      flex-shrink: 0;
+    }
+
+    .gis-oitm:hover .gis-odel {
+      opacity: .5;
+    }
+
+    .gis-odel:hover {
+      opacity: 1 !important;
+      color: var(--gis-dn);
+    }
+
+    /* MAP */
+    #gis-mwrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #gis-map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* TOPBAR */
+    #gis-topbar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, .96);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--gis-br);
+      border-radius: 11px;
+      padding: 5px 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+    }
+
+    .gis-tsep {
+      width: 1px;
+      height: 20px;
+      background: var(--gis-br);
+      margin: 0 2px;
+    }
+
+    .gis-tbtn2 {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 7px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--gis-tx2);
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .gis-tbtn2 svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .gis-tbtn2:hover {
+      background: var(--gis-sf2);
+      border-color: var(--gis-br);
+      color: var(--gis-tx);
+    }
+
+    .gis-tbtn2.gis-on {
+      background: var(--gis-acbg);
+      border-color: var(--gis-acbr);
+      color: var(--gis-ac);
+    }
+
+    .gis-tbtn2.gis-ok {
+      color: var(--gis-ok);
+    }
+
+    .gis-tbtn2.gis-ok:hover {
+      background: rgba(5, 150, 105, .08);
+      border-color: var(--gis-ok);
+    }
+
+    .gis-tbtn2.gis-dn {
+      color: var(--gis-dn);
+    }
+
+    .gis-tbtn2.gis-dn:hover {
+      background: rgba(220, 38, 38, .08);
+      border-color: var(--gis-dn);
+    }
+
+    #gis-albadge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--gis-sf2);
+      border: 1px solid var(--gis-br);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gis-tx2);
+    }
+
+    #gis-aldot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* EXPORT MENU */
+    #gis-expwrap {
+      position: relative;
+    }
+
+    #gis-expmenu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--gis-sf);
+      border: 1px solid var(--gis-br);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+      padding: 4px;
+      min-width: 170px;
+      z-index: 9999;
+    }
+
+    #gis-expmenu.gis-on {
+      display: block;
+    }
+
+    .gis-eitm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--gis-tx2);
+      transition: all .1s;
+    }
+
+    .gis-eitm:hover {
+      background: var(--gis-sf2);
+      color: var(--gis-tx);
+    }
+
+    .gis-eitm.gis-dn {
+      color: var(--gis-dn);
+    }
+
+    .gis-eitm.gis-dn:hover {
+      background: rgba(220, 38, 38, .06);
+    }
+
+    .gis-esep {
+      height: 1px;
+      background: var(--gis-br);
+      margin: 3px 0;
+    }
+
+    .gis-eitm svg {
+      width: 13px;
+      height: 13px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    /* STATUS */
+    #gis-status {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--gis-br);
+      border-radius: 7px;
+      padding: 4px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--gis-tx3);
+      display: flex;
+      gap: 14px;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .07);
+    }
+
+    #gis-status span {
+      color: var(--gis-tx2);
+      font-weight: 600;
+    }
+
+    .gis-stcoords {
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    .gis-stcoords:hover span {
+      color: var(--gis-ac);
+    }
+
+    /* TOAST */
+    #gis-toast {
+      position: absolute;
+      bottom: 48px;
+      right: 16px;
+      z-index: 9999;
+      background: var(--gis-sf);
+      border: 1px solid var(--gis-br);
+      border-radius: 9px;
+      padding: 9px 15px;
+      font-size: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+      transform: translateY(16px);
+      opacity: 0;
+      transition: all .22s cubic-bezier(.34, 1.56, .64, 1);
+      pointer-events: none;
+      max-width: 280px;
+      color: var(--gis-tx2);
+    }
+
+    #gis-toast.gis-show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #gis-toast.gis-ok {
+      border-color: var(--gis-ok);
+      color: var(--gis-ok);
+    }
+
+    #gis-toast.gis-err {
+      border-color: var(--gis-dn);
+      color: var(--gis-dn);
+    }
+
+    #gis-toast.gis-info {
+      border-color: var(--gis-ac);
+      color: var(--gis-ac);
+    }
+
+    /* MODAL */
+    .gis-mov {
+      all: initial !important;
+      display: none !important;
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 99999 !important;
+      background: rgba(15, 25, 50, .35) !important;
+      backdrop-filter: blur(3px) !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 20px !important;
+      font-family: 'Manrope', sans-serif !important;
+      box-sizing: border-box !important;
+    }
+
+    .gis-mov.gis-on {
+      display: flex !important;
+    }
+
+    .gis-mbox {
+      all: initial;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 13px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .18), 0 4px 12px rgba(0, 0, 0, .08);
+      width: 100%;
+      max-width: 460px;
+      max-height: 88vh;
+      overflow: hidden;
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: #18202e;
+      box-sizing: border-box;
+      animation: gismoin .18s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    @keyframes gismoin {
+      from {
+        opacity: 0;
+        transform: scale(.95) translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0)
+      }
+    }
+
+    .gis-mhdr {
+      padding: 15px 18px 12px;
+      border-bottom: 1px solid #dde1e8;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+
+    .gis-mhdr h3 {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+      color: #18202e;
+      margin: 0;
+      padding: 0;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .gis-mbdy {
+      padding: 16px 18px;
+      overflow-y: auto;
+      flex: 1;
+      background: #fff;
+    }
+
+    .gis-mftr {
+      padding: 11px 18px;
+      border-top: 1px solid #dde1e8;
+      display: flex;
+      gap: 7px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+      background: #f7f8fa;
+    }
+
+    .gis-fg {
+      margin-bottom: 13px;
+    }
+
+    .gis-fg:last-child {
+      margin-bottom: 0;
+    }
+
+    .gis-lbl {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: #8a95a6;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .gis-req {
+      color: #dc2626;
+    }
+
+    .gis-inp,
+    .gis-fsel,
+    .gis-ta {
+      width: 100%;
+      background: #f7f8fa;
+      border: 1px solid #dde1e8;
+      color: #18202e;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      box-sizing: border-box;
+    }
+
+    .gis-inp:focus,
+    .gis-fsel:focus,
+    .gis-ta:focus {
+      border-color: #1d6ef4;
+      box-shadow: 0 0 0 3px rgba(29, 110, 244, .08);
+    }
+
+    .gis-ta {
+      min-height: 62px;
+      resize: vertical;
+    }
+
+    .gis-fr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .gis-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: 7px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .gis-btn svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    .gis-bp {
+      background: #1d6ef4;
+      color: #fff;
+      border-color: #1d6ef4;
+    }
+
+    .gis-bp:hover {
+      background: #1558cc;
+      border-color: #1558cc;
+    }
+
+    .gis-bg {
+      background: transparent;
+      color: #48556a;
+      border-color: #dde1e8;
+    }
+
+    .gis-bg:hover {
+      border-color: #c8cdd6;
+      background: #f7f8fa;
+      color: #18202e;
+    }
+
+    .gis-bdn {
+      background: rgba(220, 38, 38, .08);
+      color: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .gis-bdn:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    /* CONTEXT MENU */
+    #gis-ctx {
+      display: none;
+      position: fixed;
+      z-index: 99998;
+      background: #fff;
+      border: 1px solid #dde1e8;
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, .14);
+      padding: 4px;
+      min-width: 155px;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    #gis-ctx.gis-on {
+      display: block;
+    }
+
+    .gis-citm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #48556a;
+      transition: all .1s;
+    }
+
+    .gis-citm:hover {
+      background: #f7f8fa;
+      color: #18202e;
+    }
+
+    .gis-citm.gis-dn {
+      color: #dc2626;
+    }
+
+    .gis-citm.gis-dn:hover {
+      background: rgba(220, 38, 38, .07);
+    }
+
+    .gis-csep {
+      height: 1px;
+      background: #dde1e8;
+      margin: 3px 0;
+    }
+
+    .gis-citm svg {
+      width: 13px;
+      height: 13px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    /* SCROLLBARS */
+    #gis-root ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    #gis-root ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #gis-root ::-webkit-scrollbar-thumb {
+      background: var(--gis-br2);
+      border-radius: 2px;
+    }
+
+    /* LEAFLET */
+    #gis-map .leaflet-container {
+      background: #e8edf2;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    #gis-map .leaflet-control-zoom {
+      display: none;
+    }
+
+    /* CUSTOM LINKED DROPDOWN */
+    .gis-ldd {
+      position: relative;
+    }
+
+    .gis-ldd-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #f7f8fa;
+      border: 1px solid #dde1e8;
+      color: #18202e;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .gis-ldd-btn:hover {
+      border-color: #c8cdd6;
+    }
+
+    .gis-ldd-btn.gis-open {
+      border-color: #1d6ef4;
+      box-shadow: 0 0 0 3px rgba(29, 110, 244, .08);
+    }
+
+    .gis-ldd-btn span {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #18202e;
+    }
+
+    .gis-ldd-btn span.gis-placeholder {
+      color: #8a95a6;
+    }
+
+    .gis-ldd-btn svg {
+      flex-shrink: 0;
+      color: #8a95a6;
+      transition: transform .15s;
+    }
+
+    .gis-ldd-btn.gis-open svg {
+      transform: rotate(180deg);
+    }
+
+    .gis-ldd-drop {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #dde1e8;
+      border-radius: 9px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .13);
+      z-index: 99999;
+      overflow: hidden;
+    }
+
+    .gis-ldd-drop.gis-open {
+      display: block;
+    }
+
+    .gis-ldd-srch-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eef0f3;
+    }
+
+    .gis-ldd-srch-wrap svg {
+      flex-shrink: 0;
+      color: #8a95a6;
+    }
+
+    .gis-ldd-srch {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #18202e;
+    }
+
+    .gis-ldd-srch::placeholder {
+      color: #8a95a6;
+    }
+
+    .gis-ldd-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .gis-ldd-opt {
+      padding: 7px 11px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #18202e;
+      cursor: pointer;
+      transition: background .08s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gis-ldd-opt:hover {
+      background: #f7f8fa;
+    }
+
+    .gis-ldd-opt.gis-sel {
+      background: rgba(29, 110, 244, .08);
+      color: #1d6ef4;
+      font-weight: 600;
+    }
+
+    .gis-ldd-empty {
+      padding: 12px 11px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #8a95a6;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="gis-root">
+
+    <!-- SIDEBAR -->
+    <div id="gis-sb">
+      <div class="gis-sbhdr">
+        <div class="gis-logo">INKAY · GIS</div>
+        <div class="gis-sub">АО «Инкай» — Картографический редактор</div>
+      </div>
+      <div class="gis-tabs">
+        <div class="gis-tab gis-on" onclick="gisSwitchTab('tools',this)">Инстр.</div>
+        <div class="gis-tab" onclick="gisSwitchTab('layers',this)">Слои</div>
+        <div class="gis-tab" onclick="gisSwitchTab('objects',this)">Объекты</div>
+      </div>
+
+      <!-- TOOLS PANEL -->
+      <div class="gis-pnl gis-on" id="gis-pnl-tools">
+        <div style="overflow-y:auto;flex:1;padding-bottom:8px">
+          <div class="gis-seclbl" style="margin-top:8px">Геометрия</div>
+          <div class="gis-tgrid">
+            <div class="gis-tbtn" id="gtl-point" onclick="gisTool('point')"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" />
+                <circle cx="12" cy="12" r="8" />
+              </svg>Точка</div>
+            <div class="gis-tbtn" id="gtl-polyline" onclick="gisTool('polyline')"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M3 20L9 8l5 5 7-10" />
+              </svg>Линия</div>
+            <div class="gis-tbtn" id="gtl-polygon" onclick="gisTool('polygon')"><svg viewBox="0 0 24 24">
+                <polygon points="12,3 21,9 17,20 7,20 3,9" />
+              </svg>Полигон</div>
+            <div class="gis-tbtn" id="gtl-rectangle" onclick="gisTool('rectangle')"><svg viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+              </svg>Прям.</div>
+            <div class="gis-tbtn" id="gtl-circle" onclick="gisTool('circle')"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+              </svg>Круг</div>
+            <div class="gis-tbtn gis-on" id="gtl-select" onclick="gisTool('select')"><svg viewBox="0 0 24 24"
+                stroke="none">
+                <path d="M5 3l14 9-7 2-3 7-4-18z" fill="currentColor" />
+              </svg>Выбор</div>
+            <div class="gis-tbtn" id="gtl-delete" onclick="gisTool('delete')"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+              </svg>Удал.</div>
+            <div class="gis-tbtn" id="gtl-measure" onclick="gisTool('measure')"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M3 21L21 3" />
+                <path stroke-linecap="round" d="M9 3h12v12" />
+              </svg>Линейка</div>
+          </div>
+          <div class="gis-stblk">
+            <div class="gis-sl">Цвет обводки</div>
+            <div class="gis-sws" id="gis-ssws"></div>
+            <div class="gis-crow"><input type="color" id="gis-scol" value="#1d6ef4"
+                oninput="gisCC('stroke',this.value)"><span class="gis-hex" id="gis-shex">#1d6ef4</span></div>
+          </div>
+          <div class="gis-stblk">
+            <div class="gis-sl">Цвет заливки</div>
+            <div class="gis-sws" id="gis-fsws"></div>
+            <div class="gis-crow"><input type="color" id="gis-fcol" value="#1d6ef4"
+                oninput="gisCC('fill',this.value)"><span class="gis-hex" id="gis-fhex">#1d6ef4</span></div>
+          </div>
+          <div class="gis-stblk">
+            <div class="gis-sl">Прозрачность заливки</div>
+            <div class="gis-rrow"><input type="range" id="gis-opr" min="0" max="100" value="35"
+                oninput="gisOp(this.value)"><span class="gis-rval" id="gis-opv">35%</span></div>
+            <div class="gis-sl">Толщина линии</div>
+            <div class="gis-rrow"><input type="range" id="gis-wtr" min="1" max="12" value="2"
+                oninput="gisWt(this.value)"><span class="gis-rval" id="gis-wtv">2px</span></div>
+            <div class="gis-sl" style="margin-top:4px">Пунктир</div>
+            <select class="gis-sel2" id="gis-dash" onchange="gisDsh(this.value)">
+              <option value="">Сплошная</option>
+              <option value="8,4">Пунктир</option>
+              <option value="2,4">Точки</option>
+              <option value="12,4,2,4">Штрих-пунктир</option>
+            </select>
+          </div>
+          <div class="gis-stblk">
+            <div class="gis-sl">Иконка точки</div>
+            <select class="gis-sel2" id="gis-ico">
+              <option value="well">⚫ Скважина</option>
+              <option value="pump">🔵 Насос</option>
+              <option value="valve">🔴 Клапан</option>
+              <option value="building">🟦 Здание</option>
+              <option value="sensor">🟡 Датчик</option>
+              <option value="pin">📍 Маркер</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYERS PANEL -->
+      <div class="gis-pnl" id="gis-pnl-layers">
+        <div class="gis-llst" id="gis-llst"></div>
+        <div class="gis-ladd" onclick="gisOpenLyrMdl()">
+          <svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" d="M12 4v16m8-8H4" />
+          </svg>Добавить слой
+        </div>
+      </div>
+
+      <!-- OBJECTS PANEL -->
+      <div class="gis-pnl" id="gis-pnl-objects">
+        <div class="gis-osrch"><input type="text" placeholder="Поиск объектов..." oninput="gisFltrObj(this.value)">
+        </div>
+        <div class="gis-olst" id="gis-olst"></div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="gis-mwrap">
+      <div id="gis-map"></div>
+
+      <div id="gis-topbar">
+        <div id="gis-albadge">
+          <div id="gis-aldot" style="background:#1d6ef4"></div><span id="gis-alname">Без слоя</span>
+        </div>
+        <div class="gis-tsep"></div>
+        <button class="gis-tbtn2" id="gbtn-dark" onclick="gisTls('dark')"><svg viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>Тёмная</button>
+        <button class="gis-tbtn2 gis-on" id="gbtn-osm" onclick="gisTls('osm')"><svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M2 12h20M12 2a15 15 0 010 20" />
+          </svg>OSM</button>
+        <button class="gis-tbtn2" id="gbtn-sat" onclick="gisTls('sat')"><svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+          </svg>Спутник</button>
+        <div class="gis-tsep"></div>
+        <button class="gis-tbtn2" onclick="gisM.zoomIn()"><svg viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" d="M12 4v16m8-8H4" />
+          </svg></button>
+        <button class="gis-tbtn2" onclick="gisM.zoomOut()"><svg viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" d="M4 12h16" />
+          </svg></button>
+        <button class="gis-tbtn2" onclick="gisHome()" title="На рудник"><svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12L12 3l9 9M5 10v10h4v-6h6v6h4V10" />
+          </svg></button>
+        <div class="gis-tsep"></div>
+        <button class="gis-tbtn2 gis-ok" onclick="gisSave()"><svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+            <polyline stroke-linecap="round" points="17 21 17 13 7 13 7 21" />
+            <polyline stroke-linecap="round" points="7 3 7 8 15 8" />
+          </svg>Сохранить</button>
+        <div id="gis-expwrap">
+          <button class="gis-tbtn2" onclick="gisTogExp()"><svg viewBox="0 0 24 24">
+              <path stroke-linecap="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>Экспорт ▾</button>
+          <div id="gis-expmenu">
+            <div class="gis-eitm" onclick="gisClExp();gisExpGJ()"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline stroke-linecap="round" points="14 2 14 8 20 8" />
+              </svg>GeoJSON</div>
+            <div class="gis-eitm" onclick="gisClExp();gisExpPNG()"><svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline stroke-linecap="round" points="21 15 16 10 5 21" />
+              </svg>PNG</div>
+            <div class="gis-eitm" onclick="gisClExp();gisExpPDF()"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline stroke-linecap="round" points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>PDF</div>
+            <div class="gis-esep"></div>
+            <div class="gis-eitm" onclick="gisClExp();document.getElementById('gis-imp').click()"><svg
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>Импорт GeoJSON</div>
+            <div class="gis-esep"></div>
+            <div class="gis-eitm gis-dn" onclick="gisClExp();gisClear()"><svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+              </svg>Очистить карту</div>
+          </div>
+        </div>
+        <input type="file" id="gis-imp" accept=".geojson,.json" style="display:none" onchange="gisImpGJ(this)">
+      </div>
+
+      <div id="gis-status">
+        <div class="gis-stcoords" onclick="gisCpCoords()" title="Скопировать">WGS84: <span id="gis-lat">—</span>, <span
+            id="gis-lng">—</span></div>
+        <div>Масштаб: <span id="gis-zoom">—</span></div>
+        <div>Объектов: <span id="gis-cnt">0</span></div>
+        <div id="gis-stool">Инструмент: <span>Выбор</span></div>
+        <div id="gis-ssel" style="display:none;color:#1d6ef4">● <span></span></div>
+      </div>
+      <div id="gis-toast"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROPERTIES -->
+  <div class="gis-mov" id="gis-pmov">
+    <div class="gis-mbox" style="max-width:480px">
+      <div class="gis-mhdr">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1d6ef4" stroke-width="2">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        <h3 id="gis-pmtitle">Свойства объекта</h3>
+        <button class="gis-btn" id="gis-pm-detail-btn"
+          style="padding:4px 11px;font-size:11px;background:rgba(29,110,244,.1);color:#1d6ef4;border:1px solid #1d6ef4;border-radius:7px;cursor:pointer;display:none;align-items:center;gap:5px;font-family:'Manrope',sans-serif;font-weight:600"
+          onclick="gisOpenLinkedDetail()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+            <polyline stroke-linecap="round" points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+          Подробнее
+        </button>
+        <button class="gis-btn gis-bg" style="padding:3px 8px;font-size:11px" onclick="gisClosePM()">✕</button>
+      </div>
+      <div class="gis-mbdy">
+        <div class="gis-fg"><label class="gis-lbl">Название</label><input class="gis-inp" type="text" id="gis-pmlbl"
+            placeholder="Скважина №142"></div>
+        <div class="gis-fg"><label class="gis-lbl">Код объекта</label><input class="gis-inp" type="text" id="gis-pmcode"
+            placeholder="WELL-142"></div>
+        <div class="gis-fg"><label class="gis-lbl">Слой</label><select class="gis-fsel" id="gis-pmlyr"></select></div>
+        <div class="gis-fg"><label class="gis-lbl">Описание</label><textarea class="gis-ta" id="gis-pmdesc"
+            placeholder="Дополнительная информация..."></textarea></div>
+        <!-- СВЯЗАННЫЙ ОБЪЕКТ (динамически по слою) -->
+        <div class="gis-fg" id="gis-pm-linked" style="display:none">
+          <label class="gis-lbl" id="gis-pm-linked-lbl">Связанный объект</label>
+          <div class="gis-ldd" id="gis-ldd-wrap">
+            <button type="button" class="gis-ldd-btn" id="gis-ldd-btn" onclick="gisLddToggle()">
+              <span id="gis-ldd-val">— не выбрано —</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div class="gis-ldd-drop" id="gis-ldd-drop">
+              <div class="gis-ldd-srch-wrap">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path stroke-linecap="round" d="m21 21-4.35-4.35" />
+                </svg>
+                <input class="gis-ldd-srch" id="gis-pm-linked-srch" type="text" placeholder="Поиск..."
+                  autocomplete="off" oninput="gisFilterLinked(this.value)">
+              </div>
+              <div class="gis-ldd-list" id="gis-ldd-list"></div>
+            </div>
+          </div>
+          <!-- скрытый select для совместимости с gisSavePM -->
+          <select id="gis-pm-linked-sel" style="display:none"></select>
+        </div>
+        <div class="gis-fr">
+          <div class="gis-fg"><label class="gis-lbl">Цвет обводки</label><input class="gis-inp" type="color"
+              id="gis-pmstroke" style="height:34px;cursor:pointer;padding:2px"></div>
+          <div class="gis-fg"><label class="gis-lbl">Цвет заливки</label><input class="gis-inp" type="color"
+              id="gis-pmfill" style="height:34px;cursor:pointer;padding:2px"></div>
+        </div>
+        <div class="gis-fr">
+          <div class="gis-fg"><label class="gis-lbl">Прозрачность (0–1)</label><input class="gis-inp" type="number"
+              id="gis-pmop" min="0" max="1" step="0.05" value="0.35"></div>
+          <div class="gis-fg"><label class="gis-lbl">Толщина линии, px</label><input class="gis-inp" type="number"
+              id="gis-pmwt" min="1" max="12" value="2"></div>
+        </div>
+        <!-- КООРДИНАТЫ -->
+        <div class="gis-fg" id="gis-pm-coord-pt" style="display:none">
+          <label class="gis-lbl">Координаты точки</label>
+          <div class="gis-fr">
+            <div class="gis-fg"><label class="gis-lbl" style="font-size:9px">Широта</label><input class="gis-inp"
+                type="number" id="gis-pmlat" step="0.000001" placeholder="44.070000"></div>
+            <div class="gis-fg"><label class="gis-lbl" style="font-size:9px">Долгота</label><input class="gis-inp"
+                type="number" id="gis-pmlng" step="0.000001" placeholder="65.360000"></div>
+          </div>
+        </div>
+        <div class="gis-fg" id="gis-pm-coord-circ" style="display:none">
+          <label class="gis-lbl">Координаты и размер</label>
+          <div class="gis-fr">
+            <div class="gis-fg"><label class="gis-lbl" style="font-size:9px">Широта</label><input class="gis-inp"
+                type="number" id="gis-pmclat" step="0.000001" placeholder="44.070000"></div>
+            <div class="gis-fg"><label class="gis-lbl" style="font-size:9px">Долгота</label><input class="gis-inp"
+                type="number" id="gis-pmclng" step="0.000001" placeholder="65.360000"></div>
+          </div>
+          <div class="gis-fg" style="margin-top:4px"><label class="gis-lbl" style="font-size:9px">Радиус
+              (м)</label><input class="gis-inp" type="number" id="gis-pmcrad" step="1" min="1" placeholder="500"></div>
+        </div>
+        <div class="gis-fg" id="gis-pm-coord-poly" style="display:none">
+          <label class="gis-lbl">Координаты вершин <span
+              style="color:#8a95a6;font-weight:400;text-transform:none;letter-spacing:0">(по одной паре широта, долгота
+              на строку)</span></label>
+          <textarea class="gis-ta" id="gis-pmcoords"
+            style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:11px" placeholder="44.123456, 65.234567
+44.234567, 65.345678
+44.111111, 65.111111"></textarea>
+        </div>
+      </div>
+      <div class="gis-mftr">
+        <button class="gis-btn gis-bdn" onclick="gisDelSel()">Удалить</button>
+        <button class="gis-btn gis-bg" onclick="gisClosePM()">Отмена</button>
+        <button class="gis-btn gis-bp" onclick="gisSavePM()"><svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" d="M5 13l4 4L19 7" />
+          </svg>Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NEW LAYER -->
+  <div class="gis-mov" id="gis-lmov">
+    <div class="gis-mbox">
+      <div class="gis-mhdr">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1d6ef4" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        <h3>Новый слой</h3>
+        <button class="gis-btn gis-bg" style="padding:3px 8px;font-size:11px" onclick="gisCloseLM()">✕</button>
+      </div>
+      <div class="gis-mbdy">
+        <div class="gis-fg"><label class="gis-lbl">Название <span class="gis-req">*</span></label><input class="gis-inp"
+            type="text" id="gis-lmname" placeholder="Скважины блока 2А"></div>
+        <div class="gis-fg"><label class="gis-lbl">Код (латиница)</label><input class="gis-inp" type="text"
+            id="gis-lmcode" placeholder="wells_2a"></div>
+        <div class="gis-fr">
+          <div class="gis-fg"><label class="gis-lbl">Цвет</label><input class="gis-inp" type="color" id="gis-lmcolor"
+              value="#1d6ef4" style="height:34px;cursor:pointer;padding:2px"></div>
+          <div class="gis-fg"><label class="gis-lbl">Порядок</label><input class="gis-inp" type="number" id="gis-lmsort"
+              value="0" min="0"></div>
+        </div>
+        <div class="gis-fg"><label class="gis-lbl">Описание</label><textarea class="gis-ta" id="gis-lmdesc"
+            placeholder="Краткое описание..."></textarea></div>
+      </div>
+      <div class="gis-mftr">
+        <button class="gis-btn gis-bg" onclick="gisCloseLM()">Отмена</button>
+        <button class="gis-btn gis-bp" onclick="gisSaveLyr()">Создать слой</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEXT MENU -->
+  <div id="gis-ctx">
+    <div class="gis-citm" onclick="gisCtxA('props')"><svg viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>Свойства</div>
+    <div class="gis-citm" onclick="gisCtxA('zoom')"><svg viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path stroke-linecap="round" d="m21 21-4.35-4.35M11 8v6M8 11h6" />
+      </svg>Приблизить</div>
+    <div class="gis-citm" onclick="gisCtxA('copy')"><svg viewBox="0 0 24 24">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+      </svg>Копировать</div>
+    <div class="gis-csep"></div>
+    <div class="gis-citm gis-dn" onclick="gisCtxA('delete')"><svg viewBox="0 0 24 24">
+        <path stroke-linecap="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+      </svg>Удалить</div>
+  </div>
+
+  <script>
+    const GAPI = '/ru/api/v1', GLTBL = 'list_map_layers', GOTBL = 'doc_map_objects', GLMDL = 'ListMapLayers', GOMDL = 'DocMapObjects';
+    const GLAT = 44.07, GLNG = 65.36, GZOOM = 13;
+
+    const GIS_LAYER_LINK = {
+      wells: { field: 'ilc_skv', label: 'Скважина', tbl: 'list_skv' },
+      blocks: { field: 'ilc_tblock', label: 'Блок', tbl: 'list_tblock' },
+      lap: { field: 'ilc_lap', label: 'ЛЭП', tbl: 'list_lap' },
+      pipe: { field: 'ilc_trunk_line', label: 'Трубопровод', tbl: 'list_trunk_line' },
+    };
+    let _gisLinkCache = {};
+
+    function gisH() { const u = localStorage.getItem('personCode') || 'anonymous', s = u + ':19451945', e = encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode('0x' + p)); return { 'X-Requested-With': 'XMLHttpRequest', 'Authorization': 'Basic ' + btoa(e) }; }
+    function gisCsrf() { const m = document.querySelector('meta[name="csrf-token"]'); if (m?.content) return m.content; if (window.yii?.getCsrfToken) { const t = window.yii.getCsrfToken(); if (t) return t; } const i = document.querySelector('input[name="_csrf-frontend"]'); if (i?.value) return i.value; try { const cm = document.cookie.match(/_csrf-frontend=([^;]+)/); if (cm) { const d = decodeURIComponent(cm[1]), tm = d.match(/"([a-zA-Z0-9_\-]{30,})"/); if (tm) return tm[1]; } } catch { } try { if (window.parent !== window) { const pm = window.parent.document.querySelector('meta[name="csrf-token"]'); if (pm?.content) return pm.content; } } catch { } return ''; }
+    async function gisGet(url) { const r = await fetch(url, { headers: gisH() }); if (!r.ok) throw new Error('HTTP ' + r.status); const d = await r.json(); return Array.isArray(d) ? d : (d.items || []); }
+    async function gisPost(url, fd) { const r = await fetch(url, { method: 'POST', headers: gisH(), body: fd }); if (!r.ok && r.status !== 302) { const t = await r.text().catch(() => ''); throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 120)); } return r; }
+
+    let gisM, gisDrwn, gisCurTool = 'select';
+    let gisLyrs = [], gisObjs = [], gisLfs = {}, gisActLyr = null, gisSel = null, gisCtxUuid = null;
+    let gisMPts = [], gisMLayer = null;
+    let gisDrwPts = [], gisDrwTmp = [], gisDrwActive = false, gisDrwType = null;
+    let gisDrwPreview = null, gisDrwStartPt = null;
+    let _lc = null;
+    const gisCS = { stroke: '#1d6ef4', fill: '#1d6ef4', opacity: .35, weight: 2, dash: '' };
+
+    const GPAL = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#1d6ef4', '#8b5cf6', '#ec4899', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2', '#2563eb', '#7c3aed', '#db2777', '#fca5a5', '#fdba74', '#fde047', '#86efac', '#67e8f9', '#93c5fd', '#c4b5fd', '#f9a8d4', '#1e293b', '#334155', '#64748b', '#94a3b8', '#cbd5e1', '#ffffff', '#78716c', '#000000'];
+
+    function gisBldPal(id, tp) { const el = document.getElementById(id); if (!el) return; el.innerHTML = ''; GPAL.forEach(c => { const d = document.createElement('div'); d.className = 'gis-sw'; d.style.background = c; d.title = c; d.onclick = () => { el.querySelectorAll('.gis-sw').forEach(s => s.classList.remove('gis-sel')); d.classList.add('gis-sel'); document.getElementById('gis-' + (tp === 'stroke' ? 's' : 'f') + 'col').value = c; document.getElementById('gis-' + (tp === 'stroke' ? 's' : 'f') + 'hex').textContent = c; if (tp === 'stroke') gisCS.stroke = c; else gisCS.fill = c; }; el.appendChild(d); }); }
+
+    function gisInitMap() {
+      gisM = L.map('gis-map', { center: [GLAT, GLNG], zoom: GZOOM, zoomControl: false, attributionControl: false });
+      const tls = { dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 22 }), osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }), sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 22 }) };
+      window._gisTls = tls; tls.osm.addTo(gisM);
+      gisDrwn = new L.FeatureGroup().addTo(gisM);
+      gisM.on('mousemove', e => {
+        const la = e.latlng.lat.toFixed(6), ln = e.latlng.lng.toFixed(6);
+        document.getElementById('gis-lat').textContent = la + '° N';
+        document.getElementById('gis-lng').textContent = ln + '° E';
+        _lc = { lat: la, lng: ln };
+        if (gisDrwActive) gisMapMouseMove(e);
+      });
+      gisM.on('zoomend', () => { document.getElementById('gis-zoom').textContent = gisM.getZoom(); });
+      document.getElementById('gis-zoom').textContent = gisM.getZoom();
+      gisM.on('click', e => {
+        if (gisDrwActive) { gisMapClick(e); return; }
+        if (gisCurTool === 'measure') { gisAddMP(e.latlng); return; }
+        gisHideCtx();
+      });
+      gisM.on('dblclick', e => { L.DomEvent.stop(e); if (gisDrwActive) gisMapDblClick(e); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          if (gisDrwActive) { gisStopDrw(); gisTool('select'); }
+          gisClosePM(); gisCloseLM(); gisStopMsr();
+        }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && gisSel && e.target === document.body) gisDelSel();
+        if (e.key === 'Enter' && gisDrwActive) gisMapDblClick({ latlng: null });
+      });
+      const st = document.createElement('style');
+      st.textContent = '.gis-lbl2{background:rgba(255,255,255,.92)!important;border:1px solid #dde1e8!important;color:#18202e!important;font-family:Manrope,sans-serif!important;font-size:11px!important;font-weight:600!important;border-radius:5px!important;padding:2px 7px!important;white-space:nowrap!important;box-shadow:0 2px 6px rgba(0,0,0,.1)!important;}.gis-lbl2::before{display:none!important;}.gis-msrtip{background:rgba(234,179,8,.9)!important;color:#1c1917!important;font-family:"JetBrains Mono",monospace!important;font-size:10px!important;border:none!important;border-radius:5px!important;font-weight:700!important;}';
+      document.head.appendChild(st);
+    }
+
+    function gisTls(k) { Object.values(window._gisTls).forEach(t => { if (gisM.hasLayer(t)) gisM.removeLayer(t); }); window._gisTls[k].addTo(gisM);['dark', 'osm', 'sat'].forEach(n => document.getElementById('gbtn-' + n)?.classList.toggle('gis-on', n === k)); }
+    function gisHome() { gisM.setView([GLAT, GLNG], GZOOM); }
+
+    function gisTool(t) {
+      gisStopDrw(); gisStopMsr(); gisCurTool = t;
+      document.querySelectorAll('.gis-tbtn').forEach(b => b.classList.remove('gis-on'));
+      document.getElementById('gtl-' + t)?.classList.add('gis-on');
+      const nm = { point: 'Точка', polyline: 'Линия', polygon: 'Полигон', rectangle: 'Прямоугольник', circle: 'Круг', select: 'Выбор', delete: 'Удаление', measure: 'Измерение' };
+      document.getElementById('gis-stool').innerHTML = 'Инструмент: <span>' + (nm[t] || t) + '</span>';
+      const mc = gisM.getContainer();
+      if (t === 'measure') { gisStrtMsr(); mc.style.cursor = 'crosshair'; return; }
+      if (t === 'select' || t === 'delete') { mc.style.cursor = t === 'delete' ? 'not-allowed' : 'default'; return; }
+      mc.style.cursor = 'crosshair';
+      gisStartDrw(t);
+    }
+    function gisStopDrw() {
+      gisDrwActive = false; gisDrwType = null;
+      gisDrwPts = [];
+      gisDrwTmp.forEach(l => { try { gisM.removeLayer(l); } catch { } }); gisDrwTmp = [];
+      if (gisDrwPreview) { try { gisM.removeLayer(gisDrwPreview); } catch { } gisDrwPreview = null; }
+      gisDrwStartPt = null;
+      gisM.dragging.enable();
+      gisM.getContainer().style.cursor = 'default';
+    }
+    function gisStartDrw(type) {
+      gisDrwActive = true; gisDrwType = type; gisDrwPts = []; gisDrwTmp = []; gisDrwPreview = null;
+      gisM.dragging.disable();
+      if (type === 'circle') { gisDrwStartPt = null; }
+    }
+    function gisMkIco(c, t) { return gisMkIcoSvg(c || document.getElementById('gis-scol').value, t || document.getElementById('gis-ico').value); }
+    function gisMkIcoSvg(c, t) { const ic = { well: `<circle cx="12" cy="12" r="8" fill="${c}" stroke="#fff" stroke-width="2"/>`, pump: `<rect x="4" y="4" width="16" height="16" rx="3" fill="${c}" stroke="#fff" stroke-width="2"/>`, valve: `<polygon points="12,4 20,20 4,20" fill="${c}" stroke="#fff" stroke-width="2"/>`, building: `<rect x="3" y="8" width="18" height="13" fill="${c}" stroke="#fff" stroke-width="2"/><polygon points="3,8 12,2 21,8" fill="${c}" stroke="#fff" stroke-width="2"/>`, sensor: `<circle cx="12" cy="12" r="5" fill="${c}"/><circle cx="12" cy="12" r="9" fill="none" stroke="${c}" stroke-width="2" opacity=".4"/>`, pin: `<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="${c}" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="9" r="2.5" fill="#fff"/>` }; const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">${ic[t] || ic.pin}</svg>`; return L.divIcon({ html: svg, className: '', iconSize: [32, 32], iconAnchor: [16, 32] }); }
+
+    function gisMkUuid() { return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)); }
+    function gisCommitObj(lyr, type, geom) {
+      const uuid = gisMkUuid();
+      const obj = { id: null, uuid, ilc_map_layers: gisActLyr || '', i00_geom_type: type, i00_label: '', i00_description: '', i00_geom_json: geom, i00_color: document.getElementById('gis-scol').value, i00_fill_color: document.getElementById('gis-fcol').value, i00_opacity: parseFloat(document.getElementById('gis-opr').value) / 100, i00_weight: parseInt(document.getElementById('gis-wtr').value), i00_dash_pattern: document.getElementById('gis-dash').value || 'solid', i00_icon_type: document.getElementById('gis-ico').value, i00_object_code: '', _unsaved: true };
+      gisObjs.push(obj); gisLfs[uuid] = lyr; gisDrwn.addLayer(lyr); gisStyl(lyr, obj); gisBind(lyr, uuid); gisRndObj(); gisUpdCnt();
+      setTimeout(() => { gisOpenPM(uuid); document.getElementById('gis-pmlbl').focus(); }, 80);
+    }
+
+    function gisMapClick(e) {
+      if (!gisDrwActive) return;
+      const ll = e.latlng, t = gisDrwType, s = gisCS;
+      if (t === 'point') {
+        const lyr = L.marker([ll.lat, ll.lng], { icon: gisMkIco() });
+        gisCommitObj(lyr, 'marker', { type: 'Point', coordinates: [ll.lng, ll.lat] });
+        return;
+      }
+      if (t === 'circle') {
+        if (!gisDrwStartPt) {
+          gisDrwStartPt = ll;
+          const m = L.circleMarker([ll.lat, ll.lng], { radius: 5, color: s.stroke, fillOpacity: 1 }).addTo(gisM);
+          gisDrwTmp.push(m);
+        } else {
+          const r = gisDrwStartPt.distanceTo(ll);
+          const lyr = L.circle([gisDrwStartPt.lat, gisDrwStartPt.lng], { radius: r, color: s.stroke, fillColor: s.fill, fillOpacity: s.opacity, weight: s.weight });
+          gisCommitObj(lyr, 'circle', { type: 'Circle', coordinates: [gisDrwStartPt.lng, gisDrwStartPt.lat], radius: r });
+          gisStopDrw(); gisStartDrw('circle');
+        }
+        return;
+      }
+      if (t === 'rectangle') {
+        if (!gisDrwStartPt) {
+          gisDrwStartPt = ll;
+          const m = L.circleMarker([ll.lat, ll.lng], { radius: 4, color: s.stroke, fillOpacity: 1 }).addTo(gisM);
+          gisDrwTmp.push(m);
+        } else {
+          const b = L.latLngBounds(gisDrwStartPt, ll);
+          const corners = [b.getNorthWest(), b.getNorthEast(), b.getSouthEast(), b.getSouthWest()];
+          const lyr = L.rectangle(b, { color: s.stroke, fillColor: s.fill, fillOpacity: s.opacity, weight: s.weight, dashArray: s.dash || null });
+          const pts = corners.map(p => [p.lng, p.lat]); pts.push(pts[0]);
+          gisCommitObj(lyr, 'rectangle', { type: 'Polygon', coordinates: [pts] });
+          gisStopDrw(); gisStartDrw('rectangle');
+        }
+        return;
+      }
+      gisDrwPts.push(ll);
+      const dot = L.circleMarker([ll.lat, ll.lng], { radius: 4, color: s.stroke, fillOpacity: 1, fillColor: '#fff' }).addTo(gisM);
+      gisDrwTmp.push(dot);
+      if (t === 'polyline' && gisDrwPts.length >= 2) {
+        if (gisDrwPreview) { gisM.removeLayer(gisDrwPreview); }
+        gisDrwPreview = L.polyline(gisDrwPts, { color: s.stroke, weight: s.weight, dashArray: s.dash || null, opacity: .7 }).addTo(gisM);
+      }
+      if (t === 'polygon' && gisDrwPts.length >= 3) {
+        if (gisDrwPreview) { gisM.removeLayer(gisDrwPreview); }
+        gisDrwPreview = L.polygon(gisDrwPts, { color: s.stroke, fillColor: s.fill, fillOpacity: s.opacity * .5, weight: s.weight, dashArray: s.dash || null }).addTo(gisM);
+      }
+    }
+
+    function gisMapDblClick(e) {
+      L.DomEvent.stopPropagation(e); L.DomEvent.preventDefault(e);
+      if (!gisDrwActive) return;
+      const t = gisDrwType, s = gisCS;
+      if (t === 'polyline' && gisDrwPts.length >= 2) {
+        const pts = gisDrwPts.map(p => [p.lng, p.lat]);
+        const lyr = L.polyline(gisDrwPts, { color: s.stroke, weight: s.weight, dashArray: s.dash || null });
+        gisCommitObj(lyr, 'polyline', { type: 'LineString', coordinates: pts });
+        gisStopDrw(); gisStartDrw('polyline');
+      } else if (t === 'polygon' && gisDrwPts.length >= 3) {
+        const pts = gisDrwPts.map(p => [p.lng, p.lat]); pts.push(pts[0]);
+        const lyr = L.polygon(gisDrwPts, { color: s.stroke, fillColor: s.fill, fillOpacity: s.opacity, weight: s.weight, dashArray: s.dash || null });
+        gisCommitObj(lyr, 'polygon', { type: 'Polygon', coordinates: [pts] });
+        gisStopDrw(); gisStartDrw('polygon');
+      }
+    }
+
+    function gisMapMouseMove(e) {
+      if (!gisDrwActive || !gisDrwPts.length) return;
+      const t = gisDrwType, s = gisCS, pts = [...gisDrwPts, e.latlng];
+      if (gisDrwPreview) gisM.removeLayer(gisDrwPreview);
+      if (t === 'polyline') gisDrwPreview = L.polyline(pts, { color: s.stroke, weight: s.weight, dashArray: s.dash || null, opacity: .5 }).addTo(gisM);
+      if (t === 'polygon' && pts.length >= 3) gisDrwPreview = L.polygon(pts, { color: s.stroke, fillColor: s.fill, fillOpacity: s.opacity * .4, weight: s.weight, opacity: .5 }).addTo(gisM);
+    }
+    function gisL2G(lyr, type) { if (type === 'marker') { const ll = lyr.getLatLng(); return { type: 'Point', coordinates: [ll.lng, ll.lat] }; } if (type === 'circle') { const ll = lyr.getLatLng(); return { type: 'Circle', coordinates: [ll.lng, ll.lat], radius: lyr.getRadius() }; } if (type === 'polyline') { return { type: 'LineString', coordinates: lyr.getLatLngs().map(p => [p.lng, p.lat]) }; } if (type === 'polygon' || type === 'rectangle') { const pts = lyr.getLatLngs()[0].map(p => [p.lng, p.lat]); if (pts.length && (pts[0][0] !== pts[pts.length - 1][0] || pts[0][1] !== pts[pts.length - 1][1])) pts.push(pts[0]); return { type: 'Polygon', coordinates: [pts] }; } return {}; }
+    function gisStyl(lyr, obj) { if (lyr.setStyle) lyr.setStyle({ color: obj.i00_color || '#1d6ef4', fillColor: obj.i00_fill_color || '#1d6ef4', fillOpacity: parseFloat(obj.i00_opacity) || .35, weight: parseInt(obj.i00_weight) || 2, dashArray: (obj.i00_dash_pattern && obj.i00_dash_pattern !== 'solid') ? obj.i00_dash_pattern : null }); if (lyr.setIcon && obj.i00_geom_type === 'marker') { try { lyr.setIcon(gisMkIcoSvg(obj.i00_color || '#1d6ef4', obj.i00_icon_type || 'pin')); } catch { } } }
+    function gisBind(lyr, uuid) {
+      lyr.on('click', e => { L.DomEvent.stopPropagation(e); if (gisCurTool === 'delete') { gisDel(uuid); return; } gisSelObj(uuid); });
+      lyr.on('dblclick', e => { L.DomEvent.stop(e); gisSelObj(uuid); gisOpenPM(uuid); });
+      lyr.on('contextmenu', e => { L.DomEvent.stopPropagation(e); gisCtxUuid = uuid; gisShowCtx(e.originalEvent.clientX, e.originalEvent.clientY); gisSelObj(uuid); });
+    }
+
+    function gisSelObj(uuid) { gisSel = uuid; document.querySelectorAll('.gis-oitm').forEach(el => el.classList.toggle('gis-sel', el.dataset.uuid === uuid)); const el = document.getElementById('gis-ssel'), obj = gisObjs.find(o => o.uuid === uuid); if (el && obj) { el.style.display = ''; el.querySelector('span').textContent = obj.i00_label || obj.i00_geom_type || 'объект'; } else if (el) el.style.display = 'none'; }
+    function gisDel(uuid) { const obj = gisObjs.find(o => o.uuid === uuid); if (!obj) return; if (gisLfs[uuid]) gisDrwn.removeLayer(gisLfs[uuid]); delete gisLfs[uuid]; gisObjs = gisObjs.filter(o => o.uuid !== uuid); gisRndObj(); gisUpdCnt(); gisSel = null; document.getElementById('gis-ssel').style.display = 'none'; if (obj.id) { const fd = new FormData(); fd.append('id', obj.id); fd.append('tblName', GOTBL); fd.append('_csrf-frontend', gisCsrf()); gisPost(`/ru/t/delete?id=${obj.id}&tbl=${GOTBL}&ajax=true&is_ajax=true`, fd).then(() => gisToast('Удалено из БД', 'ok')).catch(e => gisToast('Ошибка: ' + e.message, 'err')); } else gisToast('Объект удалён', 'ok'); }
+    function gisDelSel() { if (gisSel) gisDel(gisSel); gisClosePM(); }
+
+    async function gisOpenPM(uuid) {
+      const obj = gisObjs.find(o => o.uuid === uuid); if (!obj) return;
+      gisSel = uuid;
+      document.getElementById('gis-pm-detail-btn').style.display = 'none';
+      _gisLinkAllOpts = [];
+      const isNew = !obj.i00_label;
+      document.getElementById('gis-pmtitle').textContent = isNew ? 'Новый объект — введите название' : (obj.i00_label || 'Свойства объекта');
+      document.getElementById('gis-pmlbl').value = obj.i00_label || '';
+      document.getElementById('gis-pmcode').value = obj.i00_object_code || '';
+      document.getElementById('gis-pmdesc').value = obj.i00_description || '';
+      document.getElementById('gis-pmstroke').value = obj.i00_color || '#1d6ef4';
+      document.getElementById('gis-pmfill').value = obj.i00_fill_color || '#1d6ef4';
+      document.getElementById('gis-pmop').value = obj.i00_opacity || .35;
+      document.getElementById('gis-pmwt').value = obj.i00_weight || 2;
+      const sel = document.getElementById('gis-pmlyr');
+      sel.innerHTML = '<option value="">— без слоя —</option>';
+      gisLyrs.forEach(l => { const o = document.createElement('option'); o.value = l.code; o.textContent = l.sname; if (l.code === obj.ilc_map_layers) o.selected = true; sel.appendChild(o); });
+      const linkCfg = GIS_LAYER_LINK[obj.ilc_map_layers];
+      const linkDiv = document.getElementById('gis-pm-linked');
+      if (linkCfg) {
+        document.getElementById('gis-pm-linked-lbl').textContent = linkCfg.label;
+        const lsel = document.getElementById('gis-pm-linked-sel');
+        lsel.innerHTML = '';
+        linkDiv.style.display = '';
+        if (!_gisLinkCache[linkCfg.tbl]) {
+          try {
+            const q = JSON.stringify({ limit: 100000, columns: 'id,code,sname' });
+            _gisLinkCache[linkCfg.tbl] = await gisGet(`${GAPI}/${linkCfg.tbl}?_format=json&query=${encodeURIComponent(q)}`);
+          } catch { _gisLinkCache[linkCfg.tbl] = []; }
+        }
+        const curVal = (obj[linkCfg.field] || '').toString();
+        _gisLinkAllOpts = _gisLinkCache[linkCfg.tbl].map(r => ({
+          value: String(r.code || r.id),
+          text: r.sname || r.code || String(r.id),
+          selected: String(r.code || r.id) === curVal
+        }));
+        // Инициализируем кастомный dropdown
+        _gisLddVal = curVal;
+        gisLddClose();
+        const curOpt = _gisLinkAllOpts.find(o => o.selected);
+        const valEl = document.getElementById('gis-ldd-val');
+        if (valEl) {
+          valEl.textContent = curOpt ? curOpt.text : '— не выбрано —';
+          valEl.classList.toggle('gis-placeholder', !curOpt);
+        }
+        // Синхронизируем скрытый select
+        const lsel2 = document.getElementById('gis-pm-linked-sel');
+        lsel2.innerHTML = _gisLinkAllOpts.map(o => `<option value="${o.value}"${o.selected ? ' selected' : ''}>${o.text}</option>`).join('');
+        document.getElementById('gis-pm-detail-btn').style.display = 'inline-flex';
+      } else {
+        linkDiv.style.display = 'none';
+        document.getElementById('gis-pm-detail-btn').style.display = 'none';
+      }
+      const t = obj.i00_geom_type, lyr2 = gisLfs[uuid];
+      document.getElementById('gis-pm-coord-pt').style.display = 'none';
+      document.getElementById('gis-pm-coord-circ').style.display = 'none';
+      document.getElementById('gis-pm-coord-poly').style.display = 'none';
+      if (t === 'marker' && lyr2) {
+        const ll = lyr2.getLatLng();
+        document.getElementById('gis-pmlat').value = ll.lat.toFixed(6);
+        document.getElementById('gis-pmlng').value = ll.lng.toFixed(6);
+        document.getElementById('gis-pm-coord-pt').style.display = '';
+      } else if (t === 'circle' && lyr2) {
+        const ll = lyr2.getLatLng();
+        document.getElementById('gis-pmclat').value = ll.lat.toFixed(6);
+        document.getElementById('gis-pmclng').value = ll.lng.toFixed(6);
+        document.getElementById('gis-pmcrad').value = Math.round(lyr2.getRadius());
+        document.getElementById('gis-pm-coord-circ').style.display = '';
+      } else if ((t === 'polyline' || t === 'polygon' || t === 'rectangle') && lyr2) {
+        let pts = [];
+        try { if (t === 'polyline') pts = lyr2.getLatLngs(); else pts = lyr2.getLatLngs()[0]; } catch { }
+        document.getElementById('gis-pmcoords').value = pts.map(p => p.lat.toFixed(6) + ', ' + p.lng.toFixed(6)).join('\n');
+        document.getElementById('gis-pm-coord-poly').style.display = '';
+      }
+      document.getElementById('gis-pmov').classList.add('gis-on');
+    }
+    function gisClosePM() { document.getElementById('gis-pmov').classList.remove('gis-on'); }
+    function gisSavePM() {
+      const obj = gisObjs.find(o => o.uuid === gisSel); if (!obj) return;
+      obj.i00_label = document.getElementById('gis-pmlbl').value;
+      obj.i00_object_code = document.getElementById('gis-pmcode').value;
+      obj.i00_description = document.getElementById('gis-pmdesc').value;
+      obj.ilc_map_layers = document.getElementById('gis-pmlyr').value;
+      obj.i00_color = document.getElementById('gis-pmstroke').value;
+      obj.i00_fill_color = document.getElementById('gis-pmfill').value;
+      obj.i00_opacity = parseFloat(document.getElementById('gis-pmop').value);
+      obj.i00_weight = parseInt(document.getElementById('gis-pmwt').value);
+      const linkCfg2 = GIS_LAYER_LINK[obj.ilc_map_layers];
+      if (linkCfg2) obj[linkCfg2.field] = _gisLddVal || null;
+      obj._unsaved = true;
+      const t = obj.i00_geom_type;
+      try {
+        if (t === 'marker') {
+          const lat = parseFloat(document.getElementById('gis-pmlat').value);
+          const lng = parseFloat(document.getElementById('gis-pmlng').value);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            obj.i00_geom_json = { type: 'Point', coordinates: [lng, lat] };
+            gisRebuildLyr(gisSel);
+          }
+        } else if (t === 'circle') {
+          const lat = parseFloat(document.getElementById('gis-pmclat').value);
+          const lng = parseFloat(document.getElementById('gis-pmclng').value);
+          const rad = parseFloat(document.getElementById('gis-pmcrad').value);
+          if (!isNaN(lat) && !isNaN(lng) && !isNaN(rad)) {
+            obj.i00_geom_json = { type: 'Circle', coordinates: [lng, lat], radius: rad };
+            gisRebuildLyr(gisSel);
+          }
+        } else if (t === 'polyline' || t === 'polygon' || t === 'rectangle') {
+          const lines = document.getElementById('gis-pmcoords').value.trim().split('\n').filter(l => l.trim());
+          const pts = lines.map(l => { const p = l.split(','); return [parseFloat(p[1]), parseFloat(p[0])]; }).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+          if (pts.length >= 2) {
+            if (t === 'polyline') obj.i00_geom_json = { type: 'LineString', coordinates: pts };
+            else { const ring = [...pts]; if (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1]) ring.push(ring[0]); obj.i00_geom_json = { type: 'Polygon', coordinates: [ring] }; }
+            gisRebuildLyr(gisSel);
+          }
+        }
+      } catch (ce) { console.warn('coord save err', ce); }
+      const lyr = gisLfs[gisSel];
+      if (lyr) { gisStyl(lyr, obj); if (obj.i00_label) lyr.bindTooltip(obj.i00_label, { permanent: true, direction: 'top', className: 'gis-lbl2' }); }
+      gisRndObj(); gisClosePM(); gisToast('Свойства обновлены', 'info');
+    }
+    function gisRebuildLyr(uuid) {
+      const obj = gisObjs.find(o => o.uuid === uuid); if (!obj) return;
+      const old = gisLfs[uuid];
+      if (old) { try { gisDrwn.removeLayer(old); } catch { } }
+      const nl = gisG2L(obj.i00_geom_json, obj.i00_geom_type, obj);
+      if (nl) { gisLfs[uuid] = nl; gisDrwn.addLayer(nl); gisStyl(nl, obj); gisBind(nl, uuid); if (obj.i00_label) nl.bindTooltip(obj.i00_label, { permanent: true, direction: 'top', className: 'gis-lbl2' }); }
+    }
+
+    function gisRndLyrs() { const el = document.getElementById('gis-llst'); el.innerHTML = '';[...gisLyrs].sort((a, b) => (a.i00_sort_order || 0) - (b.i00_sort_order || 0)).forEach(l => { const cnt = gisObjs.filter(o => o.ilc_map_layers === l.code).length, div = document.createElement('div'); div.className = 'gis-litm' + (l.code === gisActLyr ? ' gis-al' : ''); div.innerHTML = `<div class="gis-ldot" style="background:${l.i00_color || '#999'}"></div><div class="gis-lnm">${gisEsc(l.sname)}</div><div class="gis-lcnt">${cnt}</div><svg class="gis-lic ${l.i00_is_visible == 0 ? 'gis-hid' : ''}" viewBox="0 0 24 24" title="${l.i00_is_visible == 0 ? 'Показать' : 'Скрыть'}" onclick="event.stopPropagation();gisTogVis('${l.code}')">${l.i00_is_visible == 0 ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}</svg><svg class="gis-lic" viewBox="0 0 24 24" title="${l.i00_is_locked == 1 ? 'Разблокировать' : 'Заблокировать'}" onclick="event.stopPropagation();gisTogLck('${l.code}')">${l.i00_is_locked == 1 ? '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>' : '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/>'}</svg>`; div.onclick = () => gisSetAL(l.code); el.appendChild(div); }); }
+    function gisSetAL(c) { gisActLyr = c; const l = gisLyrs.find(x => x.code === c); document.getElementById('gis-aldot').style.background = l?.i00_color || '#999'; document.getElementById('gis-alname').textContent = l?.sname || 'Без слоя'; gisRndLyrs(); }
+    function gisTogVis(c) { const l = gisLyrs.find(x => x.code === c); if (!l) return; l.i00_is_visible = l.i00_is_visible == 0 ? 1 : 0; gisObjs.filter(o => o.ilc_map_layers === c).forEach(o => { const lyr = gisLfs[o.uuid]; if (!lyr) return; if (l.i00_is_visible == 0) gisDrwn.removeLayer(lyr); else gisDrwn.addLayer(lyr); }); gisRndLyrs(); }
+    function gisTogLck(c) { const l = gisLyrs.find(x => x.code === c); if (!l) return; l.i00_is_locked = l.i00_is_locked == 1 ? 0 : 1; gisRndLyrs(); }
+    function gisOpenLyrMdl() { document.getElementById('gis-lmname').value = ''; document.getElementById('gis-lmcode').value = ''; document.getElementById('gis-lmdesc').value = ''; document.getElementById('gis-lmsort').value = gisLyrs.length; document.getElementById('gis-lmcolor').value = '#1d6ef4'; document.getElementById('gis-lmov').classList.add('gis-on'); setTimeout(() => document.getElementById('gis-lmname').focus(), 80); }
+    function gisCloseLM() { document.getElementById('gis-lmov').classList.remove('gis-on'); }
+    async function gisSaveLyr() { const nm = document.getElementById('gis-lmname').value.trim(), code = (document.getElementById('gis-lmcode').value.trim() || nm.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')), color = document.getElementById('gis-lmcolor').value, sort = parseInt(document.getElementById('gis-lmsort').value) || 0, desc = document.getElementById('gis-lmdesc').value.trim(); if (!nm) { gisToast('Введите название', 'err'); return; } const loc = { id: null, code, sname: nm, i00_color: color, i00_sort_order: sort, i00_description: desc, i00_is_visible: 1, i00_is_active: 1, i00_is_locked: 0 }; gisLyrs.push(loc); gisRndLyrs(); gisSetAL(code); gisCloseLM(); try { const fd = new FormData(); fd.append('_csrf-frontend', gisCsrf()); fd.append(`${GLMDL}[code]`, code); fd.append(`${GLMDL}[sname]`, nm); fd.append(`${GLMDL}[i00_color]`, color); fd.append(`${GLMDL}[i00_sort_order]`, sort); fd.append(`${GLMDL}[i00_description]`, desc); fd.append(`${GLMDL}[i00_is_active]`, 1); fd.append(`${GLMDL}[i00_is_visible]`, 1); const res = await gisPost(`/ru/t/create?tbl=${GLTBL}&version=add&modal=true&ajax=true&is_ajax=true`, fd); try { const d = await res.clone().json(); if (d?.success?.id) loc.id = d.success.id; else if (d?.id) loc.id = d.id; } catch { } gisToast(`Слой «${nm}» создан`, 'ok'); } catch (e) { gisToast('Слой добавлен локально', 'info'); } }
+
+    function gisRndObj(filter = '') { const el = document.getElementById('gis-olst'); el.innerHTML = ''; const ic = { marker: '<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>', polyline: '<path stroke-linecap="round" d="M3 20L9 8l5 5 7-10"/>', polygon: '<polygon points="12,3 21,9 17,20 7,20 3,9"/>', circle: '<circle cx="12" cy="12" r="9"/>', rectangle: '<rect x="3" y="5" width="18" height="14" rx="2"/>' }; gisObjs.filter(o => !filter || (o.i00_label || '').toLowerCase().includes(filter) || (o.i00_object_code || '').toLowerCase().includes(filter)).forEach(o => { const lyr = gisLyrs.find(l => l.code === o.ilc_map_layers), div = document.createElement('div'); div.className = 'gis-oitm' + (o.uuid === gisSel ? ' gis-sel' : ''); div.dataset.uuid = o.uuid; div.innerHTML = `<svg class="gis-oico" viewBox="0 0 24 24" style="color:${o.i00_color || '#666'}">${ic[o.i00_geom_type] || ic.marker}</svg><div class="gis-onm">${gisEsc(o.i00_label || 'Безымянный')}</div>${lyr ? `<span class="gis-otag" style="background:${lyr.i00_color}22;color:${lyr.i00_color}">${gisEsc(lyr.sname)}</span>` : ''}${o._unsaved ? '<span class="gis-ous">●</span>' : ''}<svg class="gis-odel" viewBox="0 0 24 24" onclick="event.stopPropagation();gisDel('${o.uuid}')"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>`; div.onclick = () => { gisSelObj(o.uuid); const lyr = gisLfs[o.uuid]; if (lyr) { const b = lyr.getBounds ? lyr.getBounds() : lyr.getLatLng ? new L.LatLngBounds([lyr.getLatLng()], [lyr.getLatLng()]) : null; if (b) gisM.fitBounds(b.pad(.3)); } }; div.ondblclick = () => gisOpenPM(o.uuid); el.appendChild(div); }); gisUpdCnt(); }
+    function gisFltrObj(v) { gisRndObj(v.toLowerCase()); }
+    function gisUpdCnt() { document.getElementById('gis-cnt').textContent = gisObjs.length; }
+
+    function gisShowCtx(x, y) { const m = document.getElementById('gis-ctx'); m.style.left = Math.min(x, window.innerWidth - 165) + 'px'; m.style.top = Math.min(y, window.innerHeight - 165) + 'px'; m.classList.add('gis-on'); }
+    function gisHideCtx() { document.getElementById('gis-ctx').classList.remove('gis-on'); }
+    document.addEventListener('click', gisHideCtx);
+    function gisCtxA(a) { gisHideCtx(); const uuid = gisCtxUuid; if (!uuid) return; if (a === 'props') gisOpenPM(uuid); if (a === 'delete') gisDel(uuid); if (a === 'zoom') { const lyr = gisLfs[uuid]; if (lyr) { const b = lyr.getBounds ? lyr.getBounds() : null, p = lyr.getLatLng ? lyr.getLatLng() : null; if (b) gisM.fitBounds(b.pad(.5)); else if (p) gisM.setView(p, 17); } } if (a === 'copy') { const obj = gisObjs.find(o => o.uuid === uuid); if (!obj) return; const nu = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)), cp = { ...JSON.parse(JSON.stringify(obj)), uuid: nu, id: null, _unsaved: true, i00_label: (obj.i00_label || '') + '(копия)' }; gisObjs.push(cp); const lyr = gisG2L(cp.i00_geom_json, cp.i00_geom_type, cp); if (lyr) { gisLfs[nu] = lyr; gisDrwn.addLayer(lyr); gisStyl(lyr, cp); gisBind(lyr, nu); } gisRndObj(); gisToast('Скопировано', 'ok'); } }
+
+    function gisG2L(geom, type, obj) {
+      try {
+        if (!geom) return null;
+        const t = type || '';
+        const c = geom.coordinates;
+        if (t === 'marker' || geom.type === 'Point') {
+          if (!c || c.length < 2) return null;
+          return L.marker([c[1], c[0]], { icon: gisMkIcoSvg(obj.i00_color || '#1d6ef4', obj.i00_icon_type || 'pin') });
+        }
+        if (geom.type === 'Circle' || t === 'circle') {
+          if (!c || c.length < 2) return null;
+          return L.circle([c[1], c[0]], { radius: geom.radius || 100 });
+        }
+        if (geom.type === 'LineString' || t === 'polyline') {
+          if (!c || !c.length) return null;
+          return L.polyline(c.map(p => [p[1], p[0]]));
+        }
+        if (geom.type === 'Polygon' || t === 'polygon' || t === 'rectangle') {
+          if (!c || !c.length || !c[0] || !c[0].length) return null;
+          return L.polygon(c[0].map(p => [p[1], p[0]]));
+        }
+      } catch (e) { console.warn('gisG2L', type, e); }
+      return null;
+    }
+
+    async function gisSave() {
+      const un = gisObjs.filter(o => o._unsaved); if (!un.length) { gisToast('Нет изменений', 'info'); return; } gisToast(`Сохранение ${un.length}...`, 'info'); let ok = 0, err = 0; for (const obj of un) {
+        try {
+          const fd = new FormData(); fd.append('_csrf-frontend', gisCsrf()); const f = (k, v) => fd.append(`${GOMDL}[${k}]`, v ?? ''); f('ilc_map_layers', obj.ilc_map_layers); f('i00_geom_type', obj.i00_geom_type); f('i00_label', obj.i00_label); f('i00_object_code', obj.i00_object_code); f('i00_description', obj.i00_description); f('i00_geom_json', JSON.stringify(obj.i00_geom_json)); f('i00_color', obj.i00_color); f('i00_fill_color', obj.i00_fill_color); f('i00_opacity', obj.i00_opacity); f('i00_weight', obj.i00_weight); f('i00_dash_pattern', obj.i00_dash_pattern); f('i00_icon_type', obj.i00_icon_type); f('i00_is_active', 1);
+          const linkCfgS = GIS_LAYER_LINK[obj.ilc_map_layers]; if (linkCfgS && obj[linkCfgS.field] != null) f(linkCfgS.field, obj[linkCfgS.field]);
+          const url = obj.id ? `/ru/t/update?id=${obj.id}&tbl=${GOTBL}&version=edit&modal=true&ajax=true&is_ajax=true` : `/ru/t/create?tbl=${GOTBL}&version=add&modal=true&ajax=true&is_ajax=true`; const res = await gisPost(url, fd); if (!obj.id) { try { const d = await res.clone().json(); if (d?.success?.id) obj.id = Number(d.success.id); else if (d?.id) obj.id = Number(d.id); } catch { } } obj._unsaved = false; ok++;
+        } catch (e) { console.error(e); err++; }
+      } gisRndObj(); if (err) gisToast(`Сохранено: ${ok}, ошибок: ${err}`, 'err'); else gisToast(`Сохранено ${ok} ✓`, 'ok');
+    }
+
+    async function gisLoad() {
+      try {
+        const lq = JSON.stringify({ limit: 500, columns: 'id,code,sname,i00_color,i00_sort_order,i00_is_visible,i00_is_active,i00_is_locked' });
+        gisLyrs = await gisGet(`${GAPI}/${GLTBL}?_format=json&query=${encodeURIComponent(lq)}`);
+        console.log('[GIS] layers loaded:', gisLyrs.length);
+      } catch (e) { console.warn('[GIS] layers failed:', e); }
+      if (!gisLyrs.length) gisLyrs = gisDefLyrs();
+      if (gisLyrs.length) gisSetAL(gisLyrs[0].code);
+      gisRndLyrs();
+      try {
+        const oq = JSON.stringify({ limit: 50000 });
+        const raw = await gisGet(`${GAPI}/${GOTBL}?_format=json&query=${encodeURIComponent(oq)}`);
+        console.log('[GIS] objects raw:', raw.length);
+        if (raw.length > 0) {
+          const f0 = raw[0];
+          console.log('[GIS] geom_json value:', f0.i00_geom_json, '| typeof:', typeof f0.i00_geom_json);
+          console.log('[GIS] first obj full:', JSON.stringify(f0).slice(0, 800));
+        }
+        raw.forEach(o => {
+          const layerCode = o.ilc_map_layers_data?.code || o.ilc_map_layers || '';
+          let geom = {};
+          try {
+            let gj = o.i00_geom_json;
+            if (typeof gj === 'string' && gj.trim()) gj = JSON.parse(gj);
+            if (typeof gj === 'string' && gj.trim()) gj = JSON.parse(gj);
+            if (gj && typeof gj === 'object' && !Array.isArray(gj)) geom = gj;
+          } catch (pe) { console.warn('[GIS] json parse error id=', o.id, pe.message); }
+          const obj = { ...o, uuid: o.s00_uuid || o.id?.toString() || Math.random().toString(36), ilc_map_layers: layerCode, i00_geom_json: geom, _unsaved: false };
+          gisObjs.push(obj);
+          const lyr = gisG2L(obj.i00_geom_json, obj.i00_geom_type, obj);
+          console.log('[GIS] obj id=', obj.id, 'type=', obj.i00_geom_type, 'layer=', layerCode, 'geom.type=', geom.type, 'coords=', geom.coordinates, '-> lyr=', lyr ? lyr.constructor.name : null);
+          if (lyr) { gisLfs[obj.uuid] = lyr; const l = gisLyrs.find(x => x.code === layerCode); if (!l || l.i00_is_visible != 0) gisDrwn.addLayer(lyr); gisStyl(lyr, obj); gisBind(lyr, obj.uuid); if (obj.i00_label) lyr.bindTooltip(obj.i00_label, { permanent: false, direction: 'top', className: 'gis-lbl2' }); }
+        });
+        gisRndObj(); gisRndLyrs();
+        try { if (gisDrwn.getLayers().length > 0) { const b = gisDrwn.getBounds(); if (b.isValid()) gisM.fitBounds(b.pad(0.15)); } } catch (fe) { console.warn('[GIS] fitBounds err', fe); }
+        gisToast(`Слоёв: ${gisLyrs.length}, объектов: ${gisObjs.length}`, 'ok');
+      } catch (e) {
+        console.warn('[GIS] objects failed:', e);
+        gisToast(`Слоёв: ${gisLyrs.length}, объекты не загружены`, 'info');
+      }
+    }
+    function gisDefLyrs() { return [{ id: null, code: 'wells', sname: 'Скважины', i00_color: '#ef4444', i00_sort_order: 1, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'pipelines', sname: 'Трубопроводы', i00_color: '#f97316', i00_sort_order: 2, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'blocks', sname: 'Технол. блоки', i00_color: '#8b5cf6', i00_sort_order: 3, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'roads', sname: 'Дороги', i00_color: '#78716c', i00_sort_order: 4, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'power_lines', sname: 'ЛЭП', i00_color: '#eab308', i00_sort_order: 5, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'buildings', sname: 'Здания', i00_color: '#6366f1', i00_sort_order: 6, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'pumps', sname: 'Насосные ст.', i00_color: '#06b6d4', i00_sort_order: 7, i00_is_visible: 1, i00_is_locked: 0 }, { id: null, code: 'zones', sname: 'Рабочие зоны', i00_color: '#22c55e', i00_sort_order: 8, i00_is_visible: 1, i00_is_locked: 0 }]; }
+
+    function gisStrtMsr() { gisMPts = []; gisToast('Кликайте для измерения. ESC — завершить', 'info'); }
+    function gisAddMP(ll) { gisMPts.push(ll); if (gisMLayer) gisM.removeLayer(gisMLayer); if (gisMPts.length === 1) { gisMLayer = L.circleMarker(ll, { radius: 5, color: '#d97706', fillOpacity: 1 }).addTo(gisM); } else { const d = gisMPts.reduce((s, p, i) => i ? s + gisMPts[i - 1].distanceTo(p) : 0, 0), lb = d >= 1000 ? (d / 1000).toFixed(2) + ' км' : d.toFixed(0) + ' м'; gisMLayer = L.polyline(gisMPts, { color: '#d97706', weight: 2, dashArray: '6,4' }).bindTooltip(lb, { permanent: true, direction: 'top', className: 'gis-msrtip' }).addTo(gisM); } }
+    function gisStopMsr() { if (gisMLayer) { gisM.removeLayer(gisMLayer); gisMLayer = null; } gisMPts = []; }
+
+    function gisTogExp() { document.getElementById('gis-expmenu').classList.toggle('gis-on'); }
+    function gisClExp() { document.getElementById('gis-expmenu').classList.remove('gis-on'); }
+    document.addEventListener('click', e => { if (!document.getElementById('gis-expwrap')?.contains(e.target)) gisClExp(); });
+
+    function gisExpGJ() { const fc = { type: 'FeatureCollection', features: gisObjs.map(o => ({ type: 'Feature', geometry: o.i00_geom_json, properties: { uuid: o.uuid, label: o.i00_label, layer: o.ilc_map_layers, code: o.i00_object_code, geomType: o.i00_geom_type, color: o.i00_color, fillColor: o.i00_fill_color, opacity: o.i00_opacity, weight: o.i00_weight } })) }; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(fc, null, 2)], { type: 'application/json' })); a.download = 'inkay_map_' + new Date().toISOString().slice(0, 10) + '.geojson'; a.click(); gisToast('GeoJSON экспортирован', 'ok'); }
+
+    async function gisExpPNG() { gisToast('Подготовка PNG...', 'info'); const hd = ['gis-topbar', 'gis-status', 'gis-toast']; try { hd.forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; }); document.getElementById('gis-sb').style.display = 'none'; await new Promise(r => setTimeout(r, 120)); const cv = await html2canvas(document.getElementById('gis-map'), { useCORS: true, allowTaint: true, scale: 2, backgroundColor: '#e8edf2', logging: false }); hd.forEach(id => { const e = document.getElementById(id); if (e) e.style.display = ''; }); document.getElementById('gis-sb').style.display = ''; const ctx = cv.getContext('2d'), vis = gisLyrs.filter(l => l.i00_is_visible != 0); if (vis.length) { const p = 32, lh = 44, bw = 360, bh = p * 2 + vis.length * lh, bx = cv.width - bw - 40, by = cv.height - bh - 40; ctx.fillStyle = 'rgba(255,255,255,.9)'; gisRR(ctx, bx, by, bw, bh, 20); ctx.fill(); ctx.strokeStyle = '#dde1e8'; ctx.lineWidth = 2; gisRR(ctx, bx, by, bw, bh, 20); ctx.stroke(); ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#8a95a6'; ctx.textBaseline = 'middle'; ctx.fillText('СЛОИ', bx + p, by + p * .8); vis.forEach((l, i) => { const y = by + p * 1.6 + i * lh; ctx.beginPath(); ctx.arc(bx + p + 10, y, 10, 0, Math.PI * 2); ctx.fillStyle = l.i00_color || '#999'; ctx.fill(); ctx.font = '500 20px sans-serif'; ctx.fillStyle = '#18202e'; ctx.fillText(l.sname, bx + p + 28, y); }); } ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = '#18202e'; ctx.textBaseline = 'top'; ctx.fillText('АО «Инкай» — Карта рудника', 40, 40); ctx.font = '18px monospace'; ctx.fillStyle = '#8a95a6'; ctx.fillText(new Date().toLocaleString('ru-RU'), 40, 78); const a = document.createElement('a'); a.download = 'inkay_map_' + new Date().toISOString().slice(0, 10) + '.png'; a.href = cv.toDataURL('image/png'); a.click(); gisToast('PNG сохранён ✓', 'ok'); } catch (e) { ['gis-topbar', 'gis-status', 'gis-toast'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; }); document.getElementById('gis-sb').style.display = ''; gisToast('Ошибка PNG: ' + e.message, 'err'); } }
+
+    async function gisExpPDF() { gisToast('Подготовка PDF...', 'info'); const hd = ['gis-topbar', 'gis-status', 'gis-toast']; try { hd.forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; }); document.getElementById('gis-sb').style.display = 'none'; await new Promise(r => setTimeout(r, 120)); const cv = await html2canvas(document.getElementById('gis-map'), { useCORS: true, allowTaint: true, scale: 2, backgroundColor: '#e8edf2', logging: false }); hd.forEach(id => { const e = document.getElementById(id); if (e) e.style.display = ''; }); document.getElementById('gis-sb').style.display = ''; const { jsPDF } = window.jspdf, pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' }), pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight(), hh = 14, fh = 10, sc = Math.min((pw) / (cv.width / 2), (ph - hh - fh) / (cv.height / 2)), dw = (cv.width / 2) * sc, dh = (cv.height / 2) * sc, ox = (pw - dw) / 2; pdf.setFillColor(248, 250, 252); pdf.rect(0, 0, pw, ph, 'F'); pdf.addImage(cv.toDataURL('image/jpeg', .95), 'JPEG', ox, hh, dw, dh); pdf.setFontSize(10); pdf.setTextColor(24, 32, 46); pdf.setFont('helvetica', 'bold'); pdf.text('АО «Инкай» — Карта горного отвода', 8, 9); pdf.setFontSize(6.5); pdf.setTextColor(138, 149, 166); pdf.setFont('helvetica', 'normal'); pdf.text('Сформировано: ' + new Date().toLocaleString('ru-RU'), 8, 13); const c = gisM.getCenter(); pdf.text(`Центр: ${c.lat.toFixed(5)}° N, ${c.lng.toFixed(5)}° E  |  Масштаб: ${gisM.getZoom()}  |  WGS84`, pw - 8, ph - 4, { align: 'right' }); const vis = gisLyrs.filter(l => l.i00_is_visible != 0).slice(0, 12); if (vis.length) { const lx = 8, ly = ph - fh - vis.length * 4 - 2; pdf.setFontSize(6.5); pdf.setTextColor(138, 149, 166); pdf.text('СЛОИ:', lx, ly - 1); vis.forEach((l, i) => { const y = ly + i * 4, hx = l.i00_color || '#999999'; pdf.setFillColor(parseInt(hx.slice(1, 3), 16), parseInt(hx.slice(3, 5), 16), parseInt(hx.slice(5, 7), 16)); pdf.circle(lx + 1.5, y, 1.5, 'F'); pdf.setTextColor(24, 32, 46); pdf.text(l.sname, lx + 5, y + .8); }); } pdf.setDrawColor(221, 225, 232); pdf.setLineWidth(.3); pdf.rect(1, 1, pw - 2, ph - 2); pdf.save('inkay_map_' + new Date().toISOString().slice(0, 10) + '.pdf'); gisToast('PDF сохранён ✓', 'ok'); } catch (e) { hd.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; }); document.getElementById('gis-sb').style.display = ''; gisToast('Ошибка PDF: ' + e.message, 'err'); } }
+
+    function gisRR(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); }
+
+    function gisImpGJ(inp) { const file = inp.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { try { const data = JSON.parse(e.target.result), features = data.features || (data.type === 'Feature' ? [data] : []); let added = 0; features.forEach(f => { const geom = f.geometry, props = f.properties || {}, tm = { Point: 'marker', LineString: 'polyline', Polygon: 'polygon', Circle: 'circle' }, gtype = tm[geom.type] || geom.type?.toLowerCase() || 'polyline', uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)), obj = { id: null, uuid, ilc_map_layers: props.layer || gisActLyr || '', i00_geom_type: gtype, i00_label: props.label || props.name || '', i00_object_code: props.code || '', i00_description: '', i00_geom_json: geom, i00_color: props.color || props.stroke || '#1d6ef4', i00_fill_color: props.fillColor || props.fill || '#1d6ef4', i00_opacity: props.opacity ?? 0.35, i00_weight: props.weight ?? 2, i00_dash_pattern: 'solid', i00_icon_type: 'pin', _unsaved: true }; gisObjs.push(obj); const lyr = gisG2L(geom, gtype, obj); if (lyr) { gisLfs[uuid] = lyr; gisDrwn.addLayer(lyr); gisStyl(lyr, obj); gisBind(lyr, uuid); if (obj.i00_label) lyr.bindTooltip(obj.i00_label, { permanent: false, direction: 'top', className: 'gis-lbl2' }); } added++; }); gisRndObj(); if (gisDrwn.getLayers().length) gisM.fitBounds(gisDrwn.getBounds().pad(.1)); gisToast(`Импортировано ${added}`, 'ok'); } catch (err) { gisToast('Ошибка импорта: ' + err.message, 'err'); } }; reader.readAsText(file); inp.value = ''; }
+    function gisClear() { if (!confirm('Удалить все объекты с карты?')) return; gisDrwn.clearLayers(); gisObjs = []; gisLfs = {}; gisSel = null; gisRndObj(); gisToast('Очищено', 'info'); }
+
+    function gisCC(t, v) { if (t === 'stroke') { gisCS.stroke = v; document.getElementById('gis-shex').textContent = v; } else { gisCS.fill = v; document.getElementById('gis-fhex').textContent = v; } }
+    function gisOp(v) { gisCS.opacity = v / 100; document.getElementById('gis-opv').textContent = v + '%'; }
+    function gisWt(v) { gisCS.weight = v; document.getElementById('gis-wtv').textContent = v + 'px'; }
+    function gisDsh(v) { gisCS.dash = v; }
+
+    function gisSwitchTab(n, el) { document.querySelectorAll('.gis-tab').forEach(t => t.classList.remove('gis-on')); document.querySelectorAll('.gis-pnl').forEach(p => p.classList.remove('gis-on')); el.classList.add('gis-on'); document.getElementById('gis-pnl-' + n).classList.add('gis-on'); }
+
+    function gisToast(msg, type = 'info') { const el = document.getElementById('gis-toast'); el.textContent = msg; el.className = 'gis-toast gis-show gis-' + type; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('gis-show'), 3500); }
+    function gisEsc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+    function gisCpCoords() { if (!_lc) return; const t = `${_lc.lat}, ${_lc.lng}`; navigator.clipboard?.writeText(t).then(() => gisToast('Скопировано: ' + t, 'ok')).catch(() => { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); gisToast('Скопировано', 'ok'); }); }
+
+    // CUSTOM LINKED DROPDOWN
+    let _gisLinkAllOpts = [];
+    let _gisLddVal = '';
+
+    function gisLddToggle() {
+      const btn = document.getElementById('gis-ldd-btn');
+      const drop = document.getElementById('gis-ldd-drop');
+      const isOpen = drop.classList.contains('gis-open');
+      if (isOpen) {
+        gisLddClose();
+      } else {
+        btn.classList.add('gis-open');
+        drop.classList.add('gis-open');
+        const srch = document.getElementById('gis-pm-linked-srch');
+        srch.value = '';
+        gisFilterLinked('');
+        setTimeout(() => srch.focus(), 50);
+        setTimeout(() => {
+          const sel = document.querySelector('.gis-ldd-opt.gis-sel');
+          if (sel) sel.scrollIntoView({ block: 'nearest' });
+        }, 60);
+      }
+    }
+
+    function gisLddClose() {
+      document.getElementById('gis-ldd-btn')?.classList.remove('gis-open');
+      document.getElementById('gis-ldd-drop')?.classList.remove('gis-open');
+    }
+
+    function gisLddSelect(value, text) {
+      _gisLddVal = value;
+      const valEl = document.getElementById('gis-ldd-val');
+      if (valEl) {
+        valEl.textContent = value ? text : '— не выбрано —';
+        valEl.classList.toggle('gis-placeholder', !value);
+      }
+      const sel = document.getElementById('gis-pm-linked-sel');
+      if (sel) sel.value = value;
+      document.querySelectorAll('.gis-ldd-opt').forEach(el => {
+        el.classList.toggle('gis-sel', el.dataset.val === value);
+      });
+      _gisLinkAllOpts.forEach(o => o.selected = (o.value === value));
+      gisLddClose();
+    }
+
+    function gisFilterLinked(q) {
+      const list = document.getElementById('gis-ldd-list');
+      if (!list) return;
+      const lq = q.toLowerCase().trim();
+      const filtered = lq
+        ? _gisLinkAllOpts.filter(o => o.text.toLowerCase().includes(lq) || o.value.toLowerCase().includes(lq))
+        : _gisLinkAllOpts;
+      list.innerHTML = '';
+      if (!filtered.length) {
+        list.innerHTML = '<div class="gis-ldd-empty">Ничего не найдено</div>';
+        return;
+      }
+      filtered.forEach(o => {
+        const div = document.createElement('div');
+        div.className = 'gis-ldd-opt' + (o.selected ? ' gis-sel' : '');
+        div.dataset.val = o.value;
+        div.textContent = o.text;
+        div.title = o.text;
+        div.onclick = () => gisLddSelect(o.value, o.text);
+        list.appendChild(div);
+      });
+    }
+
+    document.addEventListener('mousedown', e => {
+      const wrap = document.getElementById('gis-ldd-wrap');
+      if (wrap && !wrap.contains(e.target)) gisLddClose();
+    });
+
+    function gisOpenLinkedDetail() {
+      const obj = gisObjs.find(o => o.uuid === gisSel); if (!obj) return;
+      const linkCfg = GIS_LAYER_LINK[obj.ilc_map_layers]; if (!linkCfg) return;
+      const val = _gisLddVal; if (!val) { gisToast('Сначала выберите объект', 'info'); return; }
+      const items = _gisLinkCache[linkCfg.tbl] || [];
+      const item = items.find(r => String(r.code || r.id) === val);
+      const id = item?.id || val;
+      window.open(window.location.origin + '/ru/t/view?id=' + id + '&tbl=' + linkCfg.tbl + '&version=info_from_map', '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { gisBldPal('gis-ssws', 'stroke'); gisBldPal('gis-fsws', 'fill'); gisInitMap(); gisTool('select'); gisLoad(); });
+  </script>
+</body>
+
+</html>

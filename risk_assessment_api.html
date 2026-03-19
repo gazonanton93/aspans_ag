@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="">
+<title>Оценка рисков — Aspans</title>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f2f4f7; --bg2:#e8eaed; --surface:#ffffff; --surface2:#f7f8fa;
+  --border:#dde1e8; --border2:#c8cdd6; --text:#18202e; --text2:#48556a; --text3:#8a95a6;
+  --accent:#1d6ef4; --accent-bg:rgba(29,110,244,0.07); --accent-br:rgba(29,110,244,0.22); --accent-h:#1558cc;
+  --cat-ext:#dc2626; --cat-ext-bg:#fef2f2; --cat-ext-br:#fca5a5;
+  --cat-high:#d97706; --cat-high-bg:#fffbeb; --cat-high-br:#fcd34d;
+  --cat-mod:#059669;  --cat-mod-bg:#ecfdf5;  --cat-mod-br:#6ee7b7;
+  --cat-min:#2563eb;  --cat-min-bg:#eff6ff;  --cat-min-br:#93c5fd;
+  --shadow-xs:0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  --shadow:0 4px 16px rgba(0,0,0,0.09),0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.14),0 4px 8px rgba(0,0,0,0.06);
+  --radius:10px; --radius-sm:6px; --radius-xs:4px;
+}
+body { font-family:'Geologica',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:13px; }
+
+/* TOPBAR */
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); height:52px; display:flex; align-items:center; padding:0 20px; gap:12px; box-shadow:var(--shadow-sm); }
+.logo { font-weight:800; font-size:16px; letter-spacing:-0.5px; }
+.logo span { color:var(--accent); }
+.sep { width:1px; height:18px; background:var(--border2); }
+.mod-name { font-size:12px; font-weight:600; color:var(--text3); }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.badge { background:var(--accent-bg); border:1px solid var(--accent-br); color:var(--accent); font-weight:700; font-size:11px; padding:2px 9px; border-radius:20px; }
+
+/* BUTTONS */
+.btn { display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:12px; font-weight:600; padding:6px 13px; border-radius:var(--radius-sm); cursor:pointer; transition:all 0.15s; border:1px solid transparent; white-space:nowrap; }
+.btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn-primary:hover { background:var(--accent-h); border-color:var(--accent-h); }
+.btn-secondary { background:var(--surface); color:var(--text2); border-color:var(--border2); }
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+.btn-ghost { background:transparent; color:var(--text3); border-color:var(--border2); }
+.btn-ghost:hover { color:var(--text2); background:var(--bg2); }
+.btn svg { width:13px; height:13px; flex-shrink:0; }
+.btn-icon { width:28px; height:28px; padding:0; justify-content:center; }
+.btn-icon svg { width:14px; height:14px; }
+.btn:disabled { opacity:0.55; cursor:not-allowed; }
+
+/* STATS */
+.stats { padding:16px 20px 0; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.sc { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow-xs); cursor:pointer; transition:box-shadow 0.15s,transform 0.15s,border-color 0.15s; }
+.sc:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+.sc.active { border-width:2px; }
+.sc-ext  { background:var(--cat-ext-bg);  border-color:var(--cat-ext-br);  } .sc-ext.active  { border-color:var(--cat-ext);  }
+.sc-high { background:var(--cat-high-bg); border-color:var(--cat-high-br); } .sc-high.active { border-color:var(--cat-high); }
+.sc-mod  { background:var(--cat-mod-bg);  border-color:var(--cat-mod-br);  } .sc-mod.active  { border-color:var(--cat-mod);  }
+.sc-min  { background:var(--cat-min-bg);  border-color:var(--cat-min-br);  } .sc-min.active  { border-color:var(--cat-min);  }
+.sl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); margin-bottom:6px; }
+.sv { font-size:30px; font-weight:800; letter-spacing:-1.5px; line-height:1; }
+.sc-ext .sv { color:var(--cat-ext); } .sc-high .sv { color:var(--cat-high); }
+.sc-mod .sv { color:var(--cat-mod); } .sc-min  .sv { color:var(--cat-min); }
+.ss { font-size:11px; color:var(--text3); margin-top:3px; }
+
+/* FILTERS */
+.filters { padding:12px 20px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-top:12px; box-shadow:var(--shadow-xs); }
+.fg { display:flex; flex-direction:column; gap:3px; }
+.fg label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--text3); }
+.fi, .fs { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:12px; padding:6px 10px; outline:none; transition:border-color 0.15s,box-shadow 0.15s; height:31px; }
+.fi { min-width:240px; } .fs { min-width:148px; }
+.fi:focus,.fs:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg); }
+.fi::placeholder { color:var(--text3); }
+
+/* TABLE */
+.tsec { padding:12px 20px 24px; }
+.ttoolbar { display:flex; align-items:center; justify-content:flex-end; margin-bottom:10px; }
+.twrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:var(--surface2); border-bottom:2px solid var(--border); }
+thead th { padding:9px 12px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--text3); white-space:nowrap; cursor:pointer; user-select:none; transition:color 0.12s; }
+thead th:hover { color:var(--text2); } thead th.sorted { color:var(--accent); }
+.sa { font-size:9px; margin-left:2px; }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr.drow { cursor:pointer; } tbody tr.drow:hover { background:var(--surface2); }
+tbody tr.rexp { background:#eff6ff; }
+td { padding:9px 12px; vertical-align:middle; font-size:12px; color:var(--text); }
+td.mono { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); }
+td.ctr { text-align:center; }
+td.tr { max-width:210px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+td.trs { max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+td.acol { width:68px; }
+
+/* badges */
+.cb { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; border:1px solid transparent; white-space:nowrap; }
+.cb-ext  { background:var(--cat-ext-bg);  color:var(--cat-ext);  border-color:var(--cat-ext-br);  }
+.cb-high { background:var(--cat-high-bg); color:var(--cat-high); border-color:var(--cat-high-br); }
+.cb-mod  { background:var(--cat-mod-bg);  color:var(--cat-mod);  border-color:var(--cat-mod-br);  }
+.cb-min  { background:var(--cat-min-bg);  color:var(--cat-min);  border-color:var(--cat-min-br);  }
+.mb { display:inline-block; padding:2px 7px; border-radius:var(--radius-xs); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; background:var(--bg2); border:1px solid var(--border2); color:var(--text); }
+.pd { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--bg2); border:1px solid var(--border2); font-size:11px; font-weight:700; }
+
+/* expand row */
+.erow td { padding:0; background:#f0f6ff; }
+.einner { padding:14px 18px 16px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px 18px; border-top:2px solid var(--accent-br); animation:sdown .15s ease; }
+@keyframes sdown { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.df { display:flex; flex-direction:column; gap:2px; }
+.df .dl { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); }
+.df .dv { font-size:12px; color:var(--text); line-height:1.45; }
+.df.s3 { grid-column:1/-1; }
+
+/* PAGINATION */
+.pag { display:flex; align-items:center; gap:5px; padding:10px 20px 20px; justify-content:flex-end; }
+.pi { font-size:11px; color:var(--text3); margin-right:8px; }
+.pb { background:var(--surface); border:1px solid var(--border2); color:var(--text2); font-family:inherit; font-size:12px; font-weight:600; padding:4px 9px; border-radius:var(--radius-sm); cursor:pointer; min-width:30px; text-align:center; transition:all 0.12s; }
+.pb:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+.pb.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.pb:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* LOADER / EMPTY */
+.loader { display:flex; align-items:center; justify-content:center; padding:60px; gap:12px; color:var(--text3); }
+.spin { width:18px; height:18px; border-radius:50%; border:2px solid var(--border2); border-top-color:var(--accent); animation:sp .7s linear infinite; }
+@keyframes sp { to{transform:rotate(360deg)} }
+.empty { text-align:center; padding:60px 20px; color:var(--text3); }
+.empty h3 { font-size:15px; color:var(--text2); margin-bottom:6px; }
+
+/* MODAL */
+/* ── ISOLATION from Bootstrap / Yii2 system CSS ── */
+/* Prevent system .modal styles from bleeding into page layout */
+body.enlarged { /* system class - no override needed */ }
+
+/* Our modals sit inside .moverlay - fully isolated */
+.moverlay { all: initial; display: none; position: fixed; inset: 0; z-index: 9999 !important;
+  background: rgba(10,20,40,0.35); align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(2px); font-family: 'Geologica', sans-serif; }
+.moverlay.open { display: flex !important; animation: mfade .15s ease; }
+.rmodal { background: var(--surface) !important; border-radius: 12px !important;
+  box-shadow: var(--shadow-lg) !important; display: flex !important;
+  flex-direction: column !important; max-height: 90vh !important;
+  animation: rmin .18s cubic-bezier(.34,1.56,.64,1) !important;
+  overflow: hidden !important; position: static !important; }
+@keyframes rmin { from{opacity:0;transform:scale(0.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.mhdr { padding:16px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.mhdr h2 { font-size:15px; font-weight:700; flex:1; }
+.mbody { padding:20px; overflow-y:auto; flex:1; }
+.mftr { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-shrink:0; }
+
+/* VIEW MODAL */
+.vgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px 20px; }
+.vf { display:flex; flex-direction:column; gap:2px; }
+.vf .vl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--text3); }
+.vf .vv { font-size:13px; color:var(--text); line-height:1.45; }
+.vf.s3 { grid-column:1/-1; }
+.vsect { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin:16px 0 10px; padding-bottom:5px; border-bottom:2px solid var(--accent-bg); grid-column:1/-1; }
+
+/* FORM MODAL */
+.fgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px 14px; }
+.fgrp { display:flex; flex-direction:column; gap:3px; }
+.fgrp.s3 { grid-column:1/-1; } .fgrp.s2 { grid-column:span 2; }
+.flbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:var(--text3); }
+.flbl .req { color:var(--cat-ext); }
+.finp2,.fsel2,.fta2 { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:13px; padding:7px 10px; outline:none; transition:border-color .15s,box-shadow .15s; width:100%; }
+.finp2:focus,.fsel2:focus,.fta2:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-bg); }
+.fta2 { resize:vertical; min-height:68px; line-height:1.5; }
+.fhint { font-size:10px; color:var(--text3); margin-top:2px; }
+.fsep { grid-column:1/-1; border:none; border-top:1px solid var(--border); margin:4px 0; }
+.fsect { grid-column:1/-1; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-top:4px; }
+.ctag { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--accent-bg); border:1px solid var(--accent-br); border-radius:var(--radius-sm); font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; color:var(--accent); min-height:36px; }
+.cnote { font-size:10px; color:var(--text3); margin-top:3px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:24px; right:24px; z-index:999; background:var(--text); color:var(--surface); font-size:13px; font-weight:500; padding:10px 18px; border-radius:var(--radius); box-shadow:var(--shadow); transform:translateY(80px); opacity:0; transition:all .25s cubic-bezier(.34,1.56,.64,1); }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.tok { background:#059669; }
+.toast.terr { background:#dc2626; }
+
+::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px} ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ASPANS<span>.</span></div>
+  <div class="sep"></div>
+  <div class="mod-name">Оценка рисков</div>
+  <div class="topbar-right">
+    <span class="badge" id="count-badge">—</span>
+    <button class="btn btn-secondary" onclick="loadData()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0115.4-3.4M20 15a9 9 0 01-15.4 3.4"/></svg>
+      Обновить
+    </button>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="sc sc-ext"  id="sc-ext"  onclick="toggleCat('extreme')">
+    <div class="sl">Экстремальный</div><div class="sv" id="sv-ext">—</div><div class="ss">рисков</div>
+  </div>
+  <div class="sc sc-high" id="sc-high" onclick="toggleCat('high')">
+    <div class="sl">Высокий</div><div class="sv" id="sv-high">—</div><div class="ss">рисков</div>
+  </div>
+  <div class="sc sc-mod"  id="sc-mod"  onclick="toggleCat('middle')">
+    <div class="sl">Умеренный</div><div class="sv" id="sv-mod">—</div><div class="ss">рисков</div>
+  </div>
+  <div class="sc sc-min"  id="sc-min"  onclick="toggleCat('minimal')">
+    <div class="sl">Минимальный</div><div class="sv" id="sv-min">—</div><div class="ss">рисков</div>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="fg">
+    <label>Поиск</label>
+    <input class="fi" type="text" id="f-search" placeholder="Описание риска, источник, мероприятие...">
+  </div>
+  <div class="fg">
+    <label>Участок</label>
+    <select class="fs" id="f-org"><option value="">Все</option></select>
+  </div>
+  <div class="fg">
+    <label>Подразделение</label>
+    <select class="fs" id="f-dept"><option value="">Все</option></select>
+  </div>
+  <div class="fg">
+    <label>Вероятность</label>
+    <select class="fs" id="f-prob" style="min-width:110px">
+      <option value="">Все</option>
+      <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+    </select>
+  </div>
+  <div class="fg">
+    <label>Тяжесть</label>
+    <select class="fs" id="f-sev" style="min-width:90px">
+      <option value="">Все</option>
+      <option>1</option><option>2</option><option>3</option><option>4</option>
+    </select>
+  </div>
+  <button class="btn btn-ghost" onclick="resetFilters()">✕ Сбросить</button>
+</div>
+
+<div class="tsec">
+  <div class="ttoolbar">
+    <button class="btn btn-primary" onclick="openFormModal(null)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      Добавить риск
+    </button>
+  </div>
+  <div class="twrap">
+    <div id="loader" class="loader"><div class="spin"></div> Загрузка данных...</div>
+    <div id="empty" class="empty" style="display:none"><h3>Ничего не найдено</h3><p>Попробуйте изменить параметры фильтрации</p></div>
+    <table id="mtable" style="display:none">
+      <thead><tr>
+        <th onclick="sortBy('i00_unik_nom')">№ риска<span class="sa" id="sa-i00_unik_nom"></span></th>
+        <th onclick="sortBy('i0d_caldate')">Дата<span class="sa" id="sa-i0d_caldate"></span></th>
+        <th onclick="sortBy('ilc_orgstruct')">Участок<span class="sa" id="sa-ilc_orgstruct"></span></th>
+        <th onclick="sortBy('ilc_otdel')">Подразделение<span class="sa" id="sa-ilc_otdel"></span></th>
+        <th onclick="sortBy('ilc_ist_opasn')">Источник опасности<span class="sa" id="sa-ilc_ist_opasn"></span></th>
+        <th onclick="sortBy('i00_opis_riska')">Описание риска<span class="sa" id="sa-i00_opis_riska"></span></th>
+        <th onclick="sortBy('ilc_veroyat_riska')" style="text-align:center">Вер.<span class="sa" id="sa-ilc_veroyat_riska"></span></th>
+        <th onclick="sortBy('ilc_tyazh_riska')" style="text-align:center">Тяж.<span class="sa" id="sa-ilc_tyazh_riska"></span></th>
+        <th onclick="sortBy('ilc_velichina_riska')" style="text-align:center">Вел.<span class="sa" id="sa-ilc_velichina_riska"></span></th>
+        <th onclick="sortBy('ilc_risk_category')">Категория<span class="sa" id="sa-ilc_risk_category"></span></th>
+        <th class="acol"></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+<div class="pag" id="pag"></div>
+
+<!-- VIEW MODAL -->
+<div class="moverlay" id="view-modal">
+  <div class="rmodal" style="width:760px">
+    <div class="mhdr">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
+      <h2 id="vm-title">Риск</h2>
+      <span id="vm-badge" class="cb" style="margin-left:auto"></span>
+    </div>
+    <div class="mbody"><div class="vgrid" id="vm-body"></div></div>
+    <div class="mftr">
+      <button class="btn btn-secondary" onclick="editFromView()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Редактировать
+      </button>
+      <button class="btn btn-ghost" onclick="closeView()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="moverlay" id="form-modal">
+  <div class="rmodal" style="width:820px">
+    <div class="mhdr">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <h2 id="fm-title">Добавить риск</h2>
+    </div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="fsect">Основная информация</div>
+
+        <div class="fgrp">
+          <label class="flbl">Дата выявления <span class="req">*</span></label>
+          <input class="finp2" type="date" id="fm-caldate">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Участок</label>
+          <select class="fsel2" id="fm-orgstruct"><option value="">— не выбрано —</option></select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Подразделение</label>
+          <select class="fsel2" id="fm-otdel"><option value="">— не выбрано —</option></select>
+        </div>
+
+        <div class="fgrp s2">
+          <label class="flbl">Рабочее место / участок / оборудование</label>
+          <input class="finp2" type="text" id="fm-rab-mesto">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Тип операции</label>
+          <select class="fsel2" id="fm-tip-oper">
+            <option value="">— не выбрано —</option>
+            <option value="стандартная">Стандартная</option>
+            <option value="нерегламентированная">Нерегламентированная</option>
+          </select>
+        </div>
+        <div class="fgrp s3">
+          <label class="flbl">Работа / технологическая операция</label>
+          <input class="finp2" type="text" id="fm-rab-oper">
+        </div>
+
+        <hr class="fsep">
+        <div class="fsect">Описание риска</div>
+
+        <div class="fgrp s3">
+          <label class="flbl">Источник опасности (что может нанести вред) <span class="req">*</span></label>
+          <select class="fsel2" id="fm-ist-opasn"><option value="">— не выбрано —</option></select>
+        </div>
+        <div class="fgrp s3">
+          <label class="flbl">Описание риска / последствия события <span class="req">*</span></label>
+          <textarea class="fta2" id="fm-opis-riska" rows="2"></textarea>
+        </div>
+
+        <hr class="fsep">
+        <div class="fsect">Первичная оценка риска</div>
+
+        <div class="fgrp">
+          <label class="flbl">Вероятность <span class="req">*</span></label>
+          <select class="fsel2" id="fm-veroyat" onchange="computeRisk()">
+            <option value="">— выберите —</option>
+            <option value="A">A — Почти достоверно</option>
+            <option value="B">B — Вероятно</option>
+            <option value="C">C — Возможно</option>
+            <option value="D">D — Маловероятно</option>
+            <option value="E">E — Редко</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Тяжесть <span class="req">*</span></label>
+          <select class="fsel2" id="fm-tyazh" onchange="computeRisk()">
+            <option value="">— выберите —</option>
+            <option value="1">1 — Незначительная</option>
+            <option value="2">2 — Умеренная</option>
+            <option value="3">3 — Значительная</option>
+            <option value="4">4 — Катастрофическая</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Расчётная величина</label>
+          <div class="ctag" id="fm-computed">—</div>
+          <div class="cnote">Рассчитывается автоматически триггером БД</div>
+        </div>
+
+        <hr class="fsep">
+        <div class="fsect">Чек-лист управляемости рисками</div>
+
+        <div class="fgrp">
+          <label class="flbl">Технические меры</label>
+          <select class="fsel2" id="fm-cl1" onchange="computeRisk()">
+            <option value="">—</option><option value="da">Да</option><option value="net">Нет</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Поддержание тех. мер</label>
+          <select class="fsel2" id="fm-cl2" onchange="computeRisk()">
+            <option value="">—</option><option value="da">Да</option><option value="net">Нет</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Обход мер безопасности</label>
+          <select class="fsel2" id="fm-cl3" onchange="computeRisk()">
+            <option value="">—</option><option value="da">Да</option><option value="net">Нет</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Совмещённые работы</label>
+          <select class="fsel2" id="fm-cl4" onchange="computeRisk()">
+            <option value="">—</option><option value="da">Да</option><option value="net">Нет</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Наряд-допуск</label>
+          <select class="fsel2" id="fm-cl5" onchange="computeRisk()">
+            <option value="">—</option><option value="da">Да</option><option value="net">Нет</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Фактор недостатка</label>
+          <div class="ctag" id="fm-factor">—</div>
+          <div class="cnote">Произведение коэффициентов чек-листа</div>
+        </div>
+
+        <hr class="fsep">
+        <div class="fsect">Повторная оценка и мероприятия</div>
+
+        <div class="fgrp s3">
+          <label class="flbl">Мероприятия по снижению риска</label>
+          <textarea class="fta2" id="fm-merop" rows="3"></textarea>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Повт. вероятность (после мер)</label>
+          <select class="fsel2" id="fm-veroyat1">
+            <option value="">—</option>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            <option value="D">D</option><option value="E">E</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Повт. тяжесть (после мер)</label>
+          <select class="fsel2" id="fm-tyazh1">
+            <option value="">—</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Плановая стоимость, млн.тг</label>
+          <input class="finp2" type="text" id="fm-plan-stoim">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Фактическая стоимость, млн.тг</label>
+          <input class="finp2" type="text" id="fm-fact-stoim">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Плановая длительность</label>
+          <input class="finp2" type="text" id="fm-plan-dlit">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Фактическая длительность</label>
+          <input class="finp2" type="text" id="fm-fact-dlit">
+        </div>
+        <div class="fgrp s3">
+          <label class="flbl">Примечание</label>
+          <textarea class="fta2" id="fm-primech" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="mftr">
+      <span id="fm-err" style="color:var(--cat-ext);font-size:12px;margin-right:auto;display:none"></span>
+      <button class="btn btn-ghost" onclick="closeForm()">Отмена</button>
+      <button class="btn btn-primary" id="fm-save" onclick="saveRecord()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Сохранить
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const API_BASE = '/api/v1';
+const TABLE    = 'doc_ocenka_riskov';
+const COLS     = 'id,s00_uuid,i00_unik_nom,i0d_caldate,ilc_orgstruct,ilc_otdel,i00_rab_mesto_uch,i00_rab_tach_oper_2,ilt_risk_oper,ilc_ist_opasn,i00_opis_riska,ilc_veroyat_riska,ilc_tyazh_riska,ilc_velichina_riska,ilc_risk_category,ilc1_risk_checklist,ilc2_risk_checklist,ilc3_risk_checklist,ilc4_risk_checklist,ilc5_risk_checklist,i00_factor_nedost,i00_obsch_ocen,i00_merop_po_snizh,ilc1_veroyat_riska,ilc1_tyazh_riska,ilc3_velichina_riska,ilc2_velichina_riska,i00_plan_stoim,i00_fact_stoim,i00_plan_dlit,i00_fact_dlit,i00_primech,i00_act,i00_nomer_rab_mesta';
+const MODEL    = 'DocOcenkaRiskov';
+
+// ── AUTH ────────────────────────────────────────────────────────
+function getH() {
+  const user = localStorage.getItem('personCode') || 'anonymous';
+  const s = user + ':19451945';
+  const u = encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode('0x' + p));
+  return { 'X-Requested-With': 'XMLHttpRequest', 'Authorization': 'Basic ' + btoa(u) };
+}
+function getCsrf() {
+  const m = document.querySelector('meta[name="csrf-token"]'); if (m?.content) return m.content;
+  if (window.yii?.getCsrfToken) { const t = window.yii.getCsrfToken(); if (t) return t; }
+  const i = document.querySelector('input[name="_csrf-frontend"]'); if (i?.value) return i.value;
+  try { const cm = document.cookie.match(/_csrf-frontend=([^;]+)/); if (cm) { const d = decodeURIComponent(cm[1]); const tm = d.match(/"([a-zA-Z0-9_\-]{30,})"/); if (tm) return tm[1]; } } catch {}
+  try { if (window.parent !== window) { const pm = window.parent.document.querySelector('meta[name="csrf-token"]'); if (pm?.content) return pm.content; } } catch {}
+  return '';
+}
+async function fetchJ(url) {
+  const res = await fetch(url, { headers: getH() });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const d = await res.json();
+  return Array.isArray(d) ? d : (d.items || []);
+}
+async function apiPost(url, fd) {
+  const res = await fetch(url, { method: 'POST', headers: getH(), body: fd });
+  if (!res.ok && res.status !== 302) { const t = await res.text().catch(()=>''); throw new Error('HTTP ' + res.status + ' — ' + t.slice(0,200)); }
+  return res;
+}
+
+// ── STATE ────────────────────────────────────────────────────────
+let all = [], fil = [], sortCol = 'i0d_caldate', sortDir = -1, activeCat = null, expIdx = null, pg = 1;
+const PER = 50;
+let editId = null;
+let viewGi = null;
+
+// ── TOAST ────────────────────────────────────────────────────────
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show' + (type ? ' t'+type : '');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── LOAD ─────────────────────────────────────────────────────────
+async function loadData() {
+  const loaderEl = document.getElementById('loader');
+  loaderEl.innerHTML = '<div class="spin"></div> Загрузка данных...';
+  loaderEl.style.display = '';
+  document.getElementById('mtable').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
+  try {
+    const url = `${API_BASE}/${TABLE}?_format=json&query=${encodeURIComponent(JSON.stringify({ limit: 20000, columns: COLS }))}`;
+    console.log('[RiskTable] GET', url);
+    all = await fetchJ(url);
+    console.log('[RiskTable] rows:', all.length, all[0]);
+    fillSelects(); applyF();
+    toast('Загружено ' + all.length + ' записей', 'ok');
+    loadReferenceLists();
+  } catch (e) {
+    console.error('[RiskTable]', e);
+    alert('Ошибка загрузки данных: ' + e.message);
+    loaderEl.innerHTML = '<span style="color:#dc2626;font-size:13px">&#9888; Ошибка: ' + e.message + '</span>';
+    return;
+  }
+  loaderEl.style.display = 'none';
+}
+
+// ── REFERENCE LISTS ─────────────────────────────────────────────
+async function loadReferenceLists() {
+  try {
+    const q = JSON.stringify({ columns: 'id,code,sname', limit: 1000 });
+    const [orgs, depts, hazards] = await Promise.all([
+      fetchJ(`${API_BASE}/list_orgstruct?_format=json&query=${encodeURIComponent(q)}`).catch(() => []),
+      fetchJ(`${API_BASE}/list_otdel?_format=json&query=${encodeURIComponent(q)}`).catch(() => []),
+      fetchJ(`${API_BASE}/list_ist_opasn?_format=json&query=${encodeURIComponent(q)}`).catch(() => []),
+    ]);
+    fillRefSelect('fm-orgstruct', orgs);
+    fillRefSelect('fm-otdel', depts);
+    fillRefSelect('fm-ist-opasn', hazards);
+    console.log('[RiskTable] Справочники:', orgs.length, depts.length, hazards.length);
+  } catch(e) {
+    console.warn('[RiskTable] Ошибка загрузки справочников:', e);
+  }
+}
+function fillRefSelect(id, items) {
+  const el = document.getElementById(id); if (!el) return;
+  const cur = el.value;
+  el.innerHTML = '<option value="">— не выбрано —</option>';
+  items.sort((a,b) => (a.sname||'').localeCompare(b.sname||'', 'ru'))
+    .forEach(item => {
+      const o = document.createElement('option');
+      o.value = item.sname || item.code || '';
+      o.textContent = item.sname || item.code || '';
+      el.appendChild(o);
+    });
+  if (cur) el.value = cur;
+}
+
+function fillSelects() {
+  fillSel('f-org', 'ilc_orgstruct'); fillSel('f-dept', 'ilc_otdel');
+}
+function fillSel(id, key) {
+  const el = document.getElementById(id); const cur = el.value;
+  el.innerHTML = '<option value="">Все</option>';
+  [...new Set(all.map(r => r[key]).filter(Boolean))].sort().forEach(v => { const o = document.createElement('option'); o.value = o.textContent = v; el.appendChild(o); });
+  if (cur) el.value = cur;
+}
+
+// ── FILTER ───────────────────────────────────────────────────────
+function applyF() {
+  const srch = document.getElementById('f-search').value.toLowerCase();
+  const org  = document.getElementById('f-org').value;
+  const dept = document.getElementById('f-dept').value;
+  const prob = document.getElementById('f-prob').value;
+  const sev  = document.getElementById('f-sev').value;
+  fil = all.filter(r => {
+    if (org  && r.ilc_orgstruct !== org)   return false;
+    if (dept && r.ilc_otdel    !== dept)   return false;
+    if (prob && r.ilc_veroyat_riska !== prob) return false;
+    if (sev  && String(r.ilc_tyazh_riska) !== sev) return false;
+    if (activeCat && normCat(r.ilc_risk_category) !== activeCat) return false;
+    if (srch) {
+      const h = [r.i00_opis_riska, r.ilc_ist_opasn, r.i00_merop_po_snizh, r.ilc_otdel, r.i00_unik_nom, r.i00_rab_tach_oper_2].join(' ').toLowerCase();
+      if (!h.includes(srch)) return false;
+    }
+    return true;
+  });
+  fil.sort((a, b) => {
+    let av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
+    if (!isNaN(av) && !isNaN(bv) && av !== '' && bv !== '') return (Number(av) - Number(bv)) * sortDir;
+    return String(av).localeCompare(String(bv), 'ru') * sortDir;
+  });
+  pg = 1; expIdx = null; updStats(); render();
+}
+['f-search','f-org','f-dept','f-prob','f-sev'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', applyF); el.addEventListener('change', applyF);
+});
+function toggleCat(cat) {
+  activeCat = activeCat === cat ? null : cat;
+  ['ext','high','mod','min'].forEach(k => document.getElementById('sc-'+k)?.classList.remove('active'));
+  if (activeCat) {
+    const m = { extreme:'ext', high:'high', middle:'mod', minimal:'min' };
+    document.getElementById('sc-'+(m[activeCat]||''))?.classList.add('active');
+  }
+  applyF();
+}
+function resetFilters() {
+  ['f-search','f-org','f-dept','f-prob','f-sev'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  activeCat = null;
+  ['ext','high','mod','min'].forEach(k => document.getElementById('sc-'+k)?.classList.remove('active'));
+  applyF();
+}
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('.sa').forEach(e => e.textContent = '');
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  const el = document.getElementById('sa-'+col);
+  if (el) { el.textContent = sortDir === 1 ? '↑' : '↓'; el.closest('th')?.classList.add('sorted'); }
+  applyF();
+}
+
+// ── STATS ────────────────────────────────────────────────────────
+function updStats() {
+  const c = { extreme:0, high:0, middle:0, minimal:0 };
+  fil.forEach(r => { const k = normCat(r.ilc_risk_category); if (c[k] !== undefined) c[k]++; });
+  document.getElementById('sv-ext').textContent  = c.extreme;
+  document.getElementById('sv-high').textContent = c.high;
+  document.getElementById('sv-mod').textContent  = c.middle;
+  document.getElementById('sv-min').textContent  = c.minimal;
+  document.getElementById('count-badge').textContent = fil.length + ' записей';
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+// Normalise category value — API may return English codes OR Russian labels
+function normCat(cat) {
+  if (!cat) return '';
+  const s = String(cat).toLowerCase().trim();
+  if (s === 'extreme'  || s === 'экстремальный') return 'extreme';
+  if (s === 'high'     || s === 'высокий')       return 'high';
+  if (s === 'middle'   || s === 'умеренный')     return 'middle';
+  if (s === 'minimal'  || s === 'минимальный')   return 'minimal';
+  return s; // fallback
+}
+function cc(cat) { return { extreme:'cb-ext', high:'cb-high', middle:'cb-mod', minimal:'cb-min' }[normCat(cat)] || ''; }
+function cl(cat) { return { extreme:'🔴 Экстремальный', high:'🟡 Высокий', middle:'🟢 Умеренный', minimal:'🔵 Минимальный' }[normCat(cat)] || (cat || '—'); }
+function fd(s) { if (!s) return '—'; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString('ru-RU'); }
+function yn(v) { return v === 'da' ? '✅ Да' : v === 'net' ? '❌ Нет' : (v || '—'); }
+
+// ── RENDER ───────────────────────────────────────────────────────
+function render() {
+  const tbl = document.getElementById('mtable');
+  const emp = document.getElementById('empty');
+  const tb  = document.getElementById('tbody');
+  if (!fil.length) { tbl.style.display = 'none'; emp.style.display = ''; document.getElementById('pag').innerHTML = ''; return; }
+  emp.style.display = 'none'; tbl.style.display = '';
+  const tot = Math.ceil(fil.length / PER);
+  if (pg > tot) pg = tot;
+  const st = (pg-1)*PER;
+  const rows = fil.slice(st, st+PER);
+  let html = '';
+  rows.forEach((r, i) => {
+    const gi = st + i;
+    const cls = cc(r.ilc_risk_category);
+    html += `
+    <tr class="drow" id="tr-${gi}" onclick="toggleExp(${gi})">
+      <td class="mono">${esc(r.i00_unik_nom) || esc(r.id)}</td>
+      <td style="white-space:nowrap">${fd(r.i0d_caldate)}</td>
+      <td class="trs" title="${esc(r.ilc_orgstruct)}">${esc(r.ilc_orgstruct)}</td>
+      <td class="trs" title="${esc(r.ilc_otdel)}">${esc(r.ilc_otdel)}</td>
+      <td class="tr"  title="${esc(r.ilc_ist_opasn)}">${esc(r.ilc_ist_opasn)}</td>
+      <td class="tr"  title="${esc(r.i00_opis_riska)}">${esc(r.i00_opis_riska)}</td>
+      <td class="ctr"><span class="pd">${esc(r.ilc_veroyat_riska)}</span></td>
+      <td class="ctr">${r.ilc_tyazh_riska ?? '—'}</td>
+      <td class="ctr"><span class="mb">${esc(r.ilc_velichina_riska) || '—'}</span></td>
+      <td><span class="cb ${cls}">${cl(r.ilc_risk_category)}</span></td>
+      <td class="acol" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:3px;justify-content:flex-end">
+          <button class="btn btn-icon btn-secondary" title="Просмотр" onclick="openView(${gi})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn btn-icon btn-secondary" title="Редактировать" onclick="openFormModal(${gi})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+    <tr class="erow" id="er-${gi}" style="display:none">
+      <td colspan="11">
+        <div class="einner">
+          <div class="df"><div class="dl">Рабочее место</div><div class="dv">${esc(r.i00_rab_mesto_uch)||'—'}</div></div>
+          <div class="df"><div class="dl">Операция / должность</div><div class="dv">${esc(r.i00_rab_tach_oper_2)||'—'}</div></div>
+          <div class="df"><div class="dl">Тип операции</div><div class="dv">${esc(r.ilt_risk_oper)||'—'}</div></div>
+          <div class="df s3"><div class="dl">Мероприятия по снижению риска</div><div class="dv">${esc(r.i00_merop_po_snizh)||'—'}</div></div>
+          <div class="df"><div class="dl">Фактор недостатка</div><div class="dv">${r.i00_factor_nedost??'—'}</div></div>
+          <div class="df"><div class="dl">Общая оценка</div><div class="dv">${r.i00_obsch_ocen??'—'}</div></div>
+          <div class="df"><div class="dl">Примечание / статус</div><div class="dv">${esc(r.i00_primech)||esc(r.i00_act)||'—'}</div></div>
+        </div>
+      </td>
+    </tr>`;
+  });
+  tb.innerHTML = html;
+  renderPag(tot);
+}
+
+function toggleExp(gi) {
+  const er = document.getElementById('er-'+gi); const tr = document.getElementById('tr-'+gi); if (!er) return;
+  const open = er.style.display !== 'none';
+  if (expIdx !== null && expIdx !== gi) {
+    const pe = document.getElementById('er-'+expIdx); const pt = document.getElementById('tr-'+expIdx);
+    if (pe) pe.style.display = 'none'; if (pt) pt.classList.remove('rexp');
+  }
+  er.style.display = open ? 'none' : '';
+  tr.classList.toggle('rexp', !open);
+  expIdx = open ? null : gi;
+}
+
+function renderPag(tot) {
+  const p = document.getElementById('pag');
+  if (tot <= 1) { p.innerHTML = ''; return; }
+  let h = `<span class="pi">Стр. ${pg} из ${tot} · ${fil.length} записей</span>`;
+  h += `<button class="pb" onclick="goP(1)" ${pg===1?'disabled':''}>«</button>`;
+  h += `<button class="pb" onclick="goP(${pg-1})" ${pg===1?'disabled':''}>‹</button>`;
+  const s = Math.max(1, pg-2), e = Math.min(tot, s+4);
+  for (let x = s; x <= e; x++) h += `<button class="pb ${x===pg?'active':''}" onclick="goP(${x})">${x}</button>`;
+  h += `<button class="pb" onclick="goP(${pg+1})" ${pg===tot?'disabled':''}>›</button>`;
+  h += `<button class="pb" onclick="goP(${tot})" ${pg===tot?'disabled':''}>»</button>`;
+  p.innerHTML = h;
+}
+function goP(n) { pg = n; expIdx = null; render(); document.querySelector('.tsec').scrollIntoView({ behavior:'smooth', block:'start' }); }
+
+// ── VIEW MODAL ───────────────────────────────────────────────────
+function openView(gi) {
+  viewGi = gi; const r = fil[gi];
+  document.getElementById('vm-title').textContent = r.i00_unik_nom || ('Запись #' + (r.id || gi));
+  const b = document.getElementById('vm-badge');
+  b.textContent = cl(r.ilc_risk_category); b.className = 'cb ' + cc(r.ilc_risk_category);
+  function vf(label, val, s3) {
+    return `<div class="vf${s3?' s3':''}"><div class="vl">${label}</div><div class="vv">${esc(val)||'—'}</div></div>`;
+  }
+  document.getElementById('vm-body').innerHTML = `
+    <div class="vsect">Основная информация</div>
+    ${vf('Дата выявления', fd(r.i0d_caldate))} ${vf('Участок', r.ilc_orgstruct)} ${vf('Подразделение', r.ilc_otdel)}
+    ${vf('Рабочее место / оборудование', r.i00_rab_mesto_uch, true)}
+    ${vf('Операция / должность', r.i00_rab_tach_oper_2)} ${vf('Тип операции', r.ilt_risk_oper)} <div></div>
+    ${vf('Источник опасности', r.ilc_ist_opasn, true)}
+    ${vf('Описание риска / последствия', r.i00_opis_riska, true)}
+    <div class="vsect">Оценка риска</div>
+    ${vf('Вероятность (первичная)', r.ilc_veroyat_riska)}
+    ${vf('Тяжесть (первичная)', r.ilc_tyazh_riska)}
+    ${vf('Величина риска', r.ilc_velichina_riska)}
+    ${vf('Фактор недостатка управляемости', r.i00_factor_nedost)}
+    ${vf('Общая оценка', r.i00_obsch_ocen)}
+    <div></div>
+    <div class="vsect">Чек-лист управляемости</div>
+    ${vf('Технические меры', yn(r.ilc1_risk_checklist))}
+    ${vf('Поддержание тех. мер', yn(r.ilc2_risk_checklist))}
+    ${vf('Обход мер безопасности', yn(r.ilc3_risk_checklist))}
+    ${vf('Совмещённые работы', yn(r.ilc4_risk_checklist))}
+    ${vf('Наряд-допуск', yn(r.ilc5_risk_checklist))}
+    <div></div>
+    <div class="vsect">Мероприятия и повторная оценка</div>
+    ${vf('Мероприятия по снижению риска', r.i00_merop_po_snizh, true)}
+    ${vf('Повт. вероятность', r.ilc1_veroyat_riska)}
+    ${vf('Повт. тяжесть', r.ilc1_tyazh_riska)}
+    ${vf('Повт. величина риска', r.ilc3_velichina_riska)}
+    ${vf('Плановая стоимость, млн.тг', r.i00_plan_stoim)}
+    ${vf('Фактическая стоимость, млн.тг', r.i00_fact_stoim)}
+    ${vf('Плановая длительность', r.i00_plan_dlit)}
+    ${vf('Фактическая длительность', r.i00_fact_dlit)}
+    <div></div>
+    ${vf('Примечание', r.i00_primech, true)}
+  `;
+  document.getElementById('view-modal').classList.add('open');
+}
+function closeView() { document.getElementById('view-modal').classList.remove('open'); }
+function editFromView() { closeView(); if (viewGi !== null) openFormModal(viewGi); }
+document.getElementById('view-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeView(); });
+
+// ── FORM MODAL ───────────────────────────────────────────────────
+function openFormModal(gi) {
+  editId = null;
+  document.getElementById('fm-title').textContent = gi === null ? 'Добавить риск' : 'Редактировать риск';
+  document.getElementById('fm-err').style.display = 'none';
+  clearFm();
+  if (gi !== null) {
+    const r = fil[gi]; editId = r.id;
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    set('fm-caldate',    r.i0d_caldate ? r.i0d_caldate.split('T')[0] : '');
+    set('fm-orgstruct',  r.ilc_orgstruct);
+    set('fm-otdel',      r.ilc_otdel);
+    set('fm-rab-mesto',  r.i00_rab_mesto_uch);
+    set('fm-tip-oper',   r.ilt_risk_oper);
+    set('fm-rab-oper',   r.i00_rab_tach_oper_2);
+    set('fm-ist-opasn',  r.ilc_ist_opasn);
+    set('fm-opis-riska', r.i00_opis_riska);
+    set('fm-veroyat',    r.ilc_veroyat_riska);
+    set('fm-tyazh',      r.ilc_tyazh_riska ? String(r.ilc_tyazh_riska) : '');
+    set('fm-cl1',        r.ilc1_risk_checklist);
+    set('fm-cl2',        r.ilc2_risk_checklist);
+    set('fm-cl3',        r.ilc3_risk_checklist);
+    set('fm-cl4',        r.ilc4_risk_checklist);
+    set('fm-cl5',        r.ilc5_risk_checklist);
+    set('fm-merop',      r.i00_merop_po_snizh);
+    set('fm-veroyat1',   r.ilc1_veroyat_riska);
+    set('fm-tyazh1',     r.ilc1_tyazh_riska ? String(r.ilc1_tyazh_riska) : '');
+    set('fm-plan-stoim', r.i00_plan_stoim);
+    set('fm-fact-stoim', r.i00_fact_stoim);
+    set('fm-plan-dlit',  r.i00_plan_dlit);
+    set('fm-fact-dlit',  r.i00_fact_dlit);
+    set('fm-primech',    r.i00_primech);
+    computeRisk();
+  }
+  document.getElementById('form-modal').classList.add('open');
+}
+function closeForm() { document.getElementById('form-modal').classList.remove('open'); }
+document.getElementById('form-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeForm(); });
+
+function clearFm() {
+  ['fm-caldate','fm-orgstruct','fm-otdel','fm-rab-mesto','fm-rab-oper','fm-ist-opasn','fm-opis-riska','fm-merop','fm-plan-stoim','fm-fact-stoim','fm-plan-dlit','fm-fact-dlit','fm-primech'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['fm-tip-oper','fm-veroyat','fm-tyazh','fm-cl1','fm-cl2','fm-cl3','fm-cl4','fm-cl5','fm-veroyat1','fm-tyazh1'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('fm-computed').textContent = '—';
+  document.getElementById('fm-computed').style.color = '';
+  document.getElementById('fm-factor').textContent = '—';
+}
+
+// ── COMPUTE PREVIEW (mirrors DB trigger) ────────────────────────
+const CAT_MAP = {
+  A4:'extreme',B4:'extreme',C4:'extreme',A3:'extreme',B3:'extreme',
+  D4:'high',E4:'high',C3:'high',A2:'high',B2:'high',
+  D3:'middle',E3:'middle',C2:'middle',A1:'middle',B1:'middle',
+  D2:'minimal',E2:'minimal',C1:'minimal',D1:'minimal',E1:'minimal'
+};
+const CAT_COLOR = { extreme:'#dc2626', high:'#d97706', middle:'#059669', minimal:'#2563eb' };
+const CAT_RU    = { extreme:'Экстремальный', high:'Высокий', middle:'Умеренный', minimal:'Минимальный' };
+
+function computeRisk() {
+  const p = document.getElementById('fm-veroyat').value;
+  const t = document.getElementById('fm-tyazh').value;
+  const mag = p && t ? p + t : null;
+  const cat = mag ? CAT_MAP[mag] : null;
+  const el = document.getElementById('fm-computed');
+  el.textContent = mag ? (mag + (cat ? ' — ' + CAT_RU[cat] : '')) : '—';
+  el.style.color = cat ? CAT_COLOR[cat] : '';
+
+  const c1 = document.getElementById('fm-cl1').value;
+  const c2 = document.getElementById('fm-cl2').value;
+  const c3 = document.getElementById('fm-cl3').value;
+  const c4 = document.getElementById('fm-cl4').value;
+  const c5 = document.getElementById('fm-cl5').value;
+  const fEl = document.getElementById('fm-factor');
+  if (c1 && c2 && c3 && c4 && c5) {
+    const f = (c1==='da'?1:3)*(c2==='da'?1:3)*(c3==='net'?1:3)*(c4==='net'?1:2)*(c5==='net'?1:2);
+    fEl.textContent = f;
+  } else { fEl.textContent = '—'; }
+}
+
+// ── SAVE ─────────────────────────────────────────────────────────
+async function saveRecord() {
+  const errEl  = document.getElementById('fm-err');
+  const saveBtn = document.getElementById('fm-save');
+  const cal   = document.getElementById('fm-caldate').value;
+  const ist   = document.getElementById('fm-ist-opasn').value.trim();
+  const opis  = document.getElementById('fm-opis-riska').value.trim();
+  const ver   = document.getElementById('fm-veroyat').value;
+  const tyazh = document.getElementById('fm-tyazh').value;
+  if (!cal || !ist || !opis || !ver || !tyazh) {
+    errEl.textContent = 'Заполните обязательные поля: дата, источник опасности, описание риска, вероятность, тяжесть';
+    errEl.style.display = ''; return;
+  }
+  errEl.style.display = 'none';
+  saveBtn.disabled = true; saveBtn.textContent = 'Сохранение...';
+
+  const fd = new FormData();
+  fd.append('_csrf-frontend', getCsrf());
+  const f = (k, id) => fd.append(`${MODEL}[${k}]`, document.getElementById(id)?.value || '');
+  f('i0d_caldate',        'fm-caldate');
+  f('ilc_orgstruct',      'fm-orgstruct');
+  f('ilc_otdel',          'fm-otdel');
+  f('i00_rab_mesto_uch',  'fm-rab-mesto');
+  f('ilt_risk_oper',      'fm-tip-oper');
+  f('i00_rab_tach_oper_2','fm-rab-oper');
+  f('ilc_ist_opasn',      'fm-ist-opasn');
+  f('i00_opis_riska',     'fm-opis-riska');
+  f('ilc_veroyat_riska',  'fm-veroyat');
+  f('ilc_tyazh_riska',    'fm-tyazh');
+  f('ilc1_risk_checklist','fm-cl1');
+  f('ilc2_risk_checklist','fm-cl2');
+  f('ilc3_risk_checklist','fm-cl3');
+  f('ilc4_risk_checklist','fm-cl4');
+  f('ilc5_risk_checklist','fm-cl5');
+  f('i00_merop_po_snizh', 'fm-merop');
+  f('ilc1_veroyat_riska', 'fm-veroyat1');
+  f('ilc1_tyazh_riska',   'fm-tyazh1');
+  f('i00_plan_stoim',     'fm-plan-stoim');
+  f('i00_fact_stoim',     'fm-fact-stoim');
+  f('i00_plan_dlit',      'fm-plan-dlit');
+  f('i00_fact_dlit',      'fm-fact-dlit');
+  f('i00_primech',        'fm-primech');
+
+  try {
+    const url = editId
+      ? `/ru/t/update?id=${editId}&tbl=${TABLE}&version=edit&modal=true&ajax=true&is_ajax=true`
+      : `/ru/t/create?tbl=${TABLE}&version=add&modal=true&ajax=true&is_ajax=true`;
+    await apiPost(url, fd);
+    closeForm();
+    toast(editId ? 'Запись обновлена' : 'Риск добавлен', 'ok');
+    await loadData();
+  } catch (e) {
+    errEl.textContent = 'Ошибка: ' + e.message; errEl.style.display = '';
+    toast('Ошибка сохранения', 'err');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Сохранить';
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeView(); closeForm(); } });
+</script>
+</body>
+</html>
